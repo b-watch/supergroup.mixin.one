@@ -103,6 +103,7 @@ CREATE TABLE IF NOT EXISTS orders (
   user_id          VARCHAR(36) NOT NULL CHECK (user_id ~* '^[0-9a-f-]{36,36}$'),
   prepay_id        VARCHAR(36) DEFAULT '',
   state            VARCHAR(32) NOT NULL,
+	asset_id         VARCHAR(36) NOT NULL,
   amount           VARCHAR(128) NOT NULL,
   channel          VARCHAR(32) NOT NULL,
   transaction_id   VARCHAR(32) DEFAULT '',
