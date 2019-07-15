@@ -106,15 +106,7 @@ export default {
     this.acceptWechatPayment = config.data.accept_wechat_payment
     this.wechatPaymentAmount = config.data.wechat_payment_amount
     this.acceptCouponPayment = config.data.accept_coupon_payment
-    this.GLOBAL.api.fox.currency()
-      .then((currencyInfo) => {
-        this.currencyTickers = currencyInfo.data.cnyTickers.reduce((map, obj) => {
-          map[obj.from] = obj.price;
-          return map;
-        }, {})
-        this.cnyRatio = currencyInfo.data.currencies
-        // console.log(this.currencyTickers)
-      })
+
     this.meInfo = await this.GLOBAL.api.account.me()
     setTimeout(this.updatePrice, 2000)
     this.loading = false
@@ -129,12 +121,18 @@ export default {
     }
   },
   methods: {
-    payCrypto () {
+    async payCrypto () {
       this.loading = true
-      let traceId = this.meInfo.data.trace_id
+      // get order info
+      let orderInfo = await this.GLOBAL.api.payment.create({
+        'method': 'crypto',
+        'asset_id': this.selectedAsset.asset_id,
+        'user_id': this.meInfo.data.user_id,
+      })
+      let orderId = orderInfo.data.order.order_id
       setTimeout(async () => { await this.waitForPayment(); }, 1000)
-      window.location.href = `mixin://pay?recipient=${CLIENT_ID}&asset=${this.selectedAsset.asset_id}&amount=${this.currentCryptoPrice}&trace=${traceId}&memo=PAY_TO_JOIN`
-      // console.log(`mixin://pay?recipient=${CLIENT_ID}&asset=${this.selectedAsset.asset_id}&amount=${this.currentCryptoPrice}&trace=${traceId}&memo=PAY_TO_JOIN`);
+      window.location.href = `mixin://pay?recipient=${CLIENT_ID}&asset=${this.selectedAsset.asset_id}&amount=${this.currentCryptoPrice}&trace=${orderId}&memo=PAY_TO_JOIN`
+      console.log(`mixin://pay?recipient=${CLIENT_ID}&asset=${this.selectedAsset.asset_id}&amount=${this.currentCryptoPrice}&trace=${orderId}&memo=PAY_TO_JOIN`);
     },
     async onChangeAsset (ix) {
       this.loading = true
@@ -176,12 +174,6 @@ export default {
         return this.cryptoEsitmatedUsdMap[symbol]
       }
       // only support fetching from big.one
-      const pairName = symbol + '-' + 'USDT'
-      let resp = await this.GLOBAL.api.fox.b1Ticker(pairName)
-      if (resp && resp.data) {
-        this.cryptoEsitmatedUsdMap[symbol] = resp.data.close
-        return resp.data.close
-      }
       return -1
     },
     payWechatMobile () {

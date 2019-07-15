@@ -20,7 +20,7 @@ let HANDLERS = {
 instance.interceptors.response.use((response) => {
   return response;
 }, function (error) {
-  if (302 === error.response.status) {
+  if (error && error.response && 302 === error.response.status) {
     console.log(err)
   } else {
     return Promise.reject(error);
