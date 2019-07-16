@@ -1,53 +1,148 @@
 package models
 
 import (
+	"bytes"
+	"context"
+	"database/sql"
 	"fmt"
+	"log"
+	"strings"
 	"time"
 
-	"github.com/rs/xid"
-	"github.com/jinzhu/gorm"
+	bot "github.com/MixinNetwork/bot-api-go-client"
+	"github.com/MixinNetwork/supergroup.mixin.one/durable"
+	"github.com/MixinNetwork/supergroup.mixin.one/session"
+	"github.com/lib/pq"
 )
 
-var gormDB *gorm.DB
+const referral_DDL = `
+CREATE TABLE IF NOT EXISTS referrals (
+	code         			VARCHAR(36) PRIMARY KEY,
+	inviter_id        VARCHAR(36) NOT NULL,
+	invitee_id	      VARCHAR(36),
+	is_used       	  BOOLEAN NOT NULL DEFAULT FALSE,
+	created_at       	TIMESTAMP WITH TIME ZONE NOT NULL,
+	used_at        		TIMESTAMP WITH TIME ZONE
+);
+
+CREATE INDEX IF NOT EXISTS referrals_inviterx ON referrals(inviter_id);
+`
 
 type Referral struct {
-	InviterID string `gorm:"type:varchar(36);not null"`
-	InviteeID string `gorm:"type:varchar(36);not null"`
-	Code      string `gorm:"primary_key;type:varchar(36)"`
-	IsUsed    bool 	 `gorm:"default:false"`
-	CreatedAt time.Time `gorm:"type:time;not null"`
-	UsedAt    time.Time `gorm:"type:time;not null"`
+	Code      string
+	InviterID string
+	InviteeID string
+	IsUsed    bool 	
+	CreatedAt time.Time
+	UsedAt    pq.NullTime
 }
 
-func (user *User) Referrals() (referrals []Referral) {
-	gormDB.Where("inviter_id = ? AND is_used = ?", user.UserId, false).Find(&referrals)
-	return
+var referralColumns = []string{"code", "inviter_id", "invitee_id", "is_used", "created_at", "used_at"}
+
+func (r *Referral) values() []interface{} {
+	return []interface{}{r.Code, r.InviterID, r.InviteeID, r.IsUsed, r.CreatedAt, r.UsedAt}
 }
 
-func (user *User) CreateReferrals() (referrals []Referral, err error) {
-	if referralCount := len(user.Referrals()); referralCount > 0 {
-		err = fmt.Errorf("There are %d unused codes, can't create new one", referralCount)
-		return
+func referralFromRow(row durable.Row) (*Referral, error) {
+	var r Referral
+	err := row.Scan(&r.Code, &r.InviterID, &r.InviteeID, &r.IsUsed, &r.CreatedAt, &r.UsedAt)
+	return &r, err
+}
+
+func (user *User) Referrals(ctx context.Context) ([]*Referral, error) {
+	var referrals []*Referral
+	err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
+		query := fmt.Sprintf("SELECT %s FROM referrals WHERE inviter_id = '%s' AND is_used = %t", strings.Join(referralColumns, ","), user.UserId, false)
+		log.Printf("%s", query)
+		rows, err := tx.QueryContext(ctx, query)
+		if err != nil {
+			return err
+		}
+		defer rows.Close()
+		for rows.Next() {
+			referral, err := referralFromRow(rows)
+			if err != nil {
+				return err
+			}
+			referrals = append(referrals, referral)
+		}
+		return nil
+	})
+	if err != nil {
+		if sessionErr, ok := err.(session.Error); ok {
+			return nil, sessionErr
+		}
+		return nil, session.TransactionError(ctx, err)
+	}
+	return referrals, nil
+}
+
+func (user *User) CreateReferrals(ctx context.Context) ([]*Referral, error) {
+	var referrals []*Referral
+	currentReferrals, err := user.Referrals(ctx)
+	if err != nil {
+		return nil, err
+	} else if referralCount:= len(currentReferrals); referralCount > 0 {
+		return nil, fmt.Errorf("There are %d unused codes, can't create new one", referralCount)
+	} else {
+		var values bytes.Buffer
+		for i := 1;  i<=3; i++ {
+			referral := &Referral{InviterID: user.UserId, Code: bot.UuidNewV4().String(), CreatedAt: time.Now(), IsUsed: false}
+			if i > 1 {
+				values.WriteString(",")
+			}
+			values.WriteString(fmt.Sprintf("('%s', '%s', '%s', '%t', '%s')", referral.Code, referral.InviterID, referral.InviteeID, referral.IsUsed, string(pq.FormatTimestamp(referral.CreatedAt))))
+			referrals = append(referrals, referral)
+		}
+		query := fmt.Sprintf("INSERT INTO referrals (code,inviter_id,invitee_id,is_used,created_at) VALUES %s", values.String())
+		_, err := session.Database(ctx).ExecContext(ctx, query)
+		if err != nil {
+			return nil, session.TransactionError(ctx, err)
+		}
+		return referrals, nil
+	}
+}
+
+func (user *User) ApplyReferral(ctx context.Context, referralCode string) (*Referral, error) {
+	// return err if user is already joined
+	var referral *Referral
+	err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
+		var err error
+		referral, err = findReferralByCode(ctx, tx, referralCode)
+		if err != nil {
+			return err
+		} else if referral == nil {
+			return nil
+		}
+
+		referral.InviteeID = user.UserId
+		referral.IsUsed = true
+		referral.UsedAt = pq.NullTime{Time: time.Now(), Valid: true}
+		query := fmt.Sprintf("UPDATE referrals SET (invitee_id,is_used,used_at)=($1,$2,$3) WHERE code=$4")
+		_, err = tx.ExecContext(ctx, query, referral.InviteeID, referral.IsUsed, referral.UsedAt, referralCode) 
+		if err != nil {
+			return err
+		} else {
+			return nil
+		}
+	})
+	if err != nil {
+		if sessionErr, ok := err.(session.Error); ok {
+			return nil, sessionErr
+		}
+		return nil, session.TransactionError(ctx, err)
 	}
 
-	for i := 1;  i<=3; i++ {
-		referral := Referral{InviterID: user.UserId, Code: newReferralCode()}
-		gormDB.Create(&referrals)
-		referrals = append(referrals, referral)
-	}
-	return
+	// update user's state
+	return referral, nil
 }
 
-func (user *User) ApplyReferral(referralCode string) (referral Referral, err error) {
-	if findErr := gormDB.First(&referral, "code = ?", referralCode).Error; gorm.IsRecordNotFoundError(findErr) {
-		err = findErr
-		return
+func findReferralByCode(ctx context.Context, tx *sql.Tx, code string) (*Referral, error) {
+	query := fmt.Sprintf("SELECT %s FROM referrals WHERE code = $1 LIMIT 1", strings.Join(referralColumns, ","))
+	row := tx.QueryRowContext(ctx, query, code)
+	referral, err := referralFromRow(row)
+	if err == sql.ErrNoRows {
+		return nil, nil
 	}
-	gormDB.Model(&referral).Updates(Referral{InviteeID: user.UserId, IsUsed: true})
-	return
-}
-
-func newReferralCode() string {
-	guid := xid.New()
-	return guid.String()
+	return referral, err
 }
