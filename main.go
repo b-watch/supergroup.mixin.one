@@ -49,6 +49,9 @@ func main() {
 		if config.AppConfig.System.AccpetWeChatPayment {
 			go services.StartWxPaymentWatch(*service, database)
 		}
+		if config.AppConfig.System.AutoEstimate {
+			go services.StartCurrencySync(*service, database)
+		}
 		err := StartServer(database)
 		if err != nil {
 			log.Println(err)

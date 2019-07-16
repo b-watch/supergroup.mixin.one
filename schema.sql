@@ -126,3 +126,14 @@ CREATE TABLE IF NOT EXISTS coupons (
 CREATE UNIQUE INDEX IF NOT EXISTS coupons_codex ON coupons(code);
 CREATE INDEX IF NOT EXISTS coupons_occupiedx ON coupons(occupied_by);
 CREATE INDEX IF NOT EXISTS coupons_userx ON coupons(user_id);
+
+
+CREATE TABLE currency_rates (
+    symbol            VARCHAR(36) PRIMARY KEY,
+    price_usd         VARCHAR(32) NOT NULL,
+    price_cny         VARCHAR(32) NOT NULL,
+    created_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+    updated_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX currency_rates_pkey ON currency_rates(symbol);
