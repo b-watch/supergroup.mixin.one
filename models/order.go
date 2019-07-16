@@ -51,15 +51,15 @@ type Order struct {
 
 const WX_TN_PREFIX = "tn-"
 
-var orderColumns = []string{"order_id", "user_id", "trace_id", "prepay_id", "state", "amount", "channel", "transaction_id", "created_at", "paid_at"}
+var orderColumns = []string{"order_id", "user_id", "trace_id", "prepay_id", "state", "asset_id", "amount", "channel", "transaction_id", "created_at", "paid_at"}
 
 func (o *Order) values() []interface{} {
-	return []interface{}{o.OrderId, o.UserId, o.TraceId, o.PrepayId, o.State, o.Amount, o.Channel, o.TransactionId, o.CreatedAt, o.PaidAt}
+	return []interface{}{o.OrderId, o.UserId, o.TraceId, o.PrepayId, o.State, o.AssetId, o.Amount, o.Channel, o.TransactionId, o.CreatedAt, o.PaidAt}
 }
 
 func orderFromRow(row durable.Row) (*Order, error) {
 	var o Order
-	err := row.Scan(&o.OrderId, &o.UserId, &o.TraceId, &o.PrepayId, &o.State, &o.Amount, &o.Channel, &o.TransactionId, &o.CreatedAt, &o.PaidAt)
+	err := row.Scan(&o.OrderId, &o.UserId, &o.TraceId, &o.PrepayId, &o.State, &o.AssetId, &o.Amount, &o.Channel, &o.TransactionId, &o.CreatedAt, &o.PaidAt)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}

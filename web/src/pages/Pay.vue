@@ -17,7 +17,7 @@
       <van-cell
         :title="$t('pay.price_label', {price: currentCryptoPrice, unit: selectedAsset ? selectedAsset.text : '...'})"
         >
-        <!-- <span>≈{{currencySymbol}}{{currentEstimatedPrice.toLocaleString()}}</span> -->
+        <span v-if="currentEstimatedPrice">≈{{currencySymbol}}{{currentEstimatedPrice.toLocaleString()}}</span>
       </van-cell>
       <div slot="footer">
         <van-cell>
@@ -81,8 +81,7 @@ export default {
       acceptCouponPayment: false,
       wechatPaymentAmount: '100',
       cryptoEsitmatedUsdMap: {},
-      currencyTickers: [],
-      cnyRatio: {},
+      currencyRates: [],
       currentCryptoPrice: 0,
       currentEstimatedPrice: 0,
       couponCode: '',
@@ -107,9 +106,17 @@ export default {
     this.wechatPaymentAmount = config.data.wechat_payment_amount
     this.acceptCouponPayment = config.data.accept_coupon_payment
 
+    let currencyInfo = await this.GLOBAL.api.payment.currency()
+    for (let ix = 0; ix < currencyInfo.data.length; ix++) {
+      const ele = currencyInfo.data[ix]
+      this.currencyRates[ele.symbol] = ele
+    }
+
     this.meInfo = await this.GLOBAL.api.account.me()
-    setTimeout(this.updatePrice, 2000)
-    this.loading = false
+    setTimeout(() => {
+      this.updatePrice()
+      this.loading = false
+    }, 2000)
   },
   computed: {
     currencySymbol() {
@@ -130,9 +137,11 @@ export default {
         'user_id': this.meInfo.data.user_id,
       })
       let orderId = orderInfo.data.order.order_id
+      let amount = orderInfo.data.order.amount
+      let assetId = orderInfo.data.order.asset_id
       setTimeout(async () => { await this.waitForPayment(); }, 1000)
-      window.location.href = `mixin://pay?recipient=${CLIENT_ID}&asset=${this.selectedAsset.asset_id}&amount=${this.currentCryptoPrice}&trace=${orderId}&memo=PAY_TO_JOIN`
-      console.log(`mixin://pay?recipient=${CLIENT_ID}&asset=${this.selectedAsset.asset_id}&amount=${this.currentCryptoPrice}&trace=${orderId}&memo=PAY_TO_JOIN`);
+      window.location.href = `mixin://pay?recipient=${CLIENT_ID}&asset=${assetId}&amount=${amount}&trace=${orderId}&memo=PAY_TO_JOIN`
+      console.log(`mixin://pay?recipient=${CLIENT_ID}&asset=${assetId}&amount=${amount}&trace=${orderId}&memo=PAY_TO_JOIN`);
     },
     async onChangeAsset (ix) {
       this.loading = true
@@ -142,17 +151,18 @@ export default {
     },
     async updatePrice () {
       if (this.selectedAsset.amount === 'auto') {
-        let base = this.autoEstimateBase / parseFloat(this.cnyRatio.usdt)
-        let priceUsdt = await this.getCryptoEsitmatedUsdt(this.selectedAsset.symbol)
-        this.currentCryptoPrice = (base / priceUsdt).toFixed(8)
+        let priceCny = this.currencyRates[this.selectedAsset.symbol].price_cny
+        let priceUsd = this.currencyRates[this.selectedAsset.symbol].price_usd
         if (this.autoEstimateCurrency === 'usd') {
-          this.currentEstimatedPrice = base
+          this.currentCryptoPrice = (this.autoEstimateBase / priceUsd).toFixed(8)
+          this.currentEstimatedPrice = this.autoEstimateBase
         } else {
-          this.currentEstimatedPrice = base * this.cnyRatio.usdt
+          this.currentCryptoPrice = (this.autoEstimateBase / priceCny).toFixed(8)
+          this.currentEstimatedPrice = this.autoEstimateBase
         }
       } else {
         this.currentCryptoPrice = parseFloat(this.selectedAsset.amount).toFixed(8)
-        this.currentEstimatedPrice = '-'
+        this.currentEstimatedPrice = 0
       }
     },
     async waitForPayment () {
@@ -168,13 +178,6 @@ export default {
         return;
       }
       setTimeout(async () => { await this.waitForPayment(); }, 1500)
-    },
-    async getCryptoEsitmatedUsdt (symbol) {
-      if (this.cryptoEsitmatedUsdMap.hasOwnProperty(symbol)) {
-        return this.cryptoEsitmatedUsdMap[symbol]
-      }
-      // only support fetching from big.one
-      return -1
     },
     payWechatMobile () {
       this.$router.push(`/pay/wxqr/?qr_url=${encodeURIComponent(WEB_ROOT + '/wechat/request/' + this.meInfo.data.user_id)}`)

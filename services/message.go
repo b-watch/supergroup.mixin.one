@@ -365,8 +365,12 @@ func handleTransfer(ctx context.Context, mc *MessageContext, transfer TransferVi
 }
 
 func handleOrderPayment(ctx context.Context, mc *MessageContext, transfer TransferView, order *models.Order) error {
-	_, err := models.MarkOrderAsPaidByOrderId(ctx, order.OrderId)
-	return err
+	if order.Channel == models.PayMethodMixin && order.Amount == transfer.Amount && order.AssetId == transfer.AssetId {
+		_, err := models.MarkOrderAsPaidByOrderId(ctx, order.OrderId)
+		fmt.Println(err)
+		return err
+	}
+	return nil
 }
 
 func sendAppCard(ctx context.Context, mc *MessageContext, packet *models.Packet) error {
