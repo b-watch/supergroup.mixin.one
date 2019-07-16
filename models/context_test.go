@@ -47,6 +47,7 @@ func teardownTestContext(ctx context.Context) {
 		dropPacketsDDL,
 		dropPropertiesDDL,
 		dropCouponsDDL,
+		dropReferralsDDL,
 	}
 	for _, q := range tables {
 		if _, err := db.Exec(q); err != nil {

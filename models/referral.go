@@ -102,9 +102,11 @@ func (user *User) CreateReferrals(ctx context.Context) ([]*Referral, error) {
 }
 
 func (user *User) ApplyReferral(ctx context.Context, referralCode string) (*Referral, error) {
-	// return err if user is already joined
 	var referral *Referral
 	err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
+		if user.State != PaymentStateUnverified {
+			return fmt.Errorf("Current user can't be referred")
+		}
 		var err error
 		referral, err = findReferralByCode(ctx, tx, referralCode)
 		if err != nil {
@@ -124,7 +126,7 @@ func (user *User) ApplyReferral(ctx context.Context, referralCode string) (*Refe
 		}
 
 		query = fmt.Sprintf("UPDATE users SET state=$1 WHERE user_id=$2")
-		_, err = tx.ExecContext(ctx, query, PaymentStateInvited, user.UserId) 
+		_, err = tx.ExecContext(ctx, query, PaymentStatePending, user.UserId) 
 		if err != nil {
 			return err
 		}

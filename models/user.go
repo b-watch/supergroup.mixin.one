@@ -21,9 +21,9 @@ import (
 )
 
 const (
-	PaymentStatePending = "pending"
-	PaymentStatePaid    = "paid"
-	PaymentStateInvited = "invited"
+	PaymentStatePending 		= "pending"
+	PaymentStatePaid    		= "paid"
+	PaymentStateUnverified	= "unverified"
 
 	PayMethodMixin  = "mixin"
 	PayMethodWechat = "wechat"
@@ -118,7 +118,7 @@ func createUser(ctx context.Context, accessToken, userId, identityNumber, fullNa
 			UserId:         userId,
 			IdentityNumber: identity,
 			TraceId:        bot.UuidNewV4().String(),
-			State:          PaymentStatePending,
+			State:          PaymentStateUnverified,
 			ActiveAt:       time.Now(),
 			isNew:          true,
 		}
@@ -132,6 +132,8 @@ func createUser(ctx context.Context, accessToken, userId, identityNumber, fullNa
 			user.State = PaymentStatePaid
 			user.SubscribedAt = time.Now()
 			user.PayMethod = PayMethodOffer
+		} else if !config.AppConfig.System.ReferralToJoin {
+			user.State = PaymentStatePending
 		}
 		if config.AppConfig.Service.Environment != "test" {
 			err = createConversation(ctx, "CONTACT", userId)
@@ -277,7 +279,7 @@ func (user *User) Payment(ctx context.Context) error {
 }
 
 func (user *User) paymentInTx(ctx context.Context, tx *sql.Tx, method string) error {
-	if user.State != PaymentStatePending {
+	if user.State == PaymentStatePaid {
 		if method == PayMethodCoupon {
 			return session.ForbiddenError(ctx)
 		}
