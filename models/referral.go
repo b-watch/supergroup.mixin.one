@@ -5,7 +5,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -53,7 +52,6 @@ func (user *User) Referrals(ctx context.Context) ([]*Referral, error) {
 	var referrals []*Referral
 	err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
 		query := fmt.Sprintf("SELECT %s FROM referrals WHERE inviter_id = '%s' AND is_used = %t", strings.Join(referralColumns, ","), user.UserId, false)
-		log.Printf("%s", query)
 		rows, err := tx.QueryContext(ctx, query)
 		if err != nil {
 			return err
@@ -111,8 +109,6 @@ func (user *User) ApplyReferral(ctx context.Context, referralCode string) (*Refe
 		referral, err = findReferralByCode(ctx, tx, referralCode)
 		if err != nil {
 			return err
-		} else if referral == nil {
-			return nil
 		}
 
 		referral.InviteeID = user.UserId
@@ -122,18 +118,23 @@ func (user *User) ApplyReferral(ctx context.Context, referralCode string) (*Refe
 		_, err = tx.ExecContext(ctx, query, referral.InviteeID, referral.IsUsed, referral.UsedAt, referralCode) 
 		if err != nil {
 			return err
-		} else {
-			return nil
 		}
+
+		query = fmt.Sprintf("UPDATE users SET state=$1 WHERE user_id=$2")
+		_, err = tx.ExecContext(ctx, query, PaymentStateInvited, user.UserId) 
+		if err != nil {
+			return err
+		}
+		return nil
 	})
+
 	if err != nil {
 		if sessionErr, ok := err.(session.Error); ok {
 			return nil, sessionErr
 		}
 		return nil, session.TransactionError(ctx, err)
 	}
-
-	// update user's state
+	
 	return referral, nil
 }
 

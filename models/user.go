@@ -23,6 +23,7 @@ import (
 const (
 	PaymentStatePending = "pending"
 	PaymentStatePaid    = "paid"
+	PaymentStateInvited = "invited"
 
 	PayMethodMixin  = "mixin"
 	PayMethodWechat = "wechat"
