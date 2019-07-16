@@ -2,7 +2,7 @@ package models
 
 import (
 	"testing"
-	"fmt"
+
 	bot "github.com/MixinNetwork/bot-api-go-client"
 	"github.com/stretchr/testify/assert"
 )
@@ -30,17 +30,22 @@ func TestReferral(t *testing.T) {
 	referrals, _ = inviter.Referrals(ctx)
 	assert.False(referrals[0].UsedAt.Valid)
 
-	referral, err := invitee.ApplyReferral(ctx, referrals[0].Code)
+	firstReferralCode := referrals[0].Code
+	referral, err := invitee.ApplyReferral(ctx, firstReferralCode)
 	assert.Nil(err)
 	invitee, err = FindUser(ctx, invitee.UserId)
 	assert.Equal(PaymentStateInvited, invitee.State)
 	assert.True(referral.UsedAt.Valid)
 	referrals, _ = inviter.Referrals(ctx)
 	assert.Len(referrals, 2)
+	
+	invitee2, err := createUser(ctx, "accessToken", bot.UuidNewV4().String(), "3", "Invitee2", "http://localhost")
+	referral, err = invitee2.ApplyReferral(ctx, firstReferralCode)
+	assert.NotNil(err)
+	assert.Nil(referral)
 
 	// user is able to create referral only when all referral codes are used
 	referrals, err = inviter.CreateReferrals(ctx)
-	if assert.Error(err) {
-		assert.Equal(fmt.Errorf("There are %d unused codes, can't create new one", 2), err)
-	}
+	assert.NotNil(err)
+	assert.Nil(referrals)
 }

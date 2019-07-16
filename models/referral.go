@@ -51,8 +51,8 @@ func referralFromRow(row durable.Row) (*Referral, error) {
 func (user *User) Referrals(ctx context.Context) ([]*Referral, error) {
 	var referrals []*Referral
 	err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
-		query := fmt.Sprintf("SELECT %s FROM referrals WHERE inviter_id = '%s' AND is_used = %t", strings.Join(referralColumns, ","), user.UserId, false)
-		rows, err := tx.QueryContext(ctx, query)
+		query := fmt.Sprintf("SELECT %s FROM referrals WHERE inviter_id = $1 AND is_used = $2", strings.Join(referralColumns, ","))
+		rows, err := tx.QueryContext(ctx, query, user.UserId, false)
 		if err != nil {
 			return err
 		}
@@ -81,7 +81,7 @@ func (user *User) CreateReferrals(ctx context.Context) ([]*Referral, error) {
 	if err != nil {
 		return nil, err
 	} else if referralCount:= len(currentReferrals); referralCount > 0 {
-		return nil, fmt.Errorf("There are %d unused codes, can't create new one", referralCount)
+		return nil, session.TransactionError(ctx, fmt.Errorf("There are %d unused codes, can't create new one", referralCount))
 	} else {
 		var values bytes.Buffer
 		for i := 1;  i<=3; i++ {
@@ -109,6 +109,9 @@ func (user *User) ApplyReferral(ctx context.Context, referralCode string) (*Refe
 		referral, err = findReferralByCode(ctx, tx, referralCode)
 		if err != nil {
 			return err
+		}
+		if referral.IsUsed {
+			return fmt.Errorf("Referral Code has already been used")
 		}
 
 		referral.InviteeID = user.UserId
@@ -139,7 +142,7 @@ func (user *User) ApplyReferral(ctx context.Context, referralCode string) (*Refe
 }
 
 func findReferralByCode(ctx context.Context, tx *sql.Tx, code string) (*Referral, error) {
-	query := fmt.Sprintf("SELECT %s FROM referrals WHERE code = $1 LIMIT 1", strings.Join(referralColumns, ","))
+	query := fmt.Sprintf("SELECT %s FROM referrals WHERE code = $1 FOR UPDATE", strings.Join(referralColumns, ","))
 	row := tx.QueryRowContext(ctx, query, code)
 	referral, err := referralFromRow(row)
 	if err == sql.ErrNoRows {
