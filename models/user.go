@@ -52,19 +52,19 @@ CREATE INDEX IF NOT EXISTS users_activex ON users(active_at);
 `
 
 type User struct {
-	UserId         string `gorm:"primary_key"`
-	IdentityNumber int64  `gorm:"type:bigint;default:'';not null"`
-	FullName       string `gorm:"type:varchar(512);default:'';not null"`
-	AccessToken    string `gorm:"type:varchar(512);default:'';not null"`
-	AvatarURL      string `gorm:"type:varchar(1024);default:'';not null"`
-	TraceId        string `gorm:"type:varchar(36);default:'';not null"`
-	State          string `gorm:"type:varchar(128);not null"`
-	ActiveAt       time.Time `gorm:"type:time;default:CURRENT_TIMESTAMP;not null"`
-	SubscribedAt   time.Time `gorm:"type:time;not null"`
-	PayMethod      string `gorm:"type:varchar(512);default:'';not null"`
+	UserId         string
+	IdentityNumber int64
+	FullName       string
+	AccessToken    string
+	AvatarURL      string
+	TraceId        string
+	State          string
+	ActiveAt       time.Time
+	SubscribedAt   time.Time
+	PayMethod      string
 
-	isNew               bool `gorm:"-"`
-	AuthenticationToken string `gorm:"-"`
+	isNew               bool
+	AuthenticationToken string
 }
 
 var usersCols = []string{"user_id", "identity_number", "full_name", "access_token", "avatar_url", "trace_id", "state", "active_at", "subscribed_at", "pay_method"}
