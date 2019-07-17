@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
-	bot "github.com/MixinNetwork/bot-api-go-client"
 	"github.com/MixinNetwork/supergroup.mixin.one/durable"
 	"github.com/MixinNetwork/supergroup.mixin.one/session"
 	"github.com/lib/pq"
+	"github.com/rs/xid"
 )
 
 const invitation_DDL = `
@@ -90,7 +90,7 @@ func (user *User) CreateInvitations(ctx context.Context) ([]*Invitation, error) 
 	} else {
 		var values bytes.Buffer
 		for i := 1; i <= 3; i++ {
-			invitation := &Invitation{InviterID: user.UserId, Code: bot.UuidNewV4().String(), CreatedAt: time.Now()}
+			invitation := &Invitation{InviterID: user.UserId, Code: uniqueInvitationCode(), CreatedAt: time.Now()}
 			if i > 1 {
 				values.WriteString(",")
 			}
@@ -155,4 +155,9 @@ func findInvitationByCode(ctx context.Context, tx *sql.Tx, code string) (*Invita
 		return nil, nil
 	}
 	return invitation, err
+}
+
+func uniqueInvitationCode() string {
+	guid := xid.New()
+	return guid.String()
 }
