@@ -44,6 +44,8 @@ func Authenticate(handler http.Handler) http.Handler {
 			views.RenderErrorResponse(w, r, err)
 		} else if user == nil {
 			handleUnauthorized(handler, w, r)
+		} else if user.State == models.PaymentStateUnverified {
+			handleUnverified(handler, w, r)
 		} else {
 			ctx := context.WithValue(r.Context(), keyCurrentUser, user)
 			handler.ServeHTTP(w, r.WithContext(ctx))
@@ -63,4 +65,8 @@ func handleUnauthorized(handler http.Handler, w http.ResponseWriter, r *http.Req
 	}
 
 	views.RenderErrorResponse(w, r, session.AuthorizationError(r.Context()))
+}
+
+func handleUnverified(handler http.Handler, w http.ResponseWriter, r *http.Request) {
+	views.RenderErrorResponse(w, r, session.UnverifiedError(r.Context()))
 }

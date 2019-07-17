@@ -50,6 +50,11 @@ func AuthorizationError(ctx context.Context) Error {
 	return createError(ctx, http.StatusAccepted, 401, description, nil)
 }
 
+func UnverifiedError(ctx context.Context) Error {
+	description := "Unverified, require invitation code."
+	return createError(ctx, http.StatusAccepted, 403, description, nil)
+}
+
 func ForbiddenError(ctx context.Context) Error {
 	description := http.StatusText(http.StatusForbidden)
 	return createError(ctx, http.StatusAccepted, http.StatusForbidden, description, nil)
