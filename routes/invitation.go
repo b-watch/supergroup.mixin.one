@@ -12,9 +12,9 @@ type invitationsImpl struct{}
 
 func registerInvitations(router *httptreemux.TreeMux) {
 	impl := &invitationsImpl{}
-	router.GET("/invitation_codes", impl.index)
-	router.POST("/invitation_codes", impl.create)
-	router.PUT("/invitation_codes/:code", impl.apply)
+	router.GET("/invitations", impl.index)
+	router.POST("/invitations", impl.create)
+	router.PUT("/invitations/:code", impl.apply)
 }
 
 func (impl *invitationsImpl) index(w http.ResponseWriter, r *http.Request, params map[string]string) {
