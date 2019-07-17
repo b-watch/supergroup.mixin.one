@@ -27,5 +27,5 @@ require (
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
 	google.golang.org/genproto v0.0.0-20190701230453-710ae3a149df
 	gopkg.in/yaml.v2 v2.2.2
-	mvdan.cc/xurls v1.1.0
+	mvdan.cc/xurls/v2 v2.0.0
 )
