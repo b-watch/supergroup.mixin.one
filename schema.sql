@@ -130,7 +130,6 @@ CREATE TABLE IF NOT EXISTS invitations (
 	code         			VARCHAR(36) PRIMARY KEY,
 	inviter_id        VARCHAR(36) NOT NULL,
 	invitee_id	      VARCHAR(36),
-	is_used       	  BOOLEAN NOT NULL DEFAULT FALSE,
 	created_at       	TIMESTAMP WITH TIME ZONE NOT NULL,
 	used_at        		TIMESTAMP WITH TIME ZONE
 );

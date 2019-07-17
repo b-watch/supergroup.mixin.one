@@ -37,7 +37,7 @@ func buildInvitation(invitation *models.Invitation) InvitationView {
 		Type: 	"Invitation",
 		Code: invitation.Code,
 		Invitee: inviteeView,
-		IsUsed: invitation.IsUsed,
+		IsUsed: invitation.UsedAt.Valid,
 		CreatedAt: invitation.CreatedAt,
 		UsedAt:  invitation.UsedAt,
 	}

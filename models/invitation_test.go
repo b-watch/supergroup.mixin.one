@@ -22,15 +22,18 @@ func TestInvitation(t *testing.T) {
 	invitee, err := createUser(ctx, "accessToken", bot.UuidNewV4().String(), "2", "Invitee1", "http://localhost")
 	assert.Equal(PaymentStateUnverified, invitee.State)
 
-	// inviter should be able to create valid invitation codes
-	invitations, _ := inviter.Invitations(ctx)
+	// paid user should be able to create valid invitation codes
+	invitations, err := inviter.Invitations(ctx)
+	assert.Nil(err)
 	assert.Len(invitations, 0)
-	invitations, _ = inviter.CreateInvitations(ctx)
+	_, err = inviter.CreateInvitations(ctx)
+	assert.Nil(err)
+	invitations, err = inviter.Invitations(ctx)
+	assert.Nil(err)
 	assert.Len(invitations, 3)
-	invitations, _ = inviter.Invitations(ctx)
 	assert.False(invitations[0].UsedAt.Valid)
 
-	// invitee should be able to join group with valid invitation code
+	// unverified user should be able to join group with valid invitation code
 	firstInvitationCode := invitations[0].Code
 	invitation, err := invitee.ApplyInvitation(ctx, firstInvitationCode)
 	assert.Nil(err)
