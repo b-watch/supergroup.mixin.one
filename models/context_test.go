@@ -27,7 +27,7 @@ const (
 	dropDistributedMessagesDDL = `DROP TABLE IF EXISTS distributed_messages;`
 	dropMessagesDDL            = `DROP TABLE IF EXISTS messages;`
 	dropUsersDDL               = `DROP TABLE IF EXISTS users;`
-	dropReferralsDDL           = `DROP TABLE IF EXISTS referrals;`
+	dropInvitationsDDL           = `DROP TABLE IF EXISTS invitations;`
 )
 
 func TestClear(t *testing.T) {
@@ -47,7 +47,7 @@ func teardownTestContext(ctx context.Context) {
 		dropPacketsDDL,
 		dropPropertiesDDL,
 		dropCouponsDDL,
-		dropReferralsDDL,
+		dropInvitationsDDL,
 	}
 	for _, q := range tables {
 		if _, err := db.Exec(q); err != nil {
@@ -77,7 +77,7 @@ func setupTestContext() context.Context {
 		participants_DDL,
 		properties_DDL,
 		coupons_DDL,
-		referral_DDL,
+		invitation_DDL,
 	}
 	for _, q := range tables {
 		if _, err := db.Exec(q); err != nil {

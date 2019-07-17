@@ -30,7 +30,7 @@ func RegisterRoutes(router *httptreemux.TreeMux) {
 	registerMesseages(router)
 	registerProperties(router)
 	registerCoupons(router)
-	registerReferrals(router)
+	registerInvitations(router)
 	registerWechat(router)
 }
 

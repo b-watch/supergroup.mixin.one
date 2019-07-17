@@ -8,7 +8,7 @@ import (
 	"github.com/lib/pq"
 )
 
-type ReferralView struct {
+type InvitationView struct {
 	Type      string 		`json:"type"`
 	Code  		string 		`json:"code"`
 	Invitee  	InviteeView 	`json:"invitee"`
@@ -24,8 +24,8 @@ type InviteeView struct {
 	State					 string `json:"state"`
 }
 
-func buildReferral(referral *models.Referral) ReferralView {
-	invitee := referral.Invitee
+func buildInvitation(invitation *models.Invitation) InvitationView {
+	invitee := invitation.Invitee
 	inviteeView := InviteeView{
 		UserId: invitee.UserId,
 		FullName: invitee.FullName,
@@ -33,28 +33,28 @@ func buildReferral(referral *models.Referral) ReferralView {
 		State: invitee.State,
 	}
 	
-	return ReferralView{
-		Type: 	"Referral",
-		Code: referral.Code,
+	return InvitationView{
+		Type: 	"Invitation",
+		Code: invitation.Code,
 		Invitee: inviteeView,
-		IsUsed: referral.IsUsed,
-		CreatedAt: referral.CreatedAt,
-		UsedAt:  referral.UsedAt,
+		IsUsed: invitation.IsUsed,
+		CreatedAt: invitation.CreatedAt,
+		UsedAt:  invitation.UsedAt,
 	}
 }
 
-func RenderReferral(w http.ResponseWriter, r *http.Request, referral *models.Referral) {
-	if referral != nil {
-		RenderDataResponse(w, r, buildReferral(referral))
+func RenderInvitation(w http.ResponseWriter, r *http.Request, invitation *models.Invitation) {
+	if invitation != nil {
+		RenderDataResponse(w, r, buildInvitation(invitation))
 	} else {
 		RenderBlankResponse(w, r)
 	}
 }
 
-func RenderReferrals(w http.ResponseWriter, r *http.Request, referrals []*models.Referral) {
-	views := make([]ReferralView, len(referrals))
-	for i, referral := range referrals {
-		views[i] = buildReferral(referral)
+func RenderInvitations(w http.ResponseWriter, r *http.Request, invitations []*models.Invitation) {
+	views := make([]InvitationView, len(invitations))
+	for i, invitation := range invitations {
+		views[i] = buildInvitation(invitation)
 	}
 	RenderDataResponse(w, r, views)
 }

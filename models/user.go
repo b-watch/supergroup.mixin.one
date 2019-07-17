@@ -132,7 +132,7 @@ func createUser(ctx context.Context, accessToken, userId, identityNumber, fullNa
 			user.State = PaymentStatePaid
 			user.SubscribedAt = time.Now()
 			user.PayMethod = PayMethodOffer
-		} else if !config.AppConfig.System.ReferralToJoin {
+		} else if !config.AppConfig.System.InviteToJoin {
 			user.State = PaymentStatePending
 		}
 		if config.AppConfig.Service.Environment != "test" {

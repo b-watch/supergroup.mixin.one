@@ -61,7 +61,7 @@ type Config struct {
 		PaymentAssetId           string         `yaml:"payment_asset_id"`
 		PaymentAmount            string         `yaml:"payment_amount"`
 		PayToJoin                bool           `yaml:"pay_to_join"`
-		ReferralToJoin           bool           `yaml:"referral_to_join"`
+		InviteToJoin             bool           `yaml:"invite_to_join"`
 		AutoEstimate             bool           `yaml:"auto_estimate"`
 		AutoEstimateCurrency     string         `yaml:"auto_estimate_currency"`
 		AutoEstimateBase         string         `yaml:"auto_estimate_base"`
