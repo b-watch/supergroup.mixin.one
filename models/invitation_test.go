@@ -33,20 +33,21 @@ func TestInvitation(t *testing.T) {
 	assert.Len(invitations, 3)
 	assert.False(invitations[0].UsedAt.Valid)
 
-	// unverified user should be able to join group with valid invitation code
 	firstInvitationCode := invitations[0].Code
-	invitation, err := invitee.ApplyInvitation(ctx, firstInvitationCode)
+
+	// already joined member can't use invitation
+	invitation, err := inviter.ApplyInvitation(ctx, firstInvitationCode)
+	assert.NotNil(err)
+	assert.Nil(invitation)
+
+	// unverified user should be able to join group with valid invitation code
+	invitation, err = invitee.ApplyInvitation(ctx, firstInvitationCode)
 	assert.Nil(err)
 	invitee, err = FindUser(ctx, invitee.UserId)
 	assert.Equal(PaymentStatePending, invitee.State)
-	assert.True(invitation.UsedAt.Valid)
 	invitations, _ = inviter.Invitations(ctx)
-	assert.Len(invitations, 2)
-	
-	// already joined member can't use invitation
-	invitation, err = invitee.ApplyInvitation(ctx, invitations[0].Code)
-	assert.NotNil(err)
-	assert.Nil(invitation)
+	assert.Len(invitations, 3)
+	assert.True(invitations[0].UsedAt.Valid)
 
 	// invitee can't join with a used invitation code
 	invitee2, err := createUser(ctx, "accessToken", bot.UuidNewV4().String(), "3", "Invitee2", "http://localhost")

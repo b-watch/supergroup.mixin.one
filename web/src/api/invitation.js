@@ -5,8 +5,8 @@ const Invitation = {
     return await api.get('/invitations', {})
   },
 
-  create: async function (params) {
-    return await api.post('/invitations', params, {})
+  create: async function () {
+    return await api.post('/invitations', {}, {})
   },
 
   apply: async function (code) {

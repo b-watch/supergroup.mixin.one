@@ -26,13 +26,15 @@ CREATE TABLE IF NOT EXISTS invitations (
 CREATE INDEX IF NOT EXISTS invitations_inviterx ON invitations(inviter_id);
 `
 
+const invitationGroupSize = 3
+
 type Invitation struct {
 	Code      string
 	InviterID string
-	InviteeID string
+	InviteeID sql.NullString
 	CreatedAt time.Time
 	UsedAt    pq.NullTime
-	Invitee   User
+	Invitee   *User
 }
 
 var invitationColumns = []string{"code", "inviter_id", "invitee_id", "created_at", "used_at"}
@@ -53,8 +55,8 @@ func (user *User) Invitations(ctx context.Context) ([]*Invitation, error) {
 	}
 	var invitations []*Invitation
 	err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
-		query := fmt.Sprintf("SELECT %s FROM invitations WHERE inviter_id = $1 AND used_at IS NULL", strings.Join(invitationColumns, ","))
-		rows, queryErr := tx.QueryContext(ctx, query, user.UserId)
+		query := fmt.Sprintf("SELECT %s FROM invitations WHERE inviter_id = $1 ORDER BY created_at DESC LIMIT $2", strings.Join(invitationColumns, ","))
+		rows, queryErr := tx.QueryContext(ctx, query, user.UserId, invitationGroupSize)
 		if queryErr != nil {
 			return queryErr
 		}
@@ -63,6 +65,13 @@ func (user *User) Invitations(ctx context.Context) ([]*Invitation, error) {
 			invitation, fetchError := invitationFromRow(rows)
 			if fetchError != nil {
 				return fetchError
+			}
+			if inviteeID := invitation.InviteeID; inviteeID.Valid {
+				user, fetchUserErr := FindUser(ctx, inviteeID.String)
+				if fetchUserErr != nil {
+					return fetchUserErr
+				}
+				invitation.Invitee = user
 			}
 			invitations = append(invitations, invitation)
 		}
@@ -89,15 +98,15 @@ func (user *User) CreateInvitations(ctx context.Context) ([]*Invitation, error) 
 		return nil, session.ForbiddenError(ctx)
 	} else {
 		var values bytes.Buffer
-		for i := 1; i <= 3; i++ {
+		for i := 1; i <= invitationGroupSize; i++ {
 			invitation := &Invitation{InviterID: user.UserId, Code: uniqueInvitationCode(), CreatedAt: time.Now()}
 			if i > 1 {
 				values.WriteString(",")
 			}
-			values.WriteString(fmt.Sprintf("('%s', '%s', '%s', '%s')", invitation.Code, invitation.InviterID, invitation.InviteeID, string(pq.FormatTimestamp(invitation.CreatedAt))))
+			values.WriteString(fmt.Sprintf("('%s', '%s', '%s')", invitation.Code, invitation.InviterID, string(pq.FormatTimestamp(invitation.CreatedAt))))
 			invitations = append(invitations, invitation)
 		}
-		query := fmt.Sprintf("INSERT INTO invitations (code,inviter_id,invitee_id,created_at) VALUES %s", values.String())
+		query := fmt.Sprintf("INSERT INTO invitations (code,inviter_id,created_at) VALUES %s", values.String())
 		_, err := session.Database(ctx).ExecContext(ctx, query)
 		if err != nil {
 			return nil, session.TransactionError(ctx, err)
@@ -121,7 +130,7 @@ func (user *User) ApplyInvitation(ctx context.Context, invitationCode string) (*
 			return fmt.Errorf("Invitation Code has already been used")
 		}
 
-		invitation.InviteeID = user.UserId
+		invitation.InviteeID = sql.NullString{String: user.UserId, Valid: true}
 		invitation.UsedAt = pq.NullTime{Time: time.Now(), Valid: true}
 		query := fmt.Sprintf("UPDATE invitations SET (invitee_id,used_at)=($1,$2) WHERE code=$3")
 		_, err = tx.ExecContext(ctx, query, invitation.InviteeID, invitation.UsedAt, invitationCode)
