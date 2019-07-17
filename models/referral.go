@@ -31,9 +31,10 @@ type Referral struct {
 	Code      string
 	InviterID string
 	InviteeID string
-	IsUsed    bool 	
+	IsUsed    bool
 	CreatedAt time.Time
 	UsedAt    pq.NullTime
+	Invitee   User
 }
 
 var referralColumns = []string{"code", "inviter_id", "invitee_id", "is_used", "created_at", "used_at"}
@@ -49,6 +50,9 @@ func referralFromRow(row durable.Row) (*Referral, error) {
 }
 
 func (user *User) Referrals(ctx context.Context) ([]*Referral, error) {
+	if user.State != PaymentStatePaid {
+		return nil, session.ForbiddenError(ctx)
+	}
 	var referrals []*Referral
 	err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
 		query := fmt.Sprintf("SELECT %s FROM referrals WHERE inviter_id = $1 AND is_used = $2", strings.Join(referralColumns, ","))
@@ -76,15 +80,18 @@ func (user *User) Referrals(ctx context.Context) ([]*Referral, error) {
 }
 
 func (user *User) CreateReferrals(ctx context.Context) ([]*Referral, error) {
+	if user.State != PaymentStatePaid {
+		return nil, session.ForbiddenError(ctx)
+	}
 	var referrals []*Referral
 	currentReferrals, err := user.Referrals(ctx)
 	if err != nil {
 		return nil, err
-	} else if referralCount:= len(currentReferrals); referralCount > 0 {
-		return nil, session.TransactionError(ctx, fmt.Errorf("There are %d unused codes, can't create new one", referralCount))
+	} else if referralCount := len(currentReferrals); referralCount > 0 {
+		return nil, session.ForbiddenError(ctx)
 	} else {
 		var values bytes.Buffer
-		for i := 1;  i<=3; i++ {
+		for i := 1; i <= 3; i++ {
 			referral := &Referral{InviterID: user.UserId, Code: bot.UuidNewV4().String(), CreatedAt: time.Now(), IsUsed: false}
 			if i > 1 {
 				values.WriteString(",")
@@ -120,13 +127,13 @@ func (user *User) ApplyReferral(ctx context.Context, referralCode string) (*Refe
 		referral.IsUsed = true
 		referral.UsedAt = pq.NullTime{Time: time.Now(), Valid: true}
 		query := fmt.Sprintf("UPDATE referrals SET (invitee_id,is_used,used_at)=($1,$2,$3) WHERE code=$4")
-		_, err = tx.ExecContext(ctx, query, referral.InviteeID, referral.IsUsed, referral.UsedAt, referralCode) 
+		_, err = tx.ExecContext(ctx, query, referral.InviteeID, referral.IsUsed, referral.UsedAt, referralCode)
 		if err != nil {
 			return err
 		}
 
 		query = fmt.Sprintf("UPDATE users SET state=$1 WHERE user_id=$2")
-		_, err = tx.ExecContext(ctx, query, PaymentStatePending, user.UserId) 
+		_, err = tx.ExecContext(ctx, query, PaymentStatePending, user.UserId)
 		if err != nil {
 			return err
 		}
@@ -139,7 +146,7 @@ func (user *User) ApplyReferral(ctx context.Context, referralCode string) (*Refe
 		}
 		return nil, session.TransactionError(ctx, err)
 	}
-	
+
 	return referral, nil
 }
 

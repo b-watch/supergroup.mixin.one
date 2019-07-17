@@ -21,9 +21,9 @@ import (
 )
 
 const (
-	PaymentStatePending 		= "pending"
-	PaymentStatePaid    		= "paid"
-	PaymentStateUnverified	= "unverified"
+	PaymentStatePending    = "pending"
+	PaymentStatePaid       = "paid"
+	PaymentStateUnverified = "unverified"
 
 	PayMethodMixin  = "mixin"
 	PayMethodWechat = "wechat"

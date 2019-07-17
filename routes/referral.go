@@ -19,28 +19,28 @@ func registerReferrals(router *httptreemux.TreeMux) {
 
 func (impl *referralsImpl) index(w http.ResponseWriter, r *http.Request, params map[string]string) {
 	user := middlewares.CurrentUser(r)
-	if referrals, err := user.Referrals(); err != nil {
+	if referrals, err := user.Referrals(r.Context()); err != nil {
 		views.RenderErrorResponse(w, r, err)
 	} else {
-		views.RenderReferralCodes(w, r, referrals)
+		views.RenderReferrals(w, r, referrals)
 	}
 }
 
 func (impl *referralsImpl) create(w http.ResponseWriter, r *http.Request, params map[string]string) {
 	user := middlewares.CurrentUser(r)
-	referrals, err := user.CreateReferrals(); err != nil {
+	if referrals, err := user.CreateReferrals(r.Context()); err != nil {
 		views.RenderErrorResponse(w, r, err)
 	} else {
-		views.RenderReferralCodes(w, r, referrals)
+		views.RenderReferrals(w, r, referrals)
 	}
 }
 
 func (impl *referralsImpl) apply(w http.ResponseWriter, r *http.Request, params map[string]string) {
 	// update referral code status if code exists and unused
 	user := middlewares.CurrentUser(r)
-	referral, err := user.ApplyReferral(params["code"]); err != nil {
+	if referral, err := user.ApplyReferral(r.Context(), params["code"]); err != nil {
 		views.RenderErrorResponse(w, r, err)
 	} else {
-		views.RenderReferralCodes(w, r, referral)
+		views.RenderReferral(w, r, referral)
 	}
 }
