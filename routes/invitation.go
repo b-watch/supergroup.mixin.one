@@ -23,10 +23,10 @@ func (impl *invitationsImpl) index(w http.ResponseWriter, r *http.Request, param
 	var err error
 	var invitations []*models.Invitation
 	keys, ok := r.URL.Query()["history"]
-	if !ok || len(keys[0]) < 1 {
-		invitations, err = user.Invitations(r.Context())
-	} else if key := keys[0]; key == "true" {
+	if ok && keys[0] == "true" {
 		invitations, err = user.InvitationsHistory(r.Context())
+	} else {
+		invitations, err = user.Invitations(r.Context())
 	}
 	if err != nil {
 		views.RenderErrorResponse(w, r, err)
