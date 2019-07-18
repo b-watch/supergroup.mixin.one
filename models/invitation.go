@@ -50,33 +50,65 @@ func invitationFromRow(row durable.Row) (*Invitation, error) {
 }
 
 func (user *User) Invitations(ctx context.Context) ([]*Invitation, error) {
+	return user.invitations(ctx, false)
+}
+
+func (user *User) InvitationsHistory(ctx context.Context) ([]*Invitation, error) {
+	return user.invitations(ctx, true)
+}
+
+func (user *User) invitations(ctx context.Context, historyFlag bool) ([]*Invitation, error) {
 	if user.State != PaymentStatePaid {
 		return nil, session.ForbiddenError(ctx)
 	}
 	var invitations []*Invitation
 	err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
-		query := fmt.Sprintf("SELECT %s FROM invitations WHERE inviter_id = $1 ORDER BY created_at DESC LIMIT $2", strings.Join(invitationColumns, ","))
-		rows, queryErr := tx.QueryContext(ctx, query, user.UserId, invitationGroupSize)
-		if queryErr != nil {
-			return queryErr
+		var (
+			err error
+			rows *sql.Rows
+			query string
+		)
+		if historyFlag {
+			query = fmt.Sprintf("SELECT %s FROM invitations WHERE inviter_id = $1 AND used_at IS NOT NULL ORDER BY created_at DESC", strings.Join(invitationColumns, ","))
+			rows, err = tx.QueryContext(ctx, query, user.UserId)
+		} else {
+			query = fmt.Sprintf("SELECT %s FROM invitations WHERE inviter_id = $1 ORDER BY created_at DESC LIMIT $2", strings.Join(invitationColumns, ","))
+			rows, err = tx.QueryContext(ctx, query, user.UserId, invitationGroupSize)
 		}
+		if err != nil {
+			return err
+		}
+
+		var userIDs []string
 		defer rows.Close()
 		for rows.Next() {
-			invitation, fetchError := invitationFromRow(rows)
-			if fetchError != nil {
-				return fetchError
+			invitation, err := invitationFromRow(rows)
+			if err != nil {
+				return err
 			}
 			if inviteeID := invitation.InviteeID; inviteeID.Valid {
-				user, fetchUserErr := FindUser(ctx, inviteeID.String)
-				if fetchUserErr != nil {
-					return fetchUserErr
-				}
-				invitation.Invitee = user
+				userIDs = append(userIDs, inviteeID.String)
 			}
 			invitations = append(invitations, invitation)
 		}
+
+		users, err := findUsersByIds(ctx, userIDs)
+		if err != nil {
+			return err
+		}
+		userMap := make(map[string]*User)
+		for _, user := range users {
+			userMap[user.UserId] = user
+		}
+
+		for _, invitation := range invitations {
+			if inviteeID := invitation.InviteeID; inviteeID.Valid {
+				invitation.Invitee = userMap[inviteeID.String]
+			}
+		}	
 		return nil
 	})
+
 	if err != nil {
 		if sessionErr, ok := err.(session.Error); ok {
 			return nil, sessionErr
@@ -90,29 +122,38 @@ func (user *User) CreateInvitations(ctx context.Context) ([]*Invitation, error) 
 	if user.State != PaymentStatePaid {
 		return nil, session.ForbiddenError(ctx)
 	}
-	var invitations []*Invitation
 	currentInvitations, err := user.Invitations(ctx)
 	if err != nil {
 		return nil, err
-	} else if invitationCount := len(currentInvitations); invitationCount > 0 {
-		return nil, session.ForbiddenError(ctx)
-	} else {
-		var values bytes.Buffer
-		for i := 1; i <= invitationGroupSize; i++ {
-			invitation := &Invitation{InviterID: user.UserId, Code: uniqueInvitationCode(), CreatedAt: time.Now()}
-			if i > 1 {
-				values.WriteString(",")
+	} else if len(currentInvitations) > 0 {
+		for _, invitation := range currentInvitations {
+			if invitee := invitation.Invitee; invitee != nil {
+				if invitee.State != PaymentStatePaid {
+					return nil, session.ForbiddenError(ctx)
+				}
+			} else {
+				return nil, session.ForbiddenError(ctx)
 			}
-			values.WriteString(fmt.Sprintf("('%s', '%s', '%s')", invitation.Code, invitation.InviterID, string(pq.FormatTimestamp(invitation.CreatedAt))))
-			invitations = append(invitations, invitation)
 		}
-		query := fmt.Sprintf("INSERT INTO invitations (code,inviter_id,created_at) VALUES %s", values.String())
-		_, err := session.Database(ctx).ExecContext(ctx, query)
-		if err != nil {
-			return nil, session.TransactionError(ctx, err)
-		}
-		return invitations, nil
 	}
+
+	var invitations []*Invitation
+	var values bytes.Buffer
+	createTime := time.Now()
+	for i := 1; i <= invitationGroupSize; i++ {
+		invitation := &Invitation{InviterID: user.UserId, Code: uniqueInvitationCode(), CreatedAt: createTime}
+		if i > 1 {
+			values.WriteString(",")
+		}
+		values.WriteString(fmt.Sprintf("('%s', '%s', '%s')", invitation.Code, invitation.InviterID, string(pq.FormatTimestamp(invitation.CreatedAt))))
+		invitations = append(invitations, invitation)
+	}
+	query := fmt.Sprintf("INSERT INTO invitations (code,inviter_id,created_at) VALUES %s", values.String())
+	_, err = session.Database(ctx).ExecContext(ctx, query)
+	if err != nil {
+		return nil, session.TransactionError(ctx, err)
+	}
+	return invitations, nil
 }
 
 func (user *User) ApplyInvitation(ctx context.Context, invitationCode string) (*Invitation, error) {
@@ -156,6 +197,28 @@ func (user *User) ApplyInvitation(ctx context.Context, invitationCode string) (*
 	return invitation, nil
 }
 
+func (user *User) CleanUnpaidUser(ctx context.Context)  (int, error) {
+	var pendingUserIDs []string
+	var invitationCodes []string
+	currentInvitations, err := user.Invitations(ctx)
+	if err != nil {
+		return 0, err
+	} else if len(currentInvitations) > 0 {
+		for _, invitation := range currentInvitations {
+			if invitee := invitation.Invitee; invitee != nil {
+				if invitee.State != PaymentStatePaid {
+					pendingUserIDs = append(pendingUserIDs, invitee.UserId)
+					invitationCodes = append(invitationCodes, invitation.Code)
+				}
+			}
+		}
+	}
+
+	// delete pendingUserIDs
+	// delete invitationCodes
+	return len(pendingUserIDs), nil
+}
+
 func findInvitationByCode(ctx context.Context, tx *sql.Tx, code string) (*Invitation, error) {
 	query := fmt.Sprintf("SELECT %s FROM invitations WHERE code = $1 FOR UPDATE", strings.Join(invitationColumns, ","))
 	row := tx.QueryRowContext(ctx, query, code)
@@ -170,3 +233,4 @@ func uniqueInvitationCode() string {
 	guid := xid.New()
 	return guid.String()
 }
+

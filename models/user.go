@@ -493,6 +493,25 @@ func findUsersByKeywords(ctx context.Context, keywords string) ([]*User, error) 
 	return users, nil
 }
 
+func findUsersByIds(ctx context.Context, ids []string) ([]*User, error) {
+	query := fmt.Sprintf("SELECT %s FROM users WHERE user_id in ($1)", strings.Join(usersCols, ","))
+	rows, err := session.Database(ctx).QueryContext(ctx, query, strings.Join(ids, ","))
+	if err != nil {
+		return nil, session.TransactionError(ctx, err)
+	}
+	defer rows.Close()
+
+	var users []*User
+	for rows.Next() {
+		p, err := userFromRow(rows)
+		if err != nil {
+			return nil, session.TransactionError(ctx, err)
+		}
+		users = append(users, p)
+	}
+	return users, nil
+}
+
 func findUserById(ctx context.Context, tx *sql.Tx, userId string) (*User, error) {
 	query := fmt.Sprintf("SELECT %s FROM users WHERE user_id=$1", strings.Join(usersCols, ","))
 	row := tx.QueryRowContext(ctx, query, userId)

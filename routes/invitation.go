@@ -5,6 +5,7 @@ import (
 
 	"github.com/MixinNetwork/supergroup.mixin.one/middlewares"
 	"github.com/MixinNetwork/supergroup.mixin.one/views"
+	"github.com/MixinNetwork/supergroup.mixin.one/models"
 	"github.com/dimfeld/httptreemux"
 )
 
@@ -19,7 +20,14 @@ func registerInvitations(router *httptreemux.TreeMux) {
 
 func (impl *invitationsImpl) index(w http.ResponseWriter, r *http.Request, params map[string]string) {
 	user := middlewares.CurrentUser(r)
-	if invitations, err := user.Invitations(r.Context()); err != nil {
+	var err error
+	var invitations []*models.Invitation
+	if params["history"] == "true" {
+		invitations, err = user.InvitationsHistory(r.Context())
+	} else {
+		invitations, err = user.Invitations(r.Context())
+	}
+	if err != nil {
 		views.RenderErrorResponse(w, r, err)
 	} else {
 		views.RenderInvitations(w, r, invitations)

@@ -59,4 +59,10 @@ func TestInvitation(t *testing.T) {
 	invitations, err = inviter.CreateInvitations(ctx)
 	assert.NotNil(err)
 	assert.Nil(invitations)
+
+	// inviter should be able to list all users which invite by itself
+	invitations, _ = inviter.InvitationsHistory(ctx)
+	for _, invitation = range invitations {
+		assert.NotNil(invitation.Invitee)
+	}
 }
