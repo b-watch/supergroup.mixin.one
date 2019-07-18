@@ -22,10 +22,11 @@ func (impl *invitationsImpl) index(w http.ResponseWriter, r *http.Request, param
 	user := middlewares.CurrentUser(r)
 	var err error
 	var invitations []*models.Invitation
-	if params["history"] == "true" {
-		invitations, err = user.InvitationsHistory(r.Context())
-	} else {
+	keys, ok := r.URL.Query()["history"]
+	if !ok || len(keys[0]) < 1 {
 		invitations, err = user.Invitations(r.Context())
+	} else if key := keys[0]; key == "true" {
+		invitations, err = user.InvitationsHistory(r.Context())
 	}
 	if err != nil {
 		views.RenderErrorResponse(w, r, err)
