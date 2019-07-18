@@ -13,7 +13,7 @@ type InvitationView struct {
 	Invitee  	*InviteeView 	`json:"invitee"`
 	IsUsed   	bool 			`json:"is_used"`
 	CreatedAt *time.Time `json:"created_at"`
-	UsedAt    *time.Time `json:"used_at`
+	UsedAt    *time.Time `json:"used_at"`
 }
 
 type InviteeView struct {
