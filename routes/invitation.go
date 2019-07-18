@@ -45,7 +45,6 @@ func (impl *invitationsImpl) create(w http.ResponseWriter, r *http.Request, para
 }
 
 func (impl *invitationsImpl) apply(w http.ResponseWriter, r *http.Request, params map[string]string) {
-	// update invitation code status if code exists and unused
 	user := middlewares.CurrentUser(r)
 	if invitation, err := user.ApplyInvitation(r.Context(), params["code"]); err != nil {
 		views.RenderErrorResponse(w, r, err)
