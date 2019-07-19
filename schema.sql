@@ -141,7 +141,7 @@ CREATE TABLE currency_rates (
     symbol            VARCHAR(36) PRIMARY KEY,
     price_usd         VARCHAR(32) NOT NULL,
     price_cny         VARCHAR(32) NOT NULL,
-    created_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+    created_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
