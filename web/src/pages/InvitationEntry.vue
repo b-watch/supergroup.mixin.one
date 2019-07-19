@@ -3,7 +3,7 @@
     <h2>{{this.$t("invitation.welcome")}}</h2>
     <div class="action">
       <van-field v-model="code" :placeholder="placeholder" autosize />
-      <van-button class="button" type="info" size="small" @click="apply">{{this.$t("invitation.verify")}}</van-button>
+      <van-button class="button" type="info" @click="apply">{{this.$t("invitation.verify")}}</van-button>
     </div>
   </div>
 </template>
@@ -64,6 +64,12 @@ h2 {
 .button {
   margin-top: 2rem;
   width: 100%;
+  border-radius: 4px;
+  height: 3rem;
+}
+
+.van-cell.van-field {
+  padding: 0.5rem;
   border-radius: 4px;
 }
 </style>
