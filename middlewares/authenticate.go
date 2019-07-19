@@ -20,6 +20,7 @@ var whitelist = [][2]string{
 	{"GET", "^/wechat"},
 	{"POST", "^/wechat"},
 	{"POST", "^/auth$"},
+	{"GET", "^/shortcuts$"},
 }
 
 var unverifiedWhitelist = [][2]string{

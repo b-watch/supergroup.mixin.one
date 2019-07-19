@@ -8,5 +8,7 @@ export default {
   fox: require('./fox').default,
   coupon: require('./coupon').default,
   invitation: require('./invitation').default,
+  plugin: require('./plugin').default,
+  payment: require('./payment').default,
   net: require('./net').default,
 }

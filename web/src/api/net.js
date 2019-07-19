@@ -18,6 +18,16 @@ let HANDLERS = {
   500: []
 }
 
+instance.interceptors.response.use((response) => {
+  return response;
+}, function (error) {
+  if (error && error.response && 302 === error.response.status) {
+    console.log(err)
+  } else {
+    return Promise.reject(error);
+  }
+})
+
 const API = {
   /**
    * 配置参数，设置 headers，等信息
@@ -86,7 +96,7 @@ const API = {
       // @TODO
       console.log(response, message)
       if (!response) {
-        let err = {code: 'network_error', message: 'network error'}
+        let err = {code: 'network_error', message: message || 'network error'}
         return Promise.reject(err)
       }
     })

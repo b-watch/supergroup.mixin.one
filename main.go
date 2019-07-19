@@ -12,6 +12,7 @@ import (
 
 	"github.com/MixinNetwork/supergroup.mixin.one/config"
 	"github.com/MixinNetwork/supergroup.mixin.one/durable"
+	"github.com/MixinNetwork/supergroup.mixin.one/plugin"
 	"github.com/MixinNetwork/supergroup.mixin.one/services"
 )
 
@@ -41,10 +42,15 @@ func main() {
 		log.Panicln(err)
 	}
 
+	plugin.LoadPlugins(database)
+
 	switch *service {
 	case "http":
 		if config.AppConfig.System.AccpetWeChatPayment {
 			go services.StartWxPaymentWatch(*service, database)
+		}
+		if config.AppConfig.System.AutoEstimate {
+			go services.StartCurrencySync(*service, database)
 		}
 		err := StartServer(database)
 		if err != nil {

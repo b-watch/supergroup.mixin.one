@@ -32,6 +32,8 @@ func RegisterRoutes(router *httptreemux.TreeMux) {
 	registerCoupons(router)
 	registerInvitations(router)
 	registerWechat(router)
+	registerPluginRoutes(router)
+	registerPayment(router)
 }
 
 func root(w http.ResponseWriter, r *http.Request, params map[string]string) {

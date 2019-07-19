@@ -354,10 +354,21 @@ func handleTransfer(ctx context.Context, mc *MessageContext, transfer TransferVi
 				return user.Payment(ctx)
 			}
 		}
+	} else if order, err := models.GetOrder(ctx, transfer.TraceId); err == nil {
+		return handleOrderPayment(ctx, mc, transfer, order)
 	} else if packet, err := models.PayPacket(ctx, id.String(), transfer.AssetId, transfer.Amount); err != nil || packet == nil {
 		return err
 	} else if packet.State == models.PacketStatePaid {
 		return sendAppCard(ctx, mc, packet)
+	}
+	return nil
+}
+
+func handleOrderPayment(ctx context.Context, mc *MessageContext, transfer TransferView, order *models.Order) error {
+	if order.Channel == models.PayMethodMixin && order.Amount == transfer.Amount && order.AssetId == transfer.AssetId {
+		_, err := models.MarkOrderAsPaidByOrderId(ctx, order.OrderId)
+		fmt.Println(err)
+		return err
 	}
 	return nil
 }
