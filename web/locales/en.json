@@ -118,5 +118,27 @@
     "copy": "Copy",
     "state_available": "Available",
     "state_used": "Used by {name}"
+  },
+  "invitation": {
+    "details": "Details",
+    "mine": "Invitation list",
+    "welcome": "Welcome to Xiaolai Course",
+    "verify": "Verify",
+    "code": "Codes",
+    "apply": "Request",
+    "invitees": "Invitees",
+    "rule1": "* Pending: code is used but unverified",
+    "rule2": "* You can apply new invitation codes after all existed codes had been used and verified",
+    "used_friends": "Invited friends: ",
+    "pending_friends": "Invitation pending: ",
+    "status_used": "Used",
+    "status_unused": "Unused",
+    "status_pending": "Pending",
+    "used": "used",
+    "click_copy": "Click to copy",
+    "used_at": "Join time",
+    "code_available": "Code is available",
+    "code_unavailable": "Code is unavailable",
+    "copied": "Copied"
   }
 }

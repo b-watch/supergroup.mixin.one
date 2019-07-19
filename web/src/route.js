@@ -13,6 +13,8 @@ import Messages from './pages/Messages'
 import WxPay from './pages/WxPay'
 import WxPayDone from './pages/WxPayDone'
 import { ROUTER_MODE } from '@/constants.js'
+import InvitationDetails from './pages/InvitationDetails'
+import InvitationEntry from './pages/InvitationEntry'
 
 Vue.use(VueRouter)
 
@@ -30,6 +32,8 @@ const routes = [
   // special route for wechat, no auth required.
   { path: '/wxpay', component: WxPay },
   { path: '/wxpay/done', component: WxPayDone },
+  { path: '/invitation/details', component: InvitationDetails},
+  { path: '/invitation/entry', component: InvitationEntry},
 ]
 
 const router = new VueRouter({

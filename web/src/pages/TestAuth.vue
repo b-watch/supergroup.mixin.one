@@ -13,7 +13,7 @@ export default {
 
       if (resp.data.authentication_token) {
         if (resp.data.state == 'unverified') {
-          this.$router.push('/invitations')
+          this.$router.push('/invitation/entry')
         } else {
           this.$router.push('/')
         }

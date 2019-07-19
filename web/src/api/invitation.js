@@ -1,8 +1,8 @@
 const api = require('./net').default
 
 const Invitation = {
-  index: async function () {
-    return await api.get('/invitations', {})
+  index: async function (isHistory) {
+    return await api.get(`/invitations?history=${isHistory}`, {})
   },
 
   create: async function () {
