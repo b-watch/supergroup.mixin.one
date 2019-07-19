@@ -78,7 +78,7 @@ func handleUnauthorized(handler http.Handler, w http.ResponseWriter, r *http.Req
 }
 
 func handleUnverified(handler http.Handler, w http.ResponseWriter, r *http.Request) {
-	for _, pp := range unverifiedWhitelist {
+	for _, pp := range whitelist {
 		if pp[0] != r.Method {
 			continue
 		}
