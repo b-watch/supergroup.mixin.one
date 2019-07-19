@@ -125,3 +125,13 @@ CREATE TABLE IF NOT EXISTS coupons (
 CREATE UNIQUE INDEX IF NOT EXISTS coupons_codex ON coupons(code);
 CREATE INDEX IF NOT EXISTS coupons_occupiedx ON coupons(occupied_by);
 CREATE INDEX IF NOT EXISTS coupons_userx ON coupons(user_id);
+
+CREATE TABLE IF NOT EXISTS invitations (
+	code         			VARCHAR(36) PRIMARY KEY,
+	inviter_id        VARCHAR(36) NOT NULL,
+	invitee_id	      VARCHAR(36),
+	created_at       	TIMESTAMP WITH TIME ZONE NOT NULL,
+	used_at        		TIMESTAMP WITH TIME ZONE
+);
+
+CREATE INDEX IF NOT EXISTS invitations_inviterx ON invitations(inviter_id);

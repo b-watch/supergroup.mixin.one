@@ -22,6 +22,18 @@ var whitelist = [][2]string{
 	{"POST", "^/auth$"},
 }
 
+var unverifiedWhitelist = [][2]string{
+	{"GET", "^/$"},
+	{"GET", "^/_hc$"},
+	{"GET", "^/users"},
+	{"GET", "^/config$"},
+	{"GET", "^/amount$"},
+	{"GET", "^/wechat"},
+	{"POST", "^/wechat"},
+	{"POST", "^/auth$"},
+	{"PUT", "^/invitations/.*$"},
+}
+
 type contextValueKey struct{ int }
 
 var keyCurrentUser = contextValueKey{1000}
@@ -44,8 +56,9 @@ func Authenticate(handler http.Handler) http.Handler {
 			views.RenderErrorResponse(w, r, err)
 		} else if user == nil {
 			handleUnauthorized(handler, w, r)
+		} else if ctx := context.WithValue(r.Context(), keyCurrentUser, user); user.State == models.PaymentStateUnverified {
+			handleUnverified(handler, w, r.WithContext(ctx))
 		} else {
-			ctx := context.WithValue(r.Context(), keyCurrentUser, user)
 			handler.ServeHTTP(w, r.WithContext(ctx))
 		}
 	})
@@ -63,4 +76,18 @@ func handleUnauthorized(handler http.Handler, w http.ResponseWriter, r *http.Req
 	}
 
 	views.RenderErrorResponse(w, r, session.AuthorizationError(r.Context()))
+}
+
+func handleUnverified(handler http.Handler, w http.ResponseWriter, r *http.Request) {
+	for _, pp := range unverifiedWhitelist {
+		if pp[0] != r.Method {
+			continue
+		}
+		if matched, err := regexp.MatchString(pp[1], strings.ToLower(r.URL.Path)); err == nil && matched {
+			handler.ServeHTTP(w, r)
+			return
+		}
+	}
+
+	views.RenderErrorResponse(w, r, session.UnverifiedError(r.Context()))
 }
