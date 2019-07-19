@@ -35,7 +35,7 @@ export default {
       websiteConf: null,
       builtinItems: [
         // builtin
-        { icon: require('../assets/images/luckymoney-circle.png'), label: this.$t('invitation.details'), url: '/invitation/details'},
+        { icon: require('../assets/images/luckymoney-circle.png'), label: this.$t('invitation.entry'), url: '/invitation/details'},
         { icon: require('../assets/images/luckymoney-circle.png'), label: this.$t('home.op_luckycoin'), url: '/packets/prepare' },
         { icon: require('../assets/images/users-circle.png'), label: this.$t('home.op_members'), url: '/members' },
       ],

@@ -120,6 +120,7 @@
     "state_used": "被 {name} 用了"
   },
   "invitation": {
+    "entry": "我的邀请",
     "details": "详情",
     "mine": "我的邀请",
     "welcome": "欢迎加入笑来课堂",

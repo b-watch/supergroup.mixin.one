@@ -120,6 +120,7 @@
     "state_used": "Used by {name}"
   },
   "invitation": {
+    "entry": "Invitations",
     "details": "Details",
     "mine": "Invitation list",
     "welcome": "Welcome to Xiaolai's Course",
