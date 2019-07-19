@@ -20,6 +20,17 @@ var whitelist = [][2]string{
 	{"GET", "^/wechat"},
 	{"POST", "^/wechat"},
 	{"POST", "^/auth$"},
+}
+
+var unverifiedWhitelist = [][2]string{
+	{"GET", "^/$"},
+	{"GET", "^/_hc$"},
+	{"GET", "^/users"},
+	{"GET", "^/config$"},
+	{"GET", "^/amount$"},
+	{"GET", "^/wechat"},
+	{"POST", "^/wechat"},
+	{"POST", "^/auth$"},
 	{"PUT", "^/invitations/.*$"},
 }
 
@@ -68,7 +79,7 @@ func handleUnauthorized(handler http.Handler, w http.ResponseWriter, r *http.Req
 }
 
 func handleUnverified(handler http.Handler, w http.ResponseWriter, r *http.Request) {
-	for _, pp := range whitelist {
+	for _, pp := range unverifiedWhitelist {
 		if pp[0] != r.Method {
 			continue
 		}

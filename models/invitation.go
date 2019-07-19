@@ -64,8 +64,8 @@ func (user *User) invitations(ctx context.Context, historyFlag bool) ([]*Invitat
 	var invitations []*Invitation
 	err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
 		var (
-			err error
-			rows *sql.Rows
+			err   error
+			rows  *sql.Rows
 			query string
 		)
 		if historyFlag {
@@ -92,20 +92,22 @@ func (user *User) invitations(ctx context.Context, historyFlag bool) ([]*Invitat
 			invitations = append(invitations, invitation)
 		}
 
-		users, err := findUsersByIds(ctx, userIDs)
-		if err != nil {
-			return err
-		}
-		userMap := make(map[string]*User)
-		for _, user := range users {
-			userMap[user.UserId] = user
+		if len(userIDs) > 0 {
+			users, err := findUsersByIds(ctx, tx, userIDs)
+			if err != nil {
+				return err
+			}
+			userMap := make(map[string]*User)
+			for _, user := range users {
+				userMap[user.UserId] = user
+			}
+			for _, invitation := range invitations {
+				if inviteeID := invitation.InviteeID; inviteeID.Valid {
+					invitation.Invitee = userMap[inviteeID.String]
+				}
+			}
 		}
 
-		for _, invitation := range invitations {
-			if inviteeID := invitation.InviteeID; inviteeID.Valid {
-				invitation.Invitee = userMap[inviteeID.String]
-			}
-		}	
 		return nil
 	})
 
@@ -197,7 +199,7 @@ func (user *User) ApplyInvitation(ctx context.Context, invitationCode string) (*
 	return invitation, nil
 }
 
-func (user *User) CleanUnpaidUser(ctx context.Context)  (int, error) {
+func (user *User) CleanUnpaidUser(ctx context.Context) (int, error) {
 	var pendingUserIDs []string
 	var invitationCodes []string
 	currentInvitations, err := user.Invitations(ctx)
@@ -214,8 +216,23 @@ func (user *User) CleanUnpaidUser(ctx context.Context)  (int, error) {
 		}
 	}
 
-	// delete pendingUserIDs
-	// delete invitationCodes
+	err = session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
+		if err = deleteUsersByIds(ctx, tx, pendingUserIDs); err != nil {
+			return err
+		}
+		if err = deleteInvitationsByCodes(ctx, tx, invitationCodes); err != nil {
+			return err
+		}
+		return nil
+	})
+
+	if err != nil {
+		if sessionErr, ok := err.(session.Error); ok {
+			return 0, sessionErr
+		}
+		return 0, session.TransactionError(ctx, err)
+	}
+
 	return len(pendingUserIDs), nil
 }
 
@@ -229,8 +246,19 @@ func findInvitationByCode(ctx context.Context, tx *sql.Tx, code string) (*Invita
 	return invitation, err
 }
 
+func deleteInvitationsByCodes(ctx context.Context, tx *sql.Tx, codes []string) error {
+	for i, code := range codes {
+		codes[i] = fmt.Sprintf("'%s'", code)
+	}
+	query := fmt.Sprintf("DELETE FROM invitations WHERE code IN (%s)", strings.Join(codes, ","))
+	_, err := tx.QueryContext(ctx, query)
+	if err != nil {
+		return session.TransactionError(ctx, err)
+	}
+	return nil
+}
+
 func uniqueInvitationCode() string {
 	guid := xid.New()
 	return guid.String()
 }
-

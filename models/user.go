@@ -493,9 +493,13 @@ func findUsersByKeywords(ctx context.Context, keywords string) ([]*User, error) 
 	return users, nil
 }
 
-func findUsersByIds(ctx context.Context, ids []string) ([]*User, error) {
-	query := fmt.Sprintf("SELECT %s FROM users WHERE user_id in ($1)", strings.Join(usersCols, ","))
-	rows, err := session.Database(ctx).QueryContext(ctx, query, strings.Join(ids, ","))
+func findUsersByIds(ctx context.Context, tx *sql.Tx, ids []string) ([]*User, error) {
+	for i, id := range ids {
+		ids[i] = fmt.Sprintf("'%s'", id)
+	}
+	query := fmt.Sprintf("SELECT %s FROM users WHERE user_id in (%s)", strings.Join(usersCols, ","), strings.Join(ids, ","))
+	fmt.Printf(query)
+	rows, err := tx.QueryContext(ctx, query)
 	if err != nil {
 		return nil, session.TransactionError(ctx, err)
 	}
@@ -510,6 +514,18 @@ func findUsersByIds(ctx context.Context, ids []string) ([]*User, error) {
 		users = append(users, p)
 	}
 	return users, nil
+}
+
+func deleteUsersByIds(ctx context.Context, tx *sql.Tx, ids []string) error {
+	for i, id := range ids {
+		ids[i] = fmt.Sprintf("'%s'", id)
+	}
+	query := fmt.Sprintf("DELETE FROM users WHERE user_id in (%s)", strings.Join(ids, ","))
+	_, err := tx.QueryContext(ctx, query)
+	if err != nil {
+		return session.TransactionError(ctx, err)
+	}
+	return nil
 }
 
 func findUserById(ctx context.Context, tx *sql.Tx, userId string) (*User, error) {

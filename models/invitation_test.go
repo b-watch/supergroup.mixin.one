@@ -65,4 +65,12 @@ func TestInvitation(t *testing.T) {
 	for _, invitation = range invitations {
 		assert.NotNil(invitation.Invitee)
 	}
+
+	// unpaid user will removed
+	invitations, err = inviter.Invitations(ctx)
+	invitation, err = invitee2.ApplyInvitation(ctx, invitations[1].Code)
+	assert.Nil(err)
+	assert.NotNil(invitation)
+	removedCount, err := inviter.CleanUnpaidUser(ctx)
+	assert.Equal(2, removedCount)
 }
