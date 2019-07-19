@@ -145,4 +145,4 @@ CREATE TABLE currency_rates (
     updated_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
-CREATE UNIQUE INDEX currency_rates_pkey ON currency_rates(symbol);
+CREATE UNIQUE INDEX IF NOT EXISTS currency_rates_pkey ON currency_rates(symbol);
