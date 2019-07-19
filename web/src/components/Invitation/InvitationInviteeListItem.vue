@@ -8,11 +8,13 @@
       </div>
     </div>
     <div class="code">{{this.$t("invitation.code")}}： {{invitation.code}}</div>
-    <div class="time">{{this.$t("invitation.used_at")}}：{{invitation.used_at}}</div>
+    <div class="time">{{this.$t("invitation.used_at")}}：{{dayjs(invitation.used_at).format('YYYY/MM/DD hh:mm')}}</div>
   </div>
 </template>
 
 <script>
+import dayjs from 'dayjs'
+
 export default {
   name: "InvitationInviteeListItem",
   props: ["invitation"],
