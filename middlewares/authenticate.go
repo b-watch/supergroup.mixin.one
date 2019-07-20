@@ -22,6 +22,7 @@ var whitelist = [][2]string{
 	{"POST", "^/wechat"},
 	{"POST", "^/auth$"},
 	{"GET", "^/shortcuts$"},
+	{"PUT", "^/invitations/"},
 }
 
 var whitelistMutex sync.Mutex
