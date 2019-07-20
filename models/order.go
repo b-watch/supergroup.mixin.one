@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS orders (
 	state            VARCHAR(32) NOT NULL,
 	asset_id         VARCHAR(36) NOT NULL,
 	amount           VARCHAR(128) NOT NULL,
-	channel          VARCHAR(32) NOT NULL,
+	pay_method          VARCHAR(32) NOT NULL,
 	transaction_id   VARCHAR(32) DEFAULT '',
 	created_at       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 	paid_at          TIMESTAMP WITH TIME ZONE
@@ -43,7 +43,7 @@ type Order struct {
 	State         string      `json:"state"`
 	AssetId       string      `json:"asset_id"`
 	Amount        string      `json:"amount"`
-	Channel       string      `json:"channel"`
+	PayMethod     string      `json:"pay_method"`
 	TransactionId string      `json:"transaction_id"`
 	CreatedAt     time.Time   `json:"created_at"`
 	PaidAt        pq.NullTime `json:"paid_at"`
@@ -51,15 +51,15 @@ type Order struct {
 
 const WX_TN_PREFIX = "tn-"
 
-var orderColumns = []string{"order_id", "user_id", "trace_id", "prepay_id", "state", "asset_id", "amount", "channel", "transaction_id", "created_at", "paid_at"}
+var orderColumns = []string{"order_id", "user_id", "trace_id", "prepay_id", "state", "asset_id", "amount", "pay_method", "transaction_id", "created_at", "paid_at"}
 
 func (o *Order) values() []interface{} {
-	return []interface{}{o.OrderId, o.UserId, o.TraceId, o.PrepayId, o.State, o.AssetId, o.Amount, o.Channel, o.TransactionId, o.CreatedAt, o.PaidAt}
+	return []interface{}{o.OrderId, o.UserId, o.TraceId, o.PrepayId, o.State, o.AssetId, o.Amount, o.PayMethod, o.TransactionId, o.CreatedAt, o.PaidAt}
 }
 
 func orderFromRow(row durable.Row) (*Order, error) {
 	var o Order
-	err := row.Scan(&o.OrderId, &o.UserId, &o.TraceId, &o.PrepayId, &o.State, &o.AssetId, &o.Amount, &o.Channel, &o.TransactionId, &o.CreatedAt, &o.PaidAt)
+	err := row.Scan(&o.OrderId, &o.UserId, &o.TraceId, &o.PrepayId, &o.State, &o.AssetId, &o.Amount, &o.PayMethod, &o.TransactionId, &o.CreatedAt, &o.PaidAt)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -149,15 +149,15 @@ func createOrder(ctx context.Context, userId, assetId, amount, state, method str
 		State:         state,
 		AssetId:       assetId,
 		Amount:        amount,
-		Channel:       method,
+		PayMethod:     method,
 		TransactionId: "",
 	}
 
 	// create an order
 	var err error
-	query := "INSERT INTO orders (order_id, user_id, prepay_id, state, asset_id, amount, channel) VALUES ($1, $2, $3, $4, $5, $6, $7)"
+	query := "INSERT INTO orders (order_id, user_id, prepay_id, state, asset_id, amount, pay_method) VALUES ($1, $2, $3, $4, $5, $6, $7)"
 	_, err = session.Database(ctx).ExecContext(ctx, query,
-		order.OrderId, order.UserId, order.PrepayId, order.State, order.AssetId, order.Amount, order.Channel)
+		order.OrderId, order.UserId, order.PrepayId, order.State, order.AssetId, order.Amount, order.PayMethod)
 	if err != nil {
 		return nil, session.TransactionError(ctx, err)
 	}

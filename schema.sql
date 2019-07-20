@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS orders (
   state            VARCHAR(32) NOT NULL,
 	asset_id         VARCHAR(36) NOT NULL,
   amount           VARCHAR(128) NOT NULL,
-  channel          VARCHAR(32) NOT NULL,
+  pay_method       VARCHAR(32) NOT NULL DEFAULT ''
   transaction_id   VARCHAR(32) DEFAULT '',
   created_at       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   paid_at          TIMESTAMP WITH TIME ZONE
