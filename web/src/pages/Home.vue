@@ -111,7 +111,7 @@ export default {
           this.shortcutsGroups = this.addToGroups(conf.data.home_shortcut_groups, false)
         }
         this.GLOBAL.api.plugin.shortcuts().then((resp) => {
-          if (resp.data && resp.data[0] && resp.data[0].items) {
+          if (resp.data && resp.data[0] && resp.data[0].items && resp.data[0].items.length) {
             this.shortcutsGroups = this.addToGroups(resp.data, true)
           }
         })
