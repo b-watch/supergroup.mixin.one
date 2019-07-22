@@ -125,6 +125,7 @@ type ExportedConfig struct {
 	AccpetCouponPayment    bool            `json:"accept_coupon_payment"`
 	HomeWelcomeMessage     string          `json:"home_welcome_message"`
 	HomeShortcutGroups     []ShortcutGroup `json:"home_shortcut_groups"`
+	ServiceName            string          `json:"service_name"`
 }
 
 var AppConfig *Config
@@ -158,5 +159,6 @@ func GetExported() ExportedConfig {
 	exc.AccpetCouponPayment = AppConfig.System.AccpetCouponPayment
 	exc.HomeWelcomeMessage = AppConfig.Appearance.HomeWelcomeMessage
 	exc.HomeShortcutGroups = AppConfig.Appearance.HomeShortcutGroups
+	exc.ServiceName = AppConfig.Service.Name
 	return exc
 }
