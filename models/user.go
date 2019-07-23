@@ -562,3 +562,22 @@ func (u *User) GetFullName() string {
 	}
 	return "Null"
 }
+
+func AllUsers(ctx context.Context) ([]*User, error) {
+	var users []*User
+	query := fmt.Sprintf("SELECT %s FROM users ORDER BY subscribed_at", strings.Join(usersCols, ","))
+	rows, err := session.Database(ctx).QueryContext(ctx, query)
+	if err != nil {
+		return users, session.TransactionError(ctx, err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		u, err := userFromRow(rows)
+		if err != nil {
+			return users, session.TransactionError(ctx, err)
+		}
+		users = append(users, u)
+	}
+	return users, nil
+}
