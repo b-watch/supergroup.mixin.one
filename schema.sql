@@ -103,8 +103,9 @@ CREATE TABLE IF NOT EXISTS orders (
   user_id          VARCHAR(36) NOT NULL CHECK (user_id ~* '^[0-9a-f-]{36,36}$'),
   prepay_id        VARCHAR(36) DEFAULT '',
   state            VARCHAR(32) NOT NULL,
+	asset_id         VARCHAR(36) NOT NULL,
   amount           VARCHAR(128) NOT NULL,
-  channel          VARCHAR(32) NOT NULL,
+  pay_method       VARCHAR(32) NOT NULL DEFAULT ''
   transaction_id   VARCHAR(32) DEFAULT '',
   created_at       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   paid_at          TIMESTAMP WITH TIME ZONE
@@ -125,3 +126,23 @@ CREATE TABLE IF NOT EXISTS coupons (
 CREATE UNIQUE INDEX IF NOT EXISTS coupons_codex ON coupons(code);
 CREATE INDEX IF NOT EXISTS coupons_occupiedx ON coupons(occupied_by);
 CREATE INDEX IF NOT EXISTS coupons_userx ON coupons(user_id);
+
+CREATE TABLE IF NOT EXISTS invitations (
+	code         			VARCHAR(36) PRIMARY KEY,
+	inviter_id        VARCHAR(36) NOT NULL,
+	invitee_id	      VARCHAR(36),
+	created_at       	TIMESTAMP WITH TIME ZONE NOT NULL,
+	used_at        		TIMESTAMP WITH TIME ZONE
+);
+
+CREATE INDEX IF NOT EXISTS invitations_inviterx ON invitations(inviter_id);
+
+CREATE TABLE currency_rates (
+    symbol            VARCHAR(36) PRIMARY KEY,
+    price_usd         VARCHAR(32) NOT NULL,
+    price_cny         VARCHAR(32) NOT NULL,
+    created_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS currency_rates_pkey ON currency_rates(symbol);

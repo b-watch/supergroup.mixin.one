@@ -14,13 +14,14 @@ let instance = axios.create({
 
 let HANDLERS = {
   401: [],
+  403: [],
   500: []
 }
 
 instance.interceptors.response.use((response) => {
   return response;
 }, function (error) {
-  if (302 === error.response.status) {
+  if (error && error.response && 302 === error.response.status) {
     console.log(err)
   } else {
     return Promise.reject(error);

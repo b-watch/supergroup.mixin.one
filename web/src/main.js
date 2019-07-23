@@ -7,6 +7,7 @@ import global from './global'
 import '@/plugins/vant'
 import '@/plugins/vue-qr'
 import '@/plugins/infinite-loading'
+import '@/plugins/vue-clipboard2'
 
 Vue.config.productionTip = false
 Vue.prototype.GLOBAL = global

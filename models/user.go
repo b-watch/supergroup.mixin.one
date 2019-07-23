@@ -21,8 +21,9 @@ import (
 )
 
 const (
-	PaymentStatePending = "pending"
-	PaymentStatePaid    = "paid"
+	PaymentStatePending    = "pending"
+	PaymentStatePaid       = "paid"
+	PaymentStateUnverified = "unverified"
 
 	PayMethodMixin  = "mixin"
 	PayMethodWechat = "wechat"
@@ -117,7 +118,7 @@ func createUser(ctx context.Context, accessToken, userId, identityNumber, fullNa
 			UserId:         userId,
 			IdentityNumber: identity,
 			TraceId:        bot.UuidNewV4().String(),
-			State:          PaymentStatePending,
+			State:          PaymentStateUnverified,
 			ActiveAt:       time.Now(),
 			isNew:          true,
 		}
@@ -131,6 +132,8 @@ func createUser(ctx context.Context, accessToken, userId, identityNumber, fullNa
 			user.State = PaymentStatePaid
 			user.SubscribedAt = time.Now()
 			user.PayMethod = PayMethodOffer
+		} else if !config.AppConfig.System.InviteToJoin {
+			user.State = PaymentStatePending
 		}
 		if config.AppConfig.Service.Environment != "test" {
 			err = createConversation(ctx, "CONTACT", userId)
@@ -276,7 +279,7 @@ func (user *User) Payment(ctx context.Context) error {
 }
 
 func (user *User) paymentInTx(ctx context.Context, tx *sql.Tx, method string) error {
-	if user.State != PaymentStatePending {
+	if user.State == PaymentStatePaid {
 		if method == PayMethodCoupon {
 			return session.ForbiddenError(ctx)
 		}
@@ -488,6 +491,41 @@ func findUsersByKeywords(ctx context.Context, keywords string) ([]*User, error) 
 		users = append(users, p)
 	}
 	return users, nil
+}
+
+func findUsersByIds(ctx context.Context, tx *sql.Tx, ids []string) ([]*User, error) {
+	for i, id := range ids {
+		ids[i] = fmt.Sprintf("'%s'", id)
+	}
+	query := fmt.Sprintf("SELECT %s FROM users WHERE user_id in (%s)", strings.Join(usersCols, ","), strings.Join(ids, ","))
+	fmt.Printf(query)
+	rows, err := tx.QueryContext(ctx, query)
+	if err != nil {
+		return nil, session.TransactionError(ctx, err)
+	}
+	defer rows.Close()
+
+	var users []*User
+	for rows.Next() {
+		p, err := userFromRow(rows)
+		if err != nil {
+			return nil, session.TransactionError(ctx, err)
+		}
+		users = append(users, p)
+	}
+	return users, nil
+}
+
+func deleteUsersByIds(ctx context.Context, tx *sql.Tx, ids []string) error {
+	for i, id := range ids {
+		ids[i] = fmt.Sprintf("'%s'", id)
+	}
+	query := fmt.Sprintf("DELETE FROM users WHERE user_id in (%s)", strings.Join(ids, ","))
+	_, err := tx.QueryContext(ctx, query)
+	if err != nil {
+		return session.TransactionError(ctx, err)
+	}
+	return nil
 }
 
 func findUserById(ctx context.Context, tx *sql.Tx, userId string) (*User, error) {

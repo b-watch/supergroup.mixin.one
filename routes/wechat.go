@@ -50,7 +50,7 @@ func (impl *wechatImpl) createWxPay(w http.ResponseWriter, r *http.Request, _ ma
 		views.RenderErrorResponse(w, r, session.BadRequestError(r.Context()))
 		return
 	}
-	if order, payParams, payJsParams, err := models.CreateOrder(r.Context(), payload.UserId, "19.9", payload.OpenId); err != nil {
+	if order, payParams, payJsParams, err := models.CreateWechatOrder(r.Context(), payload.UserId, config.AppConfig.System.WeChatPaymentAmount, payload.OpenId); err != nil {
 		views.RenderErrorResponse(w, r, err)
 	} else {
 		resp.Order = order

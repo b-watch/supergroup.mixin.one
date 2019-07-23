@@ -118,5 +118,28 @@
     "copy": "复制",
     "state_available": "未使用",
     "state_used": "被 {name} 用了"
+  },
+  "invitation": {
+    "entry": "我的邀请",
+    "details": "详情",
+    "mine": "我的邀请",
+    "welcome": "欢迎加入笑来课堂",
+    "verify": "入群验证",
+    "code": "邀请码",
+    "apply": "申请",
+    "invitees": "受邀者",
+    "rule1": "* 未付费：被邀请用户已使用邀请码但未成功付费",
+    "rule2": "* 当邀请码均被使用并成功付费后即可申请新邀请码",
+    "used_friends": "成功邀请好友：",
+    "pending_friends": "待付费好友：",
+    "status_used": "已使用",
+    "status_unused": "未使用",
+    "status_pending": "待付费",
+    "used": "已用",
+    "click_copy": "点击复制",
+    "used_at": "加入时间",
+    "code_available": "邀请码可用",
+    "code_unavailable": "邀请码不可用",
+    "copied": "复制成功"
   }
 }

@@ -21,6 +21,7 @@ require (
 	github.com/gorilla/websocket v1.4.0
 	github.com/lib/pq v1.1.1
 	github.com/objcoding/wxpay v1.0.6
+	github.com/rs/xid v1.2.1
 	github.com/silenceper/wechat v1.0.0
 	github.com/stretchr/testify v1.3.0
 	github.com/tuotoo/qrcode v0.0.0-20190222102259-ac9c44189bf2
