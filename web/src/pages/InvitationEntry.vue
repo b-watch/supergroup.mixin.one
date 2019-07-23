@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h2>{{this.$t("invitation.welcome")}}</h2>
+    <h2>{{this.$t("invitation.welcome") + serviceName}}</h2>
     <div class="action">
       <van-field v-model="code" :placeholder="placeholder" autosize />
       <van-button class="button" type="info" @click="apply">{{this.$t("invitation.verify")}}</van-button>
@@ -16,8 +16,17 @@ export default {
     return {
       placeholder: this.$t("invitation.code"),
       meInfo: null,
-      code: ""
+      code: "",
+      serviceName: ""
     };
+  },
+
+  mounted() {
+    this.GLOBAL.api.website.config().then(conf => {
+      if (conf.data) {
+        this.serviceName = conf.data.service_name;
+      }
+    });
   },
 
   computed: {
