@@ -10,6 +10,9 @@ import (
 
 const ConfigFile = "config.yaml"
 const BuildVersion = "BUILD_VERSION"
+const RouterModeHash = "hash"
+const RouterModeHistory = "history"
+const RouterModeHashSymbol = "/#"
 
 type PaymentAsset struct {
 	Symbol  string `yaml:"symbol" json:"symbol"`
@@ -36,6 +39,7 @@ type Config struct {
 		Environment      string `yaml:"enviroment"`
 		HTTPListenPort   int    `yaml:"port"`
 		HTTPResourceHost string `yaml:"host"`
+		HTTPApiHost      string `yaml:"api_host"`
 	} `yaml:"service"`
 	Database struct {
 		DatebaseUser     string `yaml:"username"`
@@ -45,6 +49,7 @@ type Config struct {
 		DatabaseName     string `yaml:"database_name"`
 	} `yaml:"database"`
 	System struct {
+		RouterMode               string   `yaml:"router_mode"`
 		MessageShardModifier     string   `yaml:"message_shard_modifier"`
 		MessageShardSize         int64    `yaml:"message_shard_size"`
 		PriceAssetsEnable        bool     `yaml:"price_asset_enable"`
@@ -117,6 +122,7 @@ type Config struct {
 type ExportedConfig struct {
 	MixinClientId          string          `json:"mixin_client_id"`
 	HTTPResourceHost       string          `json:"host"`
+	HTTPApiHost            string          `json:"api_host"`
 	AutoEstimate           bool            `json:"auto_estimate"`
 	AutoEstimateCurrency   string          `json:"auto_estimate_currency"`
 	AutoEstimateBase       string          `json:"auto_estimate_base"`
@@ -151,6 +157,7 @@ func GetExported() ExportedConfig {
 	var exc ExportedConfig
 	exc.MixinClientId = AppConfig.Mixin.ClientId
 	exc.HTTPResourceHost = AppConfig.Service.HTTPResourceHost
+	exc.HTTPApiHost = AppConfig.Service.HTTPApiHost
 	exc.AutoEstimate = AppConfig.System.AutoEstimate
 	exc.AutoEstimateCurrency = AppConfig.System.AutoEstimateCurrency
 	exc.AutoEstimateBase = AppConfig.System.AutoEstimateBase
