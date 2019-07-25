@@ -355,7 +355,7 @@ func handleTransfer(ctx context.Context, mc *MessageContext, transfer TransferVi
 				return user.Payment(ctx)
 			}
 		}
-	} else if order, err := models.GetOrder(ctx, transfer.TraceId); err == nil {
+	} else if order, err := models.GetOrder(ctx, transfer.TraceId); err == nil && order != nil {
 		return handleOrderPayment(ctx, mc, transfer, order)
 	} else if packet, err := models.PayPacket(ctx, id.String(), transfer.AssetId, transfer.Amount); err != nil || packet == nil {
 		return err
