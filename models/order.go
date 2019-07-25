@@ -96,7 +96,7 @@ func CreateWechatOrder(ctx context.Context, userId, amount, wxOpenId string) (*O
 	var order *Order
 	var err error
 	// create an order
-	order, err = createOrder(ctx, userId, "", amount, "PENDING", "wx")
+	order, err = createOrder(ctx, userId, "", amount, "PENDING", PayMethodWechat)
 	if err != nil {
 		return nil, nil, nil, session.TransactionError(ctx, err)
 	}
