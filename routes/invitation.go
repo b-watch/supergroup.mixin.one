@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/MixinNetwork/supergroup.mixin.one/middlewares"
-	"github.com/MixinNetwork/supergroup.mixin.one/views"
 	"github.com/MixinNetwork/supergroup.mixin.one/models"
+	"github.com/MixinNetwork/supergroup.mixin.one/views"
 	"github.com/dimfeld/httptreemux"
 )
 
@@ -14,8 +14,8 @@ type invitationsImpl struct{}
 func registerInvitations(router *httptreemux.TreeMux) {
 	impl := &invitationsImpl{}
 	router.GET("/invitations", impl.index)
-	router.POST("/invitations", impl.create)
-	router.PUT("/invitations/:code", impl.apply)
+	// router.POST("/invitations", impl.create)
+	// router.PUT("/invitations/:code", impl.apply)
 }
 
 func (impl *invitationsImpl) index(w http.ResponseWriter, r *http.Request, params map[string]string) {
