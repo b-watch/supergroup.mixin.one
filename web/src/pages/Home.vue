@@ -8,7 +8,7 @@
       <br />
       <template v-for="group in shortcutsGroups">
         <van-panel :title="group.label">
-          <cell-table :items="group.shortcuts"></cell-table>
+          <cell-table :items="group.shortcuts" @open-external-link="openExternalLink"></cell-table>
         </van-panel>
         <br />
       </template>
@@ -184,6 +184,10 @@ export default {
     }
   },
   methods: {
+    openExternalLink(item) {
+      this.loading = true;
+      window.location.href = item.url;
+    },
     addToGroups(groups, isPlugin) {
       return this.shortcutsGroups.concat(
         groups.map(x => {
@@ -194,9 +198,11 @@ export default {
             if (isPlugin) {
               // z.click = this.handlePluginRedirect(x.id, z.id)
               // z.url = ''
+              // for plugin SPA, use hash mode to pass query
               z.isPlugin = true;
               z.url +=
-                "?token=" + encodeURIComponent(localStorage.getItem("token"));
+                "/#/?token=" +
+                encodeURIComponent(localStorage.getItem("token"));
             }
             return z;
           });
