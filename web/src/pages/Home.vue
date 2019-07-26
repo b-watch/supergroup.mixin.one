@@ -187,6 +187,9 @@ export default {
     openExternalLink(item) {
       this.loading = true;
       window.location.href = item.url;
+      setTimeout(() => {
+        this.loading = false;
+      }, 5000);
     },
     addToGroups(groups, isPlugin) {
       return this.shortcutsGroups.concat(
