@@ -48,7 +48,7 @@ export default {
           url: "/members"
         }
         // disable invitation entry
-        // { icon: require('../assets/images/invitation.png'), label: this.$t('invitation.entry'), url: '/invitation/details'},
+        { icon: require('../assets/images/invitation.png'), label: this.$t('invitation.entry'), url: '/invitation/details'},
       ],
       messagesItem: {
         icon: require("../assets/images/messages-circle.png"),
