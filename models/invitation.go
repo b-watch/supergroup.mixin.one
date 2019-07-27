@@ -11,7 +11,7 @@ import (
 	"github.com/MixinNetwork/supergroup.mixin.one/durable"
 	"github.com/MixinNetwork/supergroup.mixin.one/session"
 	"github.com/lib/pq"
-	"github.com/rs/xid"
+	"github.com/lithammer/shortuuid"
 )
 
 const invitation_DDL = `
@@ -259,6 +259,5 @@ func deleteInvitationsByCodes(ctx context.Context, tx *sql.Tx, codes []string) e
 }
 
 func uniqueInvitationCode() string {
-	guid := xid.New()
-	return guid.String()
+	return shortuuid.New()
 }
