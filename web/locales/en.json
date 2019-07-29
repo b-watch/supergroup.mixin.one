@@ -140,6 +140,7 @@
     "used_at": "Join time",
     "code_available": "Code is available",
     "code_unavailable": "Code is unavailable",
-    "copied": "Copied"
+    "copied": "Copied",
+    "no_code": "No invitation code"
   }
 }

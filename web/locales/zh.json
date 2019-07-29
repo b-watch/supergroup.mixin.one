@@ -140,6 +140,7 @@
     "used_at": "加入时间",
     "code_available": "邀请码可用",
     "code_unavailable": "邀请码不可用",
-    "copied": "复制成功"
+    "copied": "复制成功",
+    "no_code": "没有邀请码"
   }
 }

@@ -61,6 +61,7 @@ export default {
 
 <style lang="scss" scoped>
 h2 {
+  margin-top: 0;
   padding-top: 10rem;
   text-align: center;
 }
