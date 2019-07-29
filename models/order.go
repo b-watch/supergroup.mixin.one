@@ -12,6 +12,7 @@ import (
 	bot "github.com/MixinNetwork/bot-api-go-client"
 	"github.com/MixinNetwork/supergroup.mixin.one/config"
 	"github.com/MixinNetwork/supergroup.mixin.one/durable"
+	"github.com/MixinNetwork/supergroup.mixin.one/plugin"
 	"github.com/MixinNetwork/supergroup.mixin.one/session"
 	"github.com/lib/pq"
 	"github.com/objcoding/wxpay"
@@ -186,6 +187,9 @@ func MarkOrderAsPaidByTraceId(ctx context.Context, traceId int64, transactionId 
 	if err != nil {
 		return nil, session.TransactionError(ctx, err)
 	}
+
+	plugin.Trigger(plugin.EventTypeOrderPaid, order)
+
 	return order, nil
 }
 
@@ -211,6 +215,9 @@ func MarkOrderAsPaidByOrderId(ctx context.Context, orderId string) (*Order, erro
 	if err != nil {
 		return nil, session.TransactionError(ctx, err)
 	}
+
+	plugin.Trigger(plugin.EventTypeOrderPaid, order)
+
 	return order, nil
 }
 
