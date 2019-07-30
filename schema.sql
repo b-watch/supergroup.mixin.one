@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS users (
   state             VARCHAR(128) NOT NULL,
   active_at         TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   subscribed_at     TIMESTAMP WITH TIME ZONE NOT NULL,
-  pay_method        VARCHAR(512) NOT NULL DEFAULT ''
+  pay_method        VARCHAR(512) NOT NULL DEFAULT '',
+  created_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS users_identityx ON users(identity_number);
@@ -105,7 +106,7 @@ CREATE TABLE IF NOT EXISTS orders (
   state            VARCHAR(32) NOT NULL,
 	asset_id         VARCHAR(36) NOT NULL,
   amount           VARCHAR(128) NOT NULL,
-  pay_method       VARCHAR(32) NOT NULL DEFAULT ''
+  pay_method       VARCHAR(32) NOT NULL DEFAULT '',
   transaction_id   VARCHAR(32) DEFAULT '',
   created_at       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   paid_at          TIMESTAMP WITH TIME ZONE

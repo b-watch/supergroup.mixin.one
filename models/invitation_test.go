@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	bot "github.com/MixinNetwork/bot-api-go-client"
+	"github.com/MixinNetwork/supergroup.mixin.one/config"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -12,6 +13,13 @@ func TestInvitation(t *testing.T) {
 	ctx := setupTestContext()
 	defer teardownTestContext(ctx)
 	var err error
+
+	if !config.AppConfig.System.PayToJoin {
+		t.Skip("Skipping invitation when `Pay To Join` disabled")
+	}
+	if !config.AppConfig.System.InviteToJoin {
+		t.Skip("Skipping invitation when `Invite To Join` disabled")
+	}
 
 	// set up users
 	user, err := createUser(ctx, "accessToken", bot.UuidNewV4().String(), "1", "Inviter1", "http://localhost")

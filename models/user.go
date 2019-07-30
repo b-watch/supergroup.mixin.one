@@ -44,7 +44,8 @@ CREATE TABLE IF NOT EXISTS users (
 	state             VARCHAR(128) NOT NULL,
 	active_at         TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 	subscribed_at     TIMESTAMP WITH TIME ZONE NOT NULL,
-	pay_method        VARCHAR(512) NOT NULL DEFAULT ''
+	pay_method        VARCHAR(512) NOT NULL DEFAULT '',
+	created_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS users_identityx ON users(identity_number);
@@ -63,20 +64,21 @@ type User struct {
 	ActiveAt       time.Time
 	SubscribedAt   time.Time
 	PayMethod      string
+	CreatedAt      time.Time
 
 	isNew               bool
 	AuthenticationToken string
 }
 
-var usersCols = []string{"user_id", "identity_number", "full_name", "access_token", "avatar_url", "trace_id", "state", "active_at", "subscribed_at", "pay_method"}
+var usersCols = []string{"user_id", "identity_number", "full_name", "access_token", "avatar_url", "trace_id", "state", "active_at", "subscribed_at", "pay_method", "created_at"}
 
 func (u *User) values() []interface{} {
-	return []interface{}{u.UserId, u.IdentityNumber, u.FullName, u.AccessToken, u.AvatarURL, u.TraceId, u.State, u.ActiveAt, u.SubscribedAt, u.PayMethod}
+	return []interface{}{u.UserId, u.IdentityNumber, u.FullName, u.AccessToken, u.AvatarURL, u.TraceId, u.State, u.ActiveAt, u.SubscribedAt, u.PayMethod, u.CreatedAt}
 }
 
 func userFromRow(row durable.Row) (*User, error) {
 	var u User
-	err := row.Scan(&u.UserId, &u.IdentityNumber, &u.FullName, &u.AccessToken, &u.AvatarURL, &u.TraceId, &u.State, &u.ActiveAt, &u.SubscribedAt, &u.PayMethod)
+	err := row.Scan(&u.UserId, &u.IdentityNumber, &u.FullName, &u.AccessToken, &u.AvatarURL, &u.TraceId, &u.State, &u.ActiveAt, &u.SubscribedAt, &u.PayMethod, &u.CreatedAt)
 	return &u, err
 }
 
@@ -120,6 +122,7 @@ func createUser(ctx context.Context, accessToken, userId, identityNumber, fullNa
 			TraceId:        bot.UuidNewV4().String(),
 			State:          PaymentStateUnverified,
 			ActiveAt:       time.Now(),
+			CreatedAt:      time.Now(),
 			isNew:          true,
 		}
 		if !config.AppConfig.System.PayToJoin {
