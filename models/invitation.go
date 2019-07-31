@@ -247,7 +247,7 @@ func FindInviterByInviteeID(ctx context.Context, inviteeID string) (*User, error
 	var user *User
 	err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
 		var err error
-		query := fmt.Sprintf("SELECT %s FROM users INNER JOIN invitations on users.user_id = invitations.inviter_id WHERE invitations.invitee_id = $1 LIMIT 1", strings.Join(usersCols, ","))
+		query := fmt.Sprintf("SELECT users.* FROM users INNER JOIN invitations on users.user_id = invitations.inviter_id WHERE invitations.invitee_id = $1 LIMIT 1")
 		row := tx.QueryRowContext(ctx, query, inviteeID)
 		user, err = userFromRow(row)
 		if err == sql.ErrNoRows {
