@@ -28,6 +28,23 @@ CREATE INDEX IF NOT EXISTS invitations_inviterx ON invitations(inviter_id);
 
 const invitationGroupSize = 3
 
+// allow new invitations only when all invitees in current invitation group has paid
+var InviteQuota = func(ctx context.Context, user *User) int {
+	if user.State == PaymentStatePaid {
+		if currentInvitations, err := user.Invitations(ctx); err == nil {
+			if len(currentInvitations) > 0 {
+				for _, invitation := range currentInvitations {
+					if invitee := invitation.Invitee; invitee != nil && invitee.State != PaymentStatePaid {
+						return 0
+					}
+				}
+				return invitationGroupSize
+			}
+		}
+	}
+	return 0
+}
+
 type Invitation struct {
 	Code      string
 	InviterID string
@@ -121,22 +138,10 @@ func (user *User) invitations(ctx context.Context, historyFlag bool) ([]*Invitat
 }
 
 func (user *User) CreateInvitations(ctx context.Context) ([]*Invitation, error) {
-	if user.State != PaymentStatePaid {
+	quota := InviteQuota(ctx, user)
+
+	if quota == 0 {
 		return nil, session.ForbiddenError(ctx)
-	}
-	currentInvitations, err := user.Invitations(ctx)
-	if err != nil {
-		return nil, err
-	} else if len(currentInvitations) > 0 {
-		for _, invitation := range currentInvitations {
-			if invitee := invitation.Invitee; invitee != nil {
-				if invitee.State != PaymentStatePaid {
-					return nil, session.ForbiddenError(ctx)
-				}
-			} else {
-				return nil, session.ForbiddenError(ctx)
-			}
-		}
 	}
 
 	var invitations []*Invitation
