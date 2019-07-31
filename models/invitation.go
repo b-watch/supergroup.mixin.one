@@ -37,7 +37,7 @@ type Invitation struct {
 	Invitee   *User
 }
 
-var invitationColumns = []string{"code", "inviter_id", "invitee_id", "created_at", "used_at"}
+var invitationColumns = []string{"invitations.code", "invitations.inviter_id", "invitations.invitee_id", "invitations.created_at", "invitations.used_at"}
 
 func (r *Invitation) values() []interface{} {
 	return []interface{}{r.Code, r.InviterID, r.InviteeID, r.CreatedAt, r.UsedAt}
@@ -69,7 +69,7 @@ func (user *User) invitations(ctx context.Context, historyFlag bool) ([]*Invitat
 			query string
 		)
 		if historyFlag {
-			query = fmt.Sprintf("SELECT %s FROM invitations INNER JOIN users on invitee_id = users.user_id WHERE inviter_id = $1 AND users.state = $2 ORDER BY created_at DESC", strings.Join(invitationColumns, ","))
+			query = fmt.Sprintf("SELECT %s FROM invitations INNER JOIN users on invitations.invitee_id = users.user_id WHERE invitations.inviter_id = $1 AND users.state = $2 ORDER BY invitations.created_at DESC", strings.Join(invitationColumns, ","))
 			rows, err = tx.QueryContext(ctx, query, user.UserId, "paid")
 		} else {
 			query = fmt.Sprintf("SELECT %s FROM invitations WHERE inviter_id = $1 ORDER BY created_at DESC LIMIT $2", strings.Join(invitationColumns, ","))
