@@ -4,12 +4,14 @@
       <h2>{{this.$t("invitation.mine")}}</h2>
       <p class="subtitle">
         <span>{{this.$t("invitation.used_friends")}}{{this.usedInvitations.length}}</span>
-        <span class="pending">{{this.$t("invitation.pending_friends")}}{{this.pendingInvitations.length}}</span>
+        <span
+          class="pending"
+        >{{this.$t("invitation.pending_friends")}}{{this.pendingInvitations.length}}</span>
       </p>
     </div>
     <van-tabs v-model="activeName">
       <van-tab :title="titleCodes" name="codes">
-        <van-list v-model="loading" :finished="finished">
+        <van-list v-model="loading" :finished="finished" :finished-text="finishedText">
           <InvitationCodeListItem
             class="layout"
             v-for="item in availableInvitations"
@@ -96,6 +98,11 @@ export default {
     },
     applyDisabled() {
       return this.availableInvitations.length > 0;
+    },
+    finishedText() {
+      return this.invitationsCurrent.length === 0
+        ? this.$t("invitation.no_code")
+        : "";
     }
   },
 
@@ -121,7 +128,8 @@ export default {
 }
 
 .header {
-  margin-bottom: 0rem;
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 .button {

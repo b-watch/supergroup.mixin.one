@@ -11,7 +11,7 @@ import (
 	"github.com/MixinNetwork/supergroup.mixin.one/durable"
 	"github.com/MixinNetwork/supergroup.mixin.one/session"
 	"github.com/lib/pq"
-	"github.com/rs/xid"
+	"github.com/lithammer/shortuuid"
 )
 
 const invitation_DDL = `
@@ -28,6 +28,25 @@ CREATE INDEX IF NOT EXISTS invitations_inviterx ON invitations(inviter_id);
 
 const invitationGroupSize = 3
 
+// allow new invitations only when all invitees in current invitation group has paid
+var InviteQuota = func(ctx context.Context, user *User) int {
+	if user.State == PaymentStatePaid {
+		if currentInvitations, err := user.Invitations(ctx); err == nil {
+			if len(currentInvitations) > 0 {
+				for _, invitation := range currentInvitations {
+					if invitee := invitation.Invitee; invitee != nil && invitee.State != PaymentStatePaid {
+						return 0
+					}
+				}
+				return invitationGroupSize
+			} else if len(currentInvitations) == 0 {
+				return invitationGroupSize
+			}
+		}
+	}
+	return 0
+}
+
 type Invitation struct {
 	Code      string
 	InviterID string
@@ -37,7 +56,7 @@ type Invitation struct {
 	Invitee   *User
 }
 
-var invitationColumns = []string{"code", "inviter_id", "invitee_id", "created_at", "used_at"}
+var invitationColumns = []string{"invitations.code", "invitations.inviter_id", "invitations.invitee_id", "invitations.created_at", "invitations.used_at"}
 
 func (r *Invitation) values() []interface{} {
 	return []interface{}{r.Code, r.InviterID, r.InviteeID, r.CreatedAt, r.UsedAt}
@@ -69,7 +88,7 @@ func (user *User) invitations(ctx context.Context, historyFlag bool) ([]*Invitat
 			query string
 		)
 		if historyFlag {
-			query = fmt.Sprintf("SELECT %s FROM invitations INNER JOIN users on invitee_id = users.user_id WHERE inviter_id = $1 AND users.state = $2 ORDER BY created_at DESC", strings.Join(invitationColumns, ","))
+			query = fmt.Sprintf("SELECT %s FROM invitations INNER JOIN users on invitations.invitee_id = users.user_id WHERE invitations.inviter_id = $1 AND users.state = $2 ORDER BY invitations.created_at DESC", strings.Join(invitationColumns, ","))
 			rows, err = tx.QueryContext(ctx, query, user.UserId, "paid")
 		} else {
 			query = fmt.Sprintf("SELECT %s FROM invitations WHERE inviter_id = $1 ORDER BY created_at DESC LIMIT $2", strings.Join(invitationColumns, ","))
@@ -121,22 +140,10 @@ func (user *User) invitations(ctx context.Context, historyFlag bool) ([]*Invitat
 }
 
 func (user *User) CreateInvitations(ctx context.Context) ([]*Invitation, error) {
-	if user.State != PaymentStatePaid {
+	quota := InviteQuota(ctx, user)
+
+	if quota == 0 {
 		return nil, session.ForbiddenError(ctx)
-	}
-	currentInvitations, err := user.Invitations(ctx)
-	if err != nil {
-		return nil, err
-	} else if len(currentInvitations) > 0 {
-		for _, invitation := range currentInvitations {
-			if invitee := invitation.Invitee; invitee != nil {
-				if invitee.State != PaymentStatePaid {
-					return nil, session.ForbiddenError(ctx)
-				}
-			} else {
-				return nil, session.ForbiddenError(ctx)
-			}
-		}
 	}
 
 	var invitations []*Invitation
@@ -151,7 +158,7 @@ func (user *User) CreateInvitations(ctx context.Context) ([]*Invitation, error) 
 		invitations = append(invitations, invitation)
 	}
 	query := fmt.Sprintf("INSERT INTO invitations (code,inviter_id,created_at) VALUES %s", values.String())
-	_, err = session.Database(ctx).ExecContext(ctx, query)
+	_, err := session.Database(ctx).ExecContext(ctx, query)
 	if err != nil {
 		return nil, session.TransactionError(ctx, err)
 	}
@@ -274,6 +281,5 @@ func deleteInvitationsByCodes(ctx context.Context, tx *sql.Tx, codes []string) e
 }
 
 func uniqueInvitationCode() string {
-	guid := xid.New()
-	return guid.String()
+	return shortuuid.New()
 }
