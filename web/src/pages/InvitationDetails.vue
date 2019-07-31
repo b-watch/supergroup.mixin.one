@@ -56,7 +56,6 @@ export default {
 
   data() {
     return {
-      finishedText: this.$t("invitation.no_code"),
       titleCodes: this.$t("invitation.code"),
       titleInvitees: this.$t("invitation.invitees"),
       activeName: "codes",
@@ -99,6 +98,11 @@ export default {
     },
     applyDisabled() {
       return this.availableInvitations.length > 0;
+    },
+    finishedText() {
+      return this.invitationsCurrent.length === 0
+        ? this.$t("invitation.no_code")
+        : "";
     }
   },
 
