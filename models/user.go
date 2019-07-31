@@ -498,7 +498,6 @@ func findUsersByIds(ctx context.Context, tx *sql.Tx, ids []string) ([]*User, err
 		ids[i] = fmt.Sprintf("'%s'", id)
 	}
 	query := fmt.Sprintf("SELECT %s FROM users WHERE user_id in (%s)", strings.Join(usersCols, ","), strings.Join(ids, ","))
-	fmt.Printf(query)
 	rows, err := tx.QueryContext(ctx, query)
 	if err != nil {
 		return nil, session.TransactionError(ctx, err)
