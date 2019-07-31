@@ -39,6 +39,8 @@ var InviteQuota = func(ctx context.Context, user *User) int {
 					}
 				}
 				return invitationGroupSize
+			} else if len(currentInvitations) == 0 {
+				return invitationGroupSize
 			}
 		}
 	}
@@ -156,7 +158,7 @@ func (user *User) CreateInvitations(ctx context.Context) ([]*Invitation, error) 
 		invitations = append(invitations, invitation)
 	}
 	query := fmt.Sprintf("INSERT INTO invitations (code,inviter_id,created_at) VALUES %s", values.String())
-	_, err = session.Database(ctx).ExecContext(ctx, query)
+	_, err := session.Database(ctx).ExecContext(ctx, query)
 	if err != nil {
 		return nil, session.TransactionError(ctx, err)
 	}
