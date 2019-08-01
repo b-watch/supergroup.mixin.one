@@ -176,6 +176,9 @@ func (user *User) ApplyInvitation(ctx context.Context, invitationCode string) (*
 		if err != nil {
 			return err
 		}
+		if invitation == nil {
+			return session.BadDataError(ctx)
+		}
 		if invitation.UsedAt.Valid {
 			return fmt.Errorf("Invitation Code has already been used")
 		}
