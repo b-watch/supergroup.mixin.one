@@ -366,7 +366,9 @@ func handleTransfer(ctx context.Context, mc *MessageContext, transfer TransferVi
 }
 
 func handleOrderPayment(ctx context.Context, mc *MessageContext, transfer TransferView, order *models.Order) error {
-	if order.PayMethod == models.PayMethodMixin && order.Amount == transfer.Amount && order.AssetId == transfer.AssetId {
+	if order.PayMethod == models.PayMethodMixin &&
+		number.FromString(transfer.Amount).Equal(number.FromString(order.Amount).RoundFloor(8)) &&
+		order.AssetId == transfer.AssetId {
 		_, err := models.MarkOrderAsPaidByOrderId(ctx, order.OrderId)
 		if err != nil {
 			log.Println(err)
