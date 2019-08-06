@@ -146,8 +146,8 @@
     "notice": {
       "title": "NOTICE:",
       "line1": "This is a privated group.",
-      "line2_1": "You need an invitation code to join the group.",
-      "line2_2": "You need an invitation code and pay {amount} {symbol} to join the group."
+      "line2_1": "<div>You need an <span class=emphasis> invitation code </span> to join the group.</div>",
+      "line2_2": "<div>You need an <span class=emphasis> invitation code </span> and pay <span class=emphasis>{amount} {symbol}</span> to join the group.</div>"
     }
   }
 }

@@ -3,11 +3,9 @@
     <h2>{{this.$t("invitation.welcome") + configData.service_name}}</h2>
     <h3>{{configData.home_welcome_message}}</h3>
     <div class="notice">
-      {{this.$t('invitation.notice.title')}}
-      <br />
-      {{this.$t('invitation.notice.line1')}}
-      <br />
-      {{this.line2}}
+      <div>{{this.$t('invitation.notice.title')}}</div>
+      <div>{{this.$t('invitation.notice.line1')}}</div>
+      <div v-html="line2"></div>
     </div>
     <van-field v-model="code" :placeholder="$t('invitation.input_placeholder')" autosize />
     <van-button class="button" type="info" @click="apply">{{this.$t("invitation.submit")}}</van-button>
@@ -75,12 +73,12 @@ export default {
               return (
                 Number(this.configData.auto_estimate_base) /
                 Number(target.price_cny)
-              );
+              ).toFixed(8);
             case "usd":
               return (
                 Number(this.configData.auto_estimate_base) /
                 Number(target.price_usd)
-              );
+              ).toFixed(8);
             default:
               return 0;
           }
@@ -148,6 +146,11 @@ export default {
     border-radius: 3px;
     padding: 1rem;
     margin-bottom: 1.5rem;
+
+    /deep/ .emphasis {
+      color: #b32424;
+      font-weight: bold;
+    }
   }
 
   .van-cell.van-field {

@@ -147,7 +147,7 @@
       "title": "注意：",
       "line1": "这是个私有群组",
       "line2-1": "你需要邀请码加入本群组",
-      "line2-2": "这是个私有群组，你需要邀请码并支付 {amount} {symbol} 等价数字货币来加入本群组"
+      "line2-2": "这是个私有群组，你需要<span class=emphasis>邀请码</span>并支付 <span class=emphasis>{amount} {symbol}</span> 等价数字货币来加入本群组"
     }
   }
 }
