@@ -124,7 +124,7 @@
     "details": "Details",
     "mine": "Invitation list",
     "welcome": "Welcome to ",
-    "verify": "Verify",
+    "submit": "Submit",
     "code": "Codes",
     "apply": "Request",
     "invitees": "Invitees",
@@ -141,6 +141,13 @@
     "code_available": "Code is available",
     "code_unavailable": "Code is unavailable",
     "copied": "Copied",
-    "no_code": "No invitation code"
+    "no_code": "No invitation code",
+    "input_placeholder": "Your Invitation Code",
+    "notice": {
+      "title": "NOTICE:",
+      "line1": "This is a privated group.",
+      "line2_1": "You need an invitation code to join the group.",
+      "line2_2": "You need an invitation code and pay {amount} {symbol} to join the group."
+    }
   }
 }
