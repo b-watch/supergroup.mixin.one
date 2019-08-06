@@ -188,7 +188,7 @@ func MarkOrderAsPaidByTraceId(ctx context.Context, traceId int64, transactionId 
 		return nil, session.TransactionError(ctx, err)
 	}
 
-	plugin.Trigger(plugin.EventTypeOrderPaid, order)
+	plugin.Trigger(plugin.EventTypeOrderPaid, *order)
 
 	return order, nil
 }
@@ -216,7 +216,7 @@ func MarkOrderAsPaidByOrderId(ctx context.Context, orderId string) (*Order, erro
 		return nil, session.TransactionError(ctx, err)
 	}
 
-	plugin.Trigger(plugin.EventTypeOrderPaid, order)
+	plugin.Trigger(plugin.EventTypeOrderPaid, *order)
 
 	return order, nil
 }
