@@ -32,20 +32,17 @@ export default {
   },
 
   mounted() {
-    this.GLOBAL.api.website
-      .config()
-      .then(conf => {
-        if (conf.data) {
-          this.configData = conf.data;
-        }
-      })
-      .then(() => {
-        this.GLOBAL.api.payment.currency().then(res => {
-          if (res.data) {
-            this.currencyData = res.data;
-          }
-        });
-      });
+    this.GLOBAL.api.website.config().then(conf => {
+      if (conf.data) {
+        this.configData = conf.data;
+      }
+    });
+
+    this.GLOBAL.api.payment.currency().then(res => {
+      if (res.data) {
+        this.currencyData = res.data;
+      }
+    });
   },
 
   computed: {
