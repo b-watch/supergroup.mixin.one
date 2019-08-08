@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/MixinNetwork/supergroup.mixin.one/config"
 	"github.com/MixinNetwork/supergroup.mixin.one/models"
 	"github.com/MixinNetwork/supergroup.mixin.one/session"
 	"github.com/MixinNetwork/supergroup.mixin.one/views"
@@ -56,10 +57,13 @@ func Authenticate(handler http.Handler) http.Handler {
 			views.RenderErrorResponse(w, r, err)
 		} else if user == nil {
 			handleUnauthorized(handler, w, r)
-		} else if ctx := context.WithValue(r.Context(), keyCurrentUser, user); user.State == models.PaymentStateUnverified {
-			handleUnverified(handler, w, r.WithContext(ctx))
 		} else {
-			handler.ServeHTTP(w, r.WithContext(ctx))
+			ctx := context.WithValue(r.Context(), keyCurrentUser, user)
+			if config.AppConfig.System.InviteToJoin && user.State == models.PaymentStateUnverified {
+				handleUnverified(handler, w, r.WithContext(ctx))
+			} else {
+				handler.ServeHTTP(w, r.WithContext(ctx))
+			}
 		}
 	})
 }
