@@ -16,6 +16,7 @@ import (
 	bot "github.com/MixinNetwork/bot-api-go-client"
 	"github.com/MixinNetwork/supergroup.mixin.one/config"
 	"github.com/MixinNetwork/supergroup.mixin.one/durable"
+	"github.com/MixinNetwork/supergroup.mixin.one/plugin"
 	"github.com/MixinNetwork/supergroup.mixin.one/session"
 	jwt "github.com/dgrijalva/jwt-go"
 )
@@ -166,6 +167,8 @@ func createUser(ctx context.Context, accessToken, userId, identityNumber, fullNa
 		if err != nil {
 			return nil, session.TransactionError(ctx, err)
 		}
+
+		plugin.Trigger(plugin.EventTypeUserCreated, *user)
 		return user, nil
 	}
 
