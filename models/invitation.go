@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS invitations (
 CREATE INDEX IF NOT EXISTS invitations_inviterx ON invitations(inviter_id);
 `
 
-const invitationGroupSize = 3
+const InvitationGroupSize = 3
 
 // allow new invitations only when all invitees in current invitation group has paid
 var InviteQuota = func(ctx context.Context, user *User) int {
@@ -38,9 +38,9 @@ var InviteQuota = func(ctx context.Context, user *User) int {
 						return 0
 					}
 				}
-				return invitationGroupSize
+				return InvitationGroupSize
 			} else if len(currentInvitations) == 0 {
-				return invitationGroupSize
+				return InvitationGroupSize
 			}
 		}
 	}
@@ -92,7 +92,7 @@ func (user *User) invitations(ctx context.Context, historyFlag bool) ([]*Invitat
 			rows, err = tx.QueryContext(ctx, query, user.UserId, "paid")
 		} else {
 			query = fmt.Sprintf("SELECT %s FROM invitations WHERE inviter_id = $1 ORDER BY created_at DESC LIMIT $2", strings.Join(invitationColumns, ","))
-			rows, err = tx.QueryContext(ctx, query, user.UserId, invitationGroupSize)
+			rows, err = tx.QueryContext(ctx, query, user.UserId, InvitationGroupSize)
 		}
 		if err != nil {
 			return err
@@ -139,9 +139,7 @@ func (user *User) invitations(ctx context.Context, historyFlag bool) ([]*Invitat
 	return invitations, nil
 }
 
-func (user *User) CreateInvitations(ctx context.Context) ([]*Invitation, error) {
-	quota := InviteQuota(ctx, user)
-
+func (user *User) CreateInvitations(ctx context.Context, quota int, size int) ([]*Invitation, error) {
 	if quota == 0 {
 		return nil, session.ForbiddenError(ctx)
 	}
@@ -149,7 +147,7 @@ func (user *User) CreateInvitations(ctx context.Context) ([]*Invitation, error) 
 	var invitations []*Invitation
 	var values bytes.Buffer
 	createTime := time.Now()
-	for i := 1; i <= invitationGroupSize; i++ {
+	for i := 1; i <= size; i++ {
 		invitation := &Invitation{InviterID: user.UserId, Code: uniqueInvitationCode(), CreatedAt: createTime}
 		if i > 1 {
 			values.WriteString(",")
