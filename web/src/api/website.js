@@ -10,6 +10,7 @@ const Website = {
     if (resp.data) {
       window.localStorage.setItem('cfg_client_id', resp.data.mixin_client_id);
       window.localStorage.setItem('cfg_host', resp.data.host);
+      window.localStorage.setItem('cfg_invite_to_join', resp.data.invite_to_join);
     }
     return resp
   }

@@ -131,6 +131,7 @@ type ExportedConfig struct {
 	WeChatPaymentAmount    string          `json:"wechat_payment_amount"`
 	AccpetCouponPayment    bool            `json:"accept_coupon_payment"`
 	PayToJoin              bool            `json:"pay_to_join"`
+	InviteToJoin           bool            `json:"invite_to_join"`
 	HomeWelcomeMessage     string          `json:"home_welcome_message"`
 	HomeShortcutGroups     []ShortcutGroup `json:"home_shortcut_groups"`
 	ServiceName            string          `json:"service_name"`
@@ -167,6 +168,7 @@ func GetExported() ExportedConfig {
 	exc.WeChatPaymentAmount = AppConfig.System.WeChatPaymentAmount
 	exc.AccpetCouponPayment = AppConfig.System.AccpetCouponPayment
 	exc.PayToJoin = AppConfig.System.PayToJoin
+	exc.InviteToJoin = AppConfig.System.InviteToJoin
 	exc.HomeWelcomeMessage = AppConfig.Appearance.HomeWelcomeMessage
 	exc.HomeShortcutGroups = AppConfig.Appearance.HomeShortcutGroups
 	exc.ServiceName = AppConfig.Service.Name
