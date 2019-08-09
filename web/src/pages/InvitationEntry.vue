@@ -1,10 +1,14 @@
 <template>
-  <div>
-    <h2>{{this.$t("invitation.welcome") + serviceName}}</h2>
-    <div class="action">
-      <van-field v-model="code" :placeholder="placeholder" autosize />
-      <van-button class="button" type="info" @click="apply">{{this.$t("invitation.verify")}}</van-button>
+  <div class="container">
+    <h2>{{this.$t("invitation.welcome") + configData.service_name}}</h2>
+    <h3>{{configData.home_welcome_message}}</h3>
+    <div class="notice">
+      <div>{{this.$t('invitation.notice.title')}}</div>
+      <div>{{this.$t('invitation.notice.line1')}}</div>
+      <div v-html="line2"></div>
     </div>
+    <van-field v-model="code" :placeholder="$t('invitation.input_placeholder')" autosize />
+    <van-button class="button" type="info" @click="apply">{{this.$t("invitation.submit")}}</van-button>
   </div>
 </template>
 
@@ -14,28 +18,79 @@ export default {
 
   data() {
     return {
-      placeholder: this.$t("invitation.code"),
-      meInfo: null,
       code: "",
-      serviceName: ""
+      configData: {
+        service_name: "",
+        home_welcome_message: "",
+        pay_to_join: false,
+        auto_estimate_base: "",
+        auto_estimate_currency: "",
+        accept_asset_list: []
+      },
+      currencyData: []
     };
   },
 
   mounted() {
     this.GLOBAL.api.website.config().then(conf => {
       if (conf.data) {
-        this.serviceName = conf.data.service_name;
+        this.configData = conf.data;
+      }
+    });
+
+    this.GLOBAL.api.payment.currency().then(res => {
+      if (res.data) {
+        this.currencyData = res.data;
       }
     });
   },
 
   computed: {
-    fullName() {
-      if (this.meInfo) {
-        return this.meInfo.data.full_name;
+    line2() {
+      if (this.configData.pay_to_join) {
+        return this.$t("invitation.notice.line2_2")
+          .replace("{amount}", `${this.amount}`)
+          .replace("{symbol}", this.symbol);
       } else {
-        return "";
+        return this.$t("invitation.notice.line2_1");
       }
+    },
+    amount() {
+      if (
+        this.configData &&
+        this.currencyData &&
+        this.currencyData.length > 0
+      ) {
+        const target = this.currencyData.find(c => {
+          return c.symbol == this.symbol;
+        });
+        if (target) {
+          switch (this.configData.auto_estimate_currency) {
+            case "cny":
+              return (
+                Number(this.configData.auto_estimate_base) /
+                Number(target.price_cny)
+              ).toFixed(8);
+            case "usd":
+              return (
+                Number(this.configData.auto_estimate_base) /
+                Number(target.price_usd)
+              ).toFixed(8);
+            default:
+              return 0;
+          }
+        }
+        return 0;
+      }
+    },
+    symbol() {
+      if (
+        this.configData.accept_asset_list &&
+        this.configData.accept_asset_list.length > 0
+      ) {
+        return this.configData.accept_asset_list[0].symbol;
+      }
+      return "";
     }
   },
 
@@ -60,27 +115,52 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-h2 {
-  margin-top: 0;
-  padding-top: 10rem;
-  text-align: center;
-}
-
-.action {
+.container {
   margin-left: 2rem;
   margin-right: 2rem;
-}
 
-.button {
-  margin-top: 2rem;
-  width: 100%;
-  border-radius: 4px;
-  height: 3rem;
-}
+  h2 {
+    margin-top: 0;
+    padding-top: 10rem;
+    text-align: center;
+  }
 
-.van-cell.van-field {
-  padding: 0.5rem;
-  border-radius: 4px;
+  h3 {
+    text-align: center;
+    font-size: 14px;
+    color: rbga(0, 0, 0);
+    opacity: 0.6;
+    margin-bottom: 3rem;
+    font-weight: normal;
+  }
+
+  .notice {
+    font-size: 14px;
+    color: #b32424;
+    text-align: left;
+    background-color: #fffae0;
+    border: 1px solid #e2b4a5;
+    border-radius: 3px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+
+    /deep/ .emphasis {
+      color: #b32424;
+      font-weight: bold;
+    }
+  }
+
+  .van-cell.van-field {
+    padding: 0.5rem;
+    border-radius: 4px;
+    margin-bottom: 1.5rem;
+    border: 1px solid #dddddd;
+  }
+  .button {
+    width: 100%;
+    border-radius: 4px;
+    height: 3rem;
+  }
 }
 </style>
 

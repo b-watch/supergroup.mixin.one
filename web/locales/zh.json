@@ -124,7 +124,7 @@
     "details": "详情",
     "mine": "我的邀请",
     "welcome": "欢迎加入",
-    "verify": "入群验证",
+    "submit": "提交",
     "code": "邀请码",
     "apply": "申请",
     "invitees": "受邀者",
@@ -141,6 +141,13 @@
     "code_available": "邀请码可用",
     "code_unavailable": "邀请码不可用",
     "copied": "复制成功",
-    "no_code": "没有邀请码"
+    "no_code": "没有邀请码",
+    "input_placeholder": "请输入邀请码",
+    "notice": {
+      "title": "注意：",
+      "line1": "这是个私有群组",
+      "line2_1": "你需要邀请码加入本群组",
+      "line2_2": "你需要<span class=emphasis>邀请码</span>并支付 <span class=emphasis>{amount} {symbol}</span> 等价数字货币来加入本群组"
+    }
   }
 }
