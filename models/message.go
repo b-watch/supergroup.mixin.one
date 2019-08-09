@@ -81,7 +81,7 @@ func CreateMessage(ctx context.Context, user *User, messageId, category, quoteMe
 	if user.UserId != config.AppConfig.Mixin.ClientId && !user.isAdmin() {
 		if category != MessageCategoryMessageRecall && !durable.Allow(user.UserId) {
 			text := base64.StdEncoding.EncodeToString([]byte(config.AppConfig.MessageTemplate.MessageTipsTooMany))
-			if err := createSystemDistributedMessage(ctx, user, MessageCategoryPlainText, text); err != nil {
+			if err := CreateSystemDistributedMessage(ctx, user, MessageCategoryPlainText, text); err != nil {
 				return nil, err
 			}
 			return nil, nil

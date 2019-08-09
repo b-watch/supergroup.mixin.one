@@ -68,7 +68,7 @@ type DistributedMessage struct {
 	CreatedAt      time.Time
 }
 
-func createDistributeMessage(ctx context.Context, messageId, parentId, quoteMessageId, userId, recipientId, category, data string) (*DistributedMessage, error) {
+func CreateDistributeMessage(ctx context.Context, messageId, parentId, quoteMessageId, userId, recipientId, category, data string) (*DistributedMessage, error) {
 	dm := &DistributedMessage{
 		MessageId:      messageId,
 		ConversationId: UniqueConversationId(config.AppConfig.Mixin.ClientId, recipientId),
@@ -152,7 +152,7 @@ func (message *Message) Distribute(ctx context.Context) error {
 					}
 					message.Data = base64.StdEncoding.EncodeToString(data)
 				}
-				dm, err := createDistributeMessage(ctx, messageId, message.MessageId, quoteMessageId, message.UserId, user.UserId, message.Category, message.Data)
+				dm, err := CreateDistributeMessage(ctx, messageId, message.MessageId, quoteMessageId, message.UserId, user.UserId, message.Category, message.Data)
 				if err != nil {
 					session.TransactionError(ctx, err)
 				}
@@ -214,7 +214,7 @@ func (message *Message) Leapfrog(ctx context.Context, reason string) error {
 		if set[messageId] {
 			continue
 		}
-		dm, err := createDistributeMessage(ctx, messageId, message.MessageId, "", message.UserId, id, message.Category, message.Data)
+		dm, err := CreateDistributeMessage(ctx, messageId, message.MessageId, "", message.UserId, id, message.Category, message.Data)
 		if err != nil {
 			session.TransactionError(ctx, err)
 		}
@@ -247,8 +247,8 @@ func (message *Message) Leapfrog(ctx context.Context, reason string) error {
 	return nil
 }
 
-func createSystemDistributedMessage(ctx context.Context, user *User, category, data string) error {
-	dm, err := createDistributeMessage(ctx, bot.UuidNewV4().String(), bot.UuidNewV4().String(), "", config.AppConfig.Mixin.ClientId, user.UserId, "PLAIN_TEXT", data)
+func CreateSystemDistributedMessage(ctx context.Context, user *User, category, data string) error {
+	dm, err := CreateDistributeMessage(ctx, bot.UuidNewV4().String(), bot.UuidNewV4().String(), "", config.AppConfig.Mixin.ClientId, user.UserId, "PLAIN_TEXT", data)
 	if err != nil {
 		return session.TransactionError(ctx, err)
 	}
