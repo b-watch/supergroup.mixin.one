@@ -10,7 +10,7 @@ export default {
     const code = this.$route.query.code;
     try {
       let resp = await this.GLOBAL.api.account.authenticate(code);
-      console.log(resp);
+      console.log("authenticate", resp);
       if (resp.data.authentication_token) {
         if (resp.data.state == "unverified") {
           this.$router.push("/invitation/entry");
@@ -19,7 +19,7 @@ export default {
         }
       }
     } catch (err) {
-      Toast("OAuth Failed");
+      Toast("OAuth Failed:" + err.toString());
       this.$router.push("/");
     }
   }

@@ -46,14 +46,13 @@ export default {
           icon: require("../assets/images/users-circle.png"),
           label: this.$t("home.op_members"),
           url: "/members"
-        },
-        // disable invitation entry
-        {
-          icon: require("../assets/images/invitation.png"),
-          label: this.$t("invitation.entry"),
-          url: "/invitation/details"
         }
       ],
+      invitationItem: {
+        icon: require("../assets/images/invitation.png"),
+        label: this.$t("invitation.entry"),
+        url: "/invitation/details"
+      },
       messagesItem: {
         icon: require("../assets/images/messages-circle.png"),
         label: this.$t("home.op_messages"),
@@ -173,6 +172,11 @@ export default {
         this.$router.push("/pay");
         return;
       }
+      // invitation visbility
+      if (this.websiteConf.invite_to_join) {
+        this.builtinItems.push(this.invitationItem);
+      }
+      // entries for admin
       if (this.meInfo.data.role === "admin") {
         this.builtinItems.push(this.couponsItem);
         this.builtinItems.push(this.messagesItem);
