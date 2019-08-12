@@ -330,7 +330,7 @@ func (user *User) paymentInTx(ctx context.Context, tx *sql.Tx, method string) er
 		}
 
 		messageId := UniqueConversationId(user.UserId, msg.MessageId)
-		dm, err := createDistributeMessage(ctx, messageId, msg.MessageId, "", msg.UserId, user.UserId, msg.Category, msg.Data)
+		dm, err := CreateDistributeMessage(ctx, messageId, msg.MessageId, "", msg.UserId, user.UserId, msg.Category, msg.Data)
 		if err != nil {
 			session.TransactionError(ctx, err)
 		}

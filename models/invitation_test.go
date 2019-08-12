@@ -34,7 +34,9 @@ func TestInvitation(t *testing.T) {
 	invitations, err := inviter.Invitations(ctx)
 	assert.Nil(err)
 	assert.Len(invitations, 0)
-	_, err = inviter.CreateInvitations(ctx)
+	quota := InviteQuota(ctx, inviter)
+	size := InvitationGroupSize
+	_, err = inviter.CreateInvitations(ctx, quota, size)
 	assert.Nil(err)
 	invitations, err = inviter.Invitations(ctx)
 	assert.Nil(err)
@@ -64,7 +66,9 @@ func TestInvitation(t *testing.T) {
 	assert.Nil(invitation)
 
 	// inviter can't create valid invitation codes when there are unused invitation codes presents
-	invitations, err = inviter.CreateInvitations(ctx)
+	quota = InviteQuota(ctx, inviter)
+	size = InvitationGroupSize
+	invitations, err = inviter.CreateInvitations(ctx, quota, size)
 	assert.NotNil(err)
 	assert.Nil(invitations)
 
