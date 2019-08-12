@@ -20,6 +20,7 @@ type PluginContext struct {
 	config        map[string]interface{}
 	plugin        *plugin.Plugin
 	hostDB        *durable.Database
+	groupConfig   *config.Config
 }
 
 func (pc *PluginContext) load() {
@@ -43,6 +44,10 @@ func (pc *PluginContext) MixinClientID() string {
 	return config.AppConfig.Mixin.ClientId
 }
 
+func (pc *PluginContext) GroupConfig() *config.Config {
+	return config.AppConfig
+}
+
 func (pc *PluginContext) HostDB() *durable.Database {
 	return pc.hostDB
 }
@@ -63,6 +68,7 @@ func LoadPlugins(database *durable.Database) {
 				sharedLibrary: p.SharedLibrary,
 				config:        p.Config,
 				hostDB:        database,
+				groupConfig:   config.AppConfig,
 			}
 			plugCtx.load()
 			loadedPlugins = append(loadedPlugins, plugCtx)
