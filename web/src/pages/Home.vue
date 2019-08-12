@@ -173,7 +173,7 @@ export default {
         return;
       }
       // invitation visbility
-      if (this.websiteConf.invite_to_join) {
+      if (this.websiteConf.data.invite_to_join) {
         this.builtinItems.push(this.invitationItem);
       }
       // entries for admin
