@@ -6,6 +6,7 @@ const (
 	EventTypeMessageCreated          EventType = "MessageCreated"          // payload is github.com/MixinNetwork/supergroup.mixin.one/models.Message
 	EventTypeProhibitedStatusChanged EventType = "ProhibitedStatusChanged" // payload is bool
 	EventTypeOrderPaid               EventType = "OrderPaid"               // payload is github.com/MixinNetwork/supergroup.mixin.one/models.Order
+	EventTypeUserCreated             EventType = "UserCreated"             // payload is github.com/MixinNetwork/supergroup.mixin.one/models.User
 )
 
 var callbacks = map[EventType][]func(interface{}){}

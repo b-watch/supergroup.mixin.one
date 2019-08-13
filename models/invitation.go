@@ -91,8 +91,8 @@ func (user *User) invitations(ctx context.Context, historyFlag bool) ([]*Invitat
 			query = fmt.Sprintf("SELECT %s FROM invitations INNER JOIN users on invitations.invitee_id = users.user_id WHERE invitations.inviter_id = $1 AND users.state = $2 ORDER BY invitations.created_at DESC", strings.Join(invitationColumns, ","))
 			rows, err = tx.QueryContext(ctx, query, user.UserId, "paid")
 		} else {
-			query = fmt.Sprintf("SELECT %s FROM invitations WHERE inviter_id = $1 ORDER BY created_at DESC LIMIT $2", strings.Join(invitationColumns, ","))
-			rows, err = tx.QueryContext(ctx, query, user.UserId, InvitationGroupSize)
+			query = fmt.Sprintf("SELECT %s FROM invitations WHERE inviter_id = $1 ORDER BY created_at DESC", strings.Join(invitationColumns, ","))
+			rows, err = tx.QueryContext(ctx, query, user.UserId)
 		}
 		if err != nil {
 			return err
