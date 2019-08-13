@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/MixinNetwork/supergroup.mixin.one/middlewares"
 	"github.com/MixinNetwork/supergroup.mixin.one/plugin"
 	"github.com/MixinNetwork/supergroup.mixin.one/views"
 	"github.com/dimfeld/httptreemux"
@@ -36,7 +37,11 @@ func registerShortcuts(router *httptreemux.TreeMux) {
 }
 
 func (shortcutsImpl) index(w http.ResponseWriter, r *http.Request, _ map[string]string) {
-	views.RenderDataResponse(w, r, plugin.Shortcut.AllGroups())
+	if middlewares.CurrentUser(r).GetRole() == "admin" {
+		views.RenderDataResponse(w, r, plugin.Shortcut.AllGroupsWithPrivilegedItem())
+	} else {
+		views.RenderDataResponse(w, r, plugin.Shortcut.AllGroups())
+	}
 }
 
 func (shortcutsImpl) redirect(w http.ResponseWriter, r *http.Request, params map[string]string) {

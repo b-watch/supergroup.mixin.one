@@ -170,6 +170,7 @@ func createUser(ctx context.Context, accessToken, userId, identityNumber, fullNa
 		if err != nil {
 			return nil, session.TransactionError(ctx, err)
 		}
+
 		return user, nil
 	}
 

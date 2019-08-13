@@ -14,12 +14,13 @@ type shortcut struct{}
 var Shortcut shortcut
 
 type ShortcutItem struct {
-	ID       string `json:"id"`
-	LabelEn  string `json:"label_en"`
-	LabelZh  string `json:"label_zh"`
-	Icon     string `json:"icon"`
-	URL      string `json:"url"`
-	Sequence int    `json:"-"`
+	ID        string `json:"id"`
+	LabelEn   string `json:"label_en"`
+	LabelZh   string `json:"label_zh"`
+	Icon      string `json:"icon"`
+	URL       string `json:"url"`
+	Sequence  int    `json:"-"`
+	AdminOnly bool   `json:"-"`
 }
 
 type ShortcutGroup struct {
@@ -48,7 +49,27 @@ var (
 	shortcutRWMutex sync.RWMutex
 )
 
+func (shortcutGroup ShortcutGroup) filter() *ShortcutGroup {
+	var items []*ShortcutItem
+	for _, item := range shortcutGroup.Items {
+		if !item.AdminOnly {
+			items = append(items, item)
+		}
+	}
+	filteredGroup := &shortcutGroup
+	filteredGroup.Items = items
+	return filteredGroup
+}
+
 func (shortcut) AllGroups() []*ShortcutGroup {
+	var shortcutGroupsFiltered []*ShortcutGroup
+	for _, group := range shortcutGroups {
+		shortcutGroupsFiltered = append(shortcutGroupsFiltered, group.filter())
+	}
+	return shortcutGroupsFiltered
+}
+
+func (shortcut) AllGroupsWithPrivilegedItem() []*ShortcutGroup {
 	return shortcutGroups
 }
 
@@ -90,7 +111,15 @@ func (shortcut) reindex() {
 	}
 }
 
+func (g *ShortcutGroup) CreateAdminOnlyItem(id, labelEn, labelZh, icon, url string, sequence int) *ShortcutItem {
+	return g.createItem(id, labelEn, labelZh, icon, url, sequence, true)
+}
+
 func (g *ShortcutGroup) CreateItem(id, labelEn, labelZh, icon, url string, sequence int) *ShortcutItem {
+	return g.createItem(id, labelEn, labelZh, icon, url, sequence, false)
+}
+
+func (g *ShortcutGroup) createItem(id, labelEn, labelZh, icon, url string, sequence int, adminOnly bool) *ShortcutItem {
 	if s := g.FindItem(id); s != nil {
 		return s
 	}
@@ -99,12 +128,13 @@ func (g *ShortcutGroup) CreateItem(id, labelEn, labelZh, icon, url string, seque
 	defer shortcutRWMutex.Unlock()
 
 	item := &ShortcutItem{
-		ID:       id,
-		LabelEn:  labelEn,
-		LabelZh:  labelZh,
-		URL:      url,
-		Icon:     icon,
-		Sequence: sequence,
+		ID:        id,
+		LabelEn:   labelEn,
+		LabelZh:   labelZh,
+		URL:       url,
+		Icon:      icon,
+		Sequence:  sequence,
+		AdminOnly: adminOnly,
 	}
 
 	g.Items = append(g.Items, item)

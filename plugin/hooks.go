@@ -23,6 +23,11 @@ func (*PluginContext) On(eventName EventType, fn func(interface{})) {
 	callbacks[eventName] = cs
 }
 
+// pass hook from plugin
+func (*PluginContext) Trigger(eventName EventType, obj interface{}) {
+	Trigger(eventName, obj)
+}
+
 // called by main supergroup codebase
 func Trigger(eventName EventType, obj interface{}) {
 	mutex.RLock()
