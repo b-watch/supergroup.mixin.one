@@ -35,12 +35,11 @@ func TestInvitation(t *testing.T) {
 	assert.Nil(err)
 	assert.Len(invitations, 0)
 	quota := InviteQuota(ctx, inviter)
-	size := InvitationGroupSize
-	_, err = inviter.CreateInvitations(ctx, quota, size)
+	_, err = inviter.CreateInvitations(ctx, quota)
 	assert.Nil(err)
 	invitations, err = inviter.Invitations(ctx)
 	assert.Nil(err)
-	assert.Len(invitations, 3)
+	assert.Len(invitations, InvitationGroupSize)
 	assert.False(invitations[0].UsedAt.Valid)
 
 	firstInvitationCode := invitations[0].Code
@@ -56,7 +55,7 @@ func TestInvitation(t *testing.T) {
 	invitee, err = FindUser(ctx, invitee.UserId)
 	assert.Equal(PaymentStatePending, invitee.State)
 	invitations, _ = inviter.Invitations(ctx)
-	assert.Len(invitations, 3)
+	assert.Len(invitations, InvitationGroupSize)
 	assert.True(invitations[0].UsedAt.Valid)
 
 	// invitee can't join with a used invitation code
@@ -67,8 +66,7 @@ func TestInvitation(t *testing.T) {
 
 	// inviter can't create valid invitation codes when there are unused invitation codes presents
 	quota = InviteQuota(ctx, inviter)
-	size = InvitationGroupSize
-	invitations, err = inviter.CreateInvitations(ctx, quota, size)
+	invitations, err = inviter.CreateInvitations(ctx, quota)
 	assert.NotNil(err)
 	assert.Nil(invitations)
 
@@ -84,5 +82,5 @@ func TestInvitation(t *testing.T) {
 	assert.Nil(err)
 	assert.NotNil(invitation)
 	removedCount, err := inviter.CleanUnpaidUser(ctx)
-	assert.Equal(2, removedCount)
+	assert.Equal(InvitationGroupSize-1, removedCount)
 }

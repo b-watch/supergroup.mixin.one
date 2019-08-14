@@ -139,15 +139,15 @@ func (user *User) invitations(ctx context.Context, historyFlag bool) ([]*Invitat
 	return invitations, nil
 }
 
-func (user *User) CreateInvitations(ctx context.Context, quota int, size int) ([]*Invitation, error) {
-	if quota == 0 {
+func (user *User) CreateInvitations(ctx context.Context, quota int) ([]*Invitation, error) {
+	if quota <= 0 {
 		return nil, session.InviteRuleNotMetError(ctx)
 	}
 
 	var invitations []*Invitation
 	var values bytes.Buffer
 	createTime := time.Now()
-	for i := 1; i <= size; i++ {
+	for i := 1; i <= quota; i++ {
 		invitation := &Invitation{InviterID: user.UserId, Code: uniqueInvitationCode(), CreatedAt: createTime}
 		if i > 1 {
 			values.WriteString(",")

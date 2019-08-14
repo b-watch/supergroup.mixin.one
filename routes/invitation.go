@@ -38,8 +38,7 @@ func (impl *invitationsImpl) index(w http.ResponseWriter, r *http.Request, param
 func (impl *invitationsImpl) create(w http.ResponseWriter, r *http.Request, params map[string]string) {
 	user := middlewares.CurrentUser(r)
 	quota := models.InviteQuota(r.Context(), user)
-	size := models.InvitationGroupSize
-	if invitations, err := user.CreateInvitations(r.Context(), quota, size); err != nil {
+	if invitations, err := user.CreateInvitations(r.Context(), quota); err != nil {
 		views.RenderErrorResponse(w, r, err)
 	} else {
 		views.RenderInvitations(w, r, invitations)
