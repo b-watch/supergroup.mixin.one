@@ -75,6 +75,11 @@ func InsufficientAccountBalanceError(ctx context.Context) Error {
 	return createError(ctx, http.StatusAccepted, 20117, description, nil)
 }
 
+func InviteRuleNotMetError(ctx context.Context) Error {
+	description := "Invite rule not met."
+	return createError(ctx, http.StatusAccepted, 20118, description, nil)
+}
+
 func BlazeServerError(ctx context.Context, err error) Error {
 	description := "Blaze server error."
 	return createError(ctx, http.StatusInternalServerError, 7000, description, err)

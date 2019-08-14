@@ -141,7 +141,7 @@ func (user *User) invitations(ctx context.Context, historyFlag bool) ([]*Invitat
 
 func (user *User) CreateInvitations(ctx context.Context, quota int, size int) ([]*Invitation, error) {
 	if quota == 0 {
-		return nil, session.ForbiddenError(ctx)
+		return nil, session.InviteRuleNotMetError(ctx)
 	}
 
 	var invitations []*Invitation
