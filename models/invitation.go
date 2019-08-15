@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/MixinNetwork/supergroup.mixin.one/durable"
+	"github.com/MixinNetwork/supergroup.mixin.one/plugin"
 	"github.com/MixinNetwork/supergroup.mixin.one/session"
 	"github.com/lib/pq"
 	"github.com/lithammer/shortuuid"
@@ -29,22 +30,28 @@ CREATE INDEX IF NOT EXISTS invitations_inviterx ON invitations(inviter_id);
 const InvitationGroupSize = 3
 
 // allow new invitations only when all invitees in current invitation group has paid
-var InviteQuota = func(ctx context.Context, user *User) int {
+var InviteQuota = func(ctx context.Context, user *User) (quota int, err error) {
+	var currentInvitations []*Invitation
 	if user.State == PaymentStatePaid {
-		if currentInvitations, err := user.Invitations(ctx); err == nil {
+		if currentInvitations, err = user.Invitations(ctx); err == nil {
 			if len(currentInvitations) > 0 {
 				for _, invitation := range currentInvitations {
-					if invitee := invitation.Invitee; invitee != nil && invitee.State != PaymentStatePaid {
-						return 0
+					if invitee := invitation.Invitee; invitee == nil || invitee.State != PaymentStatePaid {
+						err = session.InviteRuleNotMetError(ctx, "")
+
+						return
 					}
 				}
-				return InvitationGroupSize
-			} else if len(currentInvitations) == 0 {
-				return InvitationGroupSize
 			}
+			quota = InvitationGroupSize
+			return
 		}
 	}
-	return 0
+
+	if err != nil {
+		err = session.TransactionError(ctx, err)
+	}
+	return
 }
 
 type Invitation struct {
@@ -54,6 +61,11 @@ type Invitation struct {
 	CreatedAt time.Time
 	UsedAt    pq.NullTime
 	Invitee   *User
+}
+
+type InvitationCodesBundle struct {
+	Invitations []*Invitation
+	Inviter     *User
 }
 
 var invitationColumns = []string{"invitations.code", "invitations.inviter_id", "invitations.invitee_id", "invitations.created_at", "invitations.used_at"}
@@ -140,10 +152,6 @@ func (user *User) invitations(ctx context.Context, historyFlag bool) ([]*Invitat
 }
 
 func (user *User) CreateInvitations(ctx context.Context, quota int) ([]*Invitation, error) {
-	if quota <= 0 {
-		return nil, session.InviteRuleNotMetError(ctx)
-	}
-
 	var invitations []*Invitation
 	var values bytes.Buffer
 	createTime := time.Now()
@@ -160,6 +168,10 @@ func (user *User) CreateInvitations(ctx context.Context, quota int) ([]*Invitati
 	if err != nil {
 		return nil, session.TransactionError(ctx, err)
 	}
+
+	invitationCodesBundle := InvitationCodesBundle{Invitations: invitations, Inviter: user}
+	plugin.Trigger(plugin.EventTypeInvitationCodesCreated, invitationCodesBundle)
+
 	return invitations, nil
 }
 

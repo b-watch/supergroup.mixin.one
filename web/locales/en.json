@@ -130,6 +130,7 @@
     "invitees": "Invitees",
     "rule1": "* Pending: code is used but unverified",
     "rule2": "* You can apply new invitation codes after all existed codes had been used and verified",
+    "reject_reason": "{amount} usdt valued BOX required before next request",
     "used_friends": "Invited passed: ",
     "pending_friends": "Invitation pending: ",
     "status_used": "Used",

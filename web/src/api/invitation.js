@@ -11,6 +11,10 @@ const Invitation = {
 
   apply: async function (code) {
     return await api.put('/invitations/' + code, {}, {})
-  }
+  },
+
+  checkRule: async function () {
+    return await api.get(`/invite_rule`, {})
+  },
 }
 export default Invitation;

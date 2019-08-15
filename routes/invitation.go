@@ -16,6 +16,7 @@ func registerInvitations(router *httptreemux.TreeMux) {
 	router.GET("/invitations", impl.index)
 	router.POST("/invitations", impl.create)
 	router.PUT("/invitations/:code", impl.apply)
+	router.GET("/invite_rule", impl.validate)
 }
 
 func (impl *invitationsImpl) index(w http.ResponseWriter, r *http.Request, params map[string]string) {
@@ -37,7 +38,12 @@ func (impl *invitationsImpl) index(w http.ResponseWriter, r *http.Request, param
 
 func (impl *invitationsImpl) create(w http.ResponseWriter, r *http.Request, params map[string]string) {
 	user := middlewares.CurrentUser(r)
-	quota := models.InviteQuota(r.Context(), user)
+	quota, err := models.InviteQuota(r.Context(), user)
+	if err != nil {
+		views.RenderErrorResponse(w, r, err)
+		return
+	}
+
 	if invitations, err := user.CreateInvitations(r.Context(), quota); err != nil {
 		views.RenderErrorResponse(w, r, err)
 	} else {
@@ -52,4 +58,18 @@ func (impl *invitationsImpl) apply(w http.ResponseWriter, r *http.Request, param
 	} else {
 		views.RenderInvitation(w, r, invitation)
 	}
+}
+
+func (impl *invitationsImpl) validate(w http.ResponseWriter, r *http.Request, params map[string]string) {
+	user := middlewares.CurrentUser(r)
+	_, err := models.InviteQuota(r.Context(), user)
+	if err != nil {
+		views.RenderErrorResponse(w, r, err)
+	} else {
+		views.RenderDataResponse(w, r, inviteRuleResult{true})
+	}
+}
+
+type inviteRuleResult struct {
+	Pass bool `json:"pass"`
 }

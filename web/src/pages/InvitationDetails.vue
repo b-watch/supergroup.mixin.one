@@ -32,6 +32,9 @@
             size="small"
             @click="apply"
           >{{this.$t("invitation.apply")}}</van-button>
+          <p v-show="requiredAmount" class="subtitle">
+          {{this.$t("invitation.reject_reason", {amount: this.requiredAmount})}}
+          </p>
         </div>
       </van-tab>
       <van-tab :title="titleInvitees" name="invitees">
@@ -62,11 +65,21 @@ export default {
       loading: false,
       finished: true,
       invitationsHistory: [],
-      invitationsCurrent: []
+      invitationsCurrent: [],
+      ableToInvite: false,
+      requiredAmount: null,
     };
   },
 
   mounted() {
+    this.GLOBAL.api.invitation.checkRule().then(response => {
+        this.ableToInvite = true;
+    })
+    .catch(error => {
+      if (error.description != "") {
+        this.requiredAmount = error.description;
+      }
+    });
     this.GLOBAL.api.invitation.index(false).then(response => {
       this.invitationsCurrent = response.data;
     });
@@ -97,7 +110,7 @@ export default {
       return this.unusedInvitations.concat(this.pendingInvitations) || [];
     },
     applyDisabled() {
-      return this.availableInvitations.length > 0;
+      return !this.ableToInvite;
     },
     finishedText() {
       return this.invitationsCurrent.length === 0
@@ -114,7 +127,13 @@ export default {
   methods: {
     apply() {
       this.GLOBAL.api.invitation.create().then(response => {
-        this.invitationsCurrent = response.data;
+        this.invitationsCurrent.unshift(...response.data);
+      })
+      .catch(error => {
+        this.ableToInvite = false;
+        if (error.description != "") {
+          this.requiredAmount = error.description;
+        }
       });
     }
   }

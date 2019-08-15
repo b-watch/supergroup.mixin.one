@@ -8,19 +8,19 @@ import (
 )
 
 type InvitationView struct {
-	Type      string 		`json:"type"`
-	Code  		string 		`json:"code"`
-	Invitee  	*InviteeView 	`json:"invitee"`
-	IsUsed   	bool 			`json:"is_used"`
-	CreatedAt *time.Time `json:"created_at"`
-	UsedAt    *time.Time `json:"used_at"`
+	Type      string       `json:"type"`
+	Code      string       `json:"code"`
+	Invitee   *InviteeView `json:"invitee"`
+	IsUsed    bool         `json:"is_used"`
+	CreatedAt *time.Time   `json:"created_at"`
+	UsedAt    *time.Time   `json:"used_at"`
 }
 
 type InviteeView struct {
 	IdentityNumber int64  `json:"identity_number"`
 	FullName       string `json:"full_name"`
 	AvatarURL      string `json:"avatar_url"`
-	State					 string `json:"state"`
+	State          string `json:"state"`
 }
 
 func buildInvitation(invitation *models.Invitation) InvitationView {
@@ -28,9 +28,9 @@ func buildInvitation(invitation *models.Invitation) InvitationView {
 	if invitee := invitation.Invitee; invitee != nil {
 		inviteeView = &InviteeView{
 			IdentityNumber: invitee.IdentityNumber,
-			FullName: invitee.FullName,
-			AvatarURL: invitee.AvatarURL,
-			State: invitee.State,
+			FullName:       invitee.FullName,
+			AvatarURL:      invitee.AvatarURL,
+			State:          invitee.State,
 		}
 	}
 
@@ -39,12 +39,12 @@ func buildInvitation(invitation *models.Invitation) InvitationView {
 		usedAt = &invitation.UsedAt.Time
 	}
 	return InvitationView{
-		Type: 	"Invitation",
-		Code: invitation.Code,
-		Invitee: inviteeView,
-		IsUsed: invitation.UsedAt.Valid,
+		Type:      "Invitation",
+		Code:      invitation.Code,
+		Invitee:   inviteeView,
+		IsUsed:    invitation.UsedAt.Valid,
 		CreatedAt: &invitation.CreatedAt,
-		UsedAt: usedAt,
+		UsedAt:    usedAt,
 	}
 }
 
