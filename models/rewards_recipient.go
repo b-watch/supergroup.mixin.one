@@ -100,3 +100,16 @@ func RemoveRewardsRecipient(ctx context.Context, userId string) error {
 	}
 	return nil
 }
+
+func CreateRewardsMessage(ctx context.Context, fromUser, toUser *User, amount, symbol string) error {
+	err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
+		if err := createSystemRewardsMessage(ctx, tx, fromUser, toUser, amount, symbol); err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}

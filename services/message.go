@@ -71,6 +71,11 @@ type MessageContext struct {
 	WriteBuffer    chan []byte
 	RecipientId    map[string]time.Time
 }
+type TransferMemoInst struct {
+	Action string `json:"a"`
+	Param1 string `json:"p1"`
+	Param2 string `json:"p2"`
+}
 
 func (service *MessageService) Run(ctx context.Context) error {
 	go distribute(ctx)
@@ -346,21 +351,56 @@ func handleTransfer(ctx context.Context, mc *MessageContext, transfer TransferVi
 	if user == nil || err != nil {
 		return err
 	}
-	if user.TraceId == transfer.TraceId {
-		if transfer.Amount == config.AppConfig.System.PaymentAmount && transfer.AssetId == config.AppConfig.System.PaymentAssetId {
-			return user.Payment(ctx)
+	if inst, err := crackTransferProtocol(ctx, mc, transfer, user); err == nil && inst.Action != "" {
+		if inst.Action == "rewards" {
+			return handleRewardsPayment(ctx, mc, transfer, user, inst)
 		}
-		for _, asset := range config.AppConfig.System.AccpetPaymentAssetList {
-			if number.FromString(transfer.Amount).Equal(number.FromString(asset.Amount).RoundFloor(8)) && transfer.AssetId == asset.AssetId {
+	} else {
+		if user.TraceId == transfer.TraceId {
+			if transfer.Amount == config.AppConfig.System.PaymentAmount && transfer.AssetId == config.AppConfig.System.PaymentAssetId {
 				return user.Payment(ctx)
 			}
+			for _, asset := range config.AppConfig.System.AccpetPaymentAssetList {
+				if number.FromString(transfer.Amount).Equal(number.FromString(asset.Amount).RoundFloor(8)) && transfer.AssetId == asset.AssetId {
+					return user.Payment(ctx)
+				}
+			}
+		} else if order, err := models.GetOrder(ctx, transfer.TraceId); err == nil && order != nil {
+			return handleOrderPayment(ctx, mc, transfer, order)
+		} else if packet, err := models.PayPacket(ctx, id.String(), transfer.AssetId, transfer.Amount); err != nil || packet == nil {
+			return err
+		} else if packet.State == models.PacketStatePaid {
+			return sendAppCard(ctx, mc, packet)
 		}
-	} else if order, err := models.GetOrder(ctx, transfer.TraceId); err == nil && order != nil {
-		return handleOrderPayment(ctx, mc, transfer, order)
-	} else if packet, err := models.PayPacket(ctx, id.String(), transfer.AssetId, transfer.Amount); err != nil || packet == nil {
+	}
+	return nil
+}
+
+func crackTransferProtocol(ctx context.Context, mc *MessageContext, transfer TransferView, user *models.User) (*TransferMemoInst, error) {
+	var data *TransferMemoInst
+	err := json.Unmarshal([]byte(transfer.Memo), &data)
+	return data, err
+}
+
+func handleRewardsPayment(ctx context.Context, mc *MessageContext, transfer TransferView, user *models.User, inst *TransferMemoInst) error {
+	userId := inst.Param1
+	targetUser, err := models.FindUser(ctx, userId)
+	if err != nil {
+		return nil
+	}
+	log.Println("Rewards to ", userId)
+	in := &bot.TransferInput{
+		AssetId:     transfer.AssetId,
+		RecipientId: targetUser.UserId,
+		Amount:      number.FromString(transfer.Amount),
+		TraceId:     bot.UuidNewV4().String(),
+		Memo:        "Rewards from " + user.FullName,
+	}
+	if err := bot.CreateTransfer(ctx, in, config.AppConfig.Mixin.ClientId, config.AppConfig.Mixin.SessionId, config.AppConfig.Mixin.SessionKey, config.AppConfig.Mixin.SessionAssetPIN, config.AppConfig.Mixin.PinToken); err != nil {
 		return err
-	} else if packet.State == models.PacketStatePaid {
-		return sendAppCard(ctx, mc, packet)
+	}
+	if err := models.CreateRewardsMessage(ctx, user, targetUser, transfer.Amount, inst.Param2); err != nil {
+		return err
 	}
 	return nil
 }

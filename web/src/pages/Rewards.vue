@@ -185,11 +185,16 @@ export default {
   },
   methods: {
     async pay() {
-      window.location.href = `mixin://pay?recipient=${
-        this.selectedUser.user_id
-      }&asset=${this.selectedAsset.asset_id}&amount=${
-        this.form.amount
-      }&trace=${uuid.v4()}&memo=REWARDS`;
+      let memo = JSON.stringify({
+        a: "rewards",
+        p1: this.selectedUser.user_id,
+        p2: this.selectedAsset.symbol
+      });
+      window.location.href = `mixin://pay?recipient=${CLIENT_ID}&asset=${
+        this.selectedAsset.asset_id
+      }&amount=${this.form.amount}&trace=${uuid.v4()}&memo=${encodeURIComponent(
+        memo
+      )}`;
       Dialog.confirm({
         title: this.$t("rewards.dialog_confrim_title"),
         confirmButtonText: this.$t("rewards.dialog_confrim_ok"),

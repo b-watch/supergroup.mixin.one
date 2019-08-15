@@ -95,6 +95,7 @@ type Config struct {
 		MessageTipsHelpBtn      string `yaml:"message_tips_help_btn"`
 		MessageTipsUnsubscribe  string `yaml:"message_tips_unsubscribe"`
 		MessageTipsTooMany      string `yaml:"message_tips_too_many"`
+		MessageTipsRewards      string `yaml:"message_tips_rewards"`
 		MessageCommandsInfo     string `yaml:"message_commands_info"`
 		MessageCommandsInfoResp string `yaml:"message_commands_info_resp"`
 	} `yaml:"message_template"`
