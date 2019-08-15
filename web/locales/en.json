@@ -151,7 +151,10 @@
     }
   },
   "rewards": {
+    "title": "Rewards",
     "entry": "Rewards",
+    "no_recipient": "No one to get rewards",
+    "add_label": "Add recipients",
     "select_assets": "Select assets",
     "placeholder_amount": "Min: {min}",
     "amount": "Amount",

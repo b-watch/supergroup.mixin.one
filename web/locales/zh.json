@@ -151,7 +151,10 @@
     }
   },
   "rewards": {
+    "title": "打赏",
     "entry": "打赏",
+    "no_recipient": "没有人可以接受打赏",
+    "add_label": "添加受赏人",
     "select_assets": "打赏币种",
     "placeholder_amount": "至少 {min}",
     "amount": "金额",

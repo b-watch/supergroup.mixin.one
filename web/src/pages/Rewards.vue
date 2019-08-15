@@ -2,19 +2,40 @@
   <loading :loading="loading" :fullscreen="true">
     <div class="rewards-page">
       <nav-bar :title="$t('rewards.title')" :hasTopRight="false" :hasBack="true"></nav-bar>
-
-      <van-cell-group :title="$t('rewards.recipient_section_title')">
-        <van-cell v-for="user in recipients" :title="user.full_name">
-          <van-icon
-            v-if="user.selected"
-            slot="right-icon"
-            name="success"
-            style="line-height: inherit;"
-          />
-        </van-cell>
+      <van-cell-group v-if="recipients.length !== 0" :title="$t('rewards.recipient_section_title')">
+        <van-swipe-cell v-bind:key="user.user_id" v-for="user in recipients">
+          <van-cell :title="user.full_name" @click="selectUser(user)">
+            <van-image
+              round
+              width="28"
+              height="28"
+              slot="icon"
+              :src="user.avatar_url"
+              style="margin-right: 10px; border-radius: 99em;"
+            />
+            <van-icon
+              v-if="user.selected"
+              slot="right-icon"
+              name="success"
+              style="line-height: inherit;"
+            />
+          </van-cell>
+          <template v-if="isAdmin" slot="right">
+            <van-button square type="danger" text="Remove" @click="removeUser(user)" />
+          </template>
+        </van-swipe-cell>
+      </van-cell-group>
+      <template v-else>
+        <div v-if="!loading" style="text-align: center; margin-bottom: 20px;">
+          <van-icon name="warning-o" size="64"></van-icon>
+          <div class>{{$t('rewards.no_recipient')}}</div>
+        </div>
+      </template>
+      <van-cell-group v-if="isAdmin">
+        <van-cell :title="$t('rewards.add_label')" icon="plus" @click="showAddDialog = true"></van-cell>
       </van-cell-group>
 
-      <van-cell-group :title="$t('rewards.rewards_section_title')">
+      <van-cell-group v-if="selectedUser" :title="$t('rewards.rewards_section_title')">
         <row-select
           :index="0"
           :title="$t('rewards.select_assets')"
@@ -36,7 +57,7 @@
         </van-cell>
         <van-cell title=" " :value="esitmatedValue"></van-cell>
       </van-cell-group>
-      <van-row style="padding: 20px">
+      <van-row v-if="selectedUser" style="padding: 20px">
         <van-col span="24">
           <van-button
             style="width: 100%"
@@ -47,6 +68,15 @@
         </van-col>
       </van-row>
     </div>
+    <van-dialog v-model="showAddDialog" title="标题" show-cancel-button @confirm="addUser">
+      <div style="padding: 20px 0;">
+        <van-cell-group>
+          <van-cell>
+            <van-field v-model="addUserId" placeholder="identity number or user id"></van-field>
+          </van-cell>
+        </van-cell-group>
+      </div>
+    </van-dialog>
   </loading>
 </template>
 
@@ -56,7 +86,8 @@ import RowSelect from "@/components/RowSelect";
 import Row from "@/components/Nav";
 import Loading from "@/components/Loading";
 import uuid from "uuid";
-import { Toast } from "vant";
+import utils from "@/utils";
+import { Toast, Dialog } from "vant";
 import { CLIENT_ID } from "@/constants";
 
 export default {
@@ -67,23 +98,10 @@ export default {
   data() {
     return {
       loading: false,
-      recipients: [
-        {
-          user_id: "dac88ffd-0d6e-397a-97bc-965d7f1aa944",
-          full_name: "lyric",
-          selected: true
-        },
-        {
-          user_id: "e9a5b807-fa8b-455a-8dfa-b189d28310ff",
-          full_name: "ABC123",
-          selected: false
-        },
-        {
-          user_id: "e9a5b807-fa8b-455a-8dfa-b189d28310ff",
-          full_name: "john",
-          selected: false
-        }
-      ],
+      showAddDialog: false,
+      isAdmin: false,
+      addUserId: "",
+      recipients: [],
       coversationId: "",
       assets: [],
       selectedAsset: null,
@@ -113,6 +131,17 @@ export default {
       }
       this.coversationId = prepareInfo.data.conversation.coversation_id;
     }
+    let recipientsInfo = await this.GLOBAL.api.rewards.indexRecipients();
+    if (recipientsInfo && recipientsInfo.data) {
+      this.recipients = recipientsInfo.data.map(x => {
+        x.selected = false;
+        return x;
+      });
+      if (this.recipients.length) {
+        this.recipients[0].selected = true;
+      }
+    }
+    this.isAdmin = window.localStorage.getItem("role") === "admin";
     this.loading = false;
   },
   computed: {
@@ -151,7 +180,6 @@ export default {
   },
   methods: {
     async pay() {
-      this.loading = true;
       window.location.href = `mixin://pay?recipient=${
         this.selectedUser.user_id
       }&asset=${this.selectedAsset.asset_id}&amount=${
@@ -162,6 +190,32 @@ export default {
       this.selectedAsset = this.assets[ix];
       this.form.memo = this.$t("rewards.default_memo", {
         symbol: this.selectedAsset.symbol
+      });
+    },
+    async addUser() {
+      try {
+        const resp = await this.GLOBAL.api.rewards.createRecipient(
+          this.addUserId
+        );
+        utils.reloadPage();
+      } catch (err) {
+        console.log(err);
+        Toast(`User ${this.addUserId} not found.`);
+      }
+    },
+    async removeUser(user) {
+      try {
+        const resp = await this.GLOBAL.api.rewards.deleteRecipient(
+          user.user_id
+        );
+      } catch (err) {
+        Toast(`User ${user.full_name} not found.`);
+      }
+    },
+    selectUser(user) {
+      this.recipients = this.recipients.map(x => {
+        x.selected = x.user_id === user.user_id;
+        return x;
       });
     }
   }
