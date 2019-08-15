@@ -53,6 +53,11 @@ export default {
         label: this.$t("invitation.entry"),
         url: "/invitation/details"
       },
+      rewardsItem: {
+        icon: require("../assets/images/rewards.png"),
+        label: this.$t("rewards.entry"),
+        url: "/rewards"
+      },
       messagesItem: {
         icon: require("../assets/images/messages-circle.png"),
         label: this.$t("home.op_messages"),
@@ -171,6 +176,10 @@ export default {
       if (this.meInfo.data.state === "pending") {
         this.$router.push("/pay");
         return;
+      }
+      // tips visbility
+      if (this.websiteConf.data.rewards_enable) {
+        this.builtinItems.push(this.rewardsItem);
       }
       // invitation visbility
       if (this.websiteConf.data.invite_to_join) {

@@ -149,5 +149,14 @@
       "line2_1": "<div>You need an <span class=emphasis> invitation code </span> to join the group.</div>",
       "line2_2": "<div>You need an <span class=emphasis> invitation code </span> and pay <span class=emphasis>{amount} {symbol}</span> to join the group.</div>"
     }
+  },
+  "rewards": {
+    "entry": "Rewards",
+    "select_assets": "Select assets",
+    "placeholder_amount": "Min: {min}",
+    "amount": "Amount",
+    "pay": "Send Rewards",
+    "recipient_section_title": "Select a recipient",
+    "rewards_section_title": "Rewards"
   }
 }

@@ -1,0 +1,190 @@
+<template>
+  <loading :loading="loading" :fullscreen="true">
+    <div class="rewards-page">
+      <nav-bar :title="$t('rewards.title')" :hasTopRight="false" :hasBack="true"></nav-bar>
+
+      <van-cell-group :title="$t('rewards.recipient_section_title')">
+        <van-cell v-for="user in recipients" :title="user.full_name">
+          <van-icon
+            v-if="user.selected"
+            slot="right-icon"
+            name="success"
+            style="line-height: inherit;"
+          />
+        </van-cell>
+      </van-cell-group>
+
+      <van-cell-group :title="$t('rewards.rewards_section_title')">
+        <row-select
+          :index="0"
+          :title="$t('rewards.select_assets')"
+          :columns="assets"
+          placeholder="Tap to Select"
+          @change="onChangeAsset"
+        >
+          <span slot="text">{{selectedAsset ? selectedAsset.text : 'Tap to Select'}}</span>
+        </row-select>
+        <van-cell>
+          <van-field
+            type="number"
+            v-model="form.amount"
+            :label="$t('rewards.amount')"
+            :placeholder="$t('rewards.placeholder_amount', {min: minAmount})"
+          >
+            <span slot="right-icon">{{selectedAsset ? selectedAsset.symbol : ''}}</span>
+          </van-field>
+        </van-cell>
+        <van-cell title=" " :value="esitmatedValue"></van-cell>
+      </van-cell-group>
+      <van-row style="padding: 20px">
+        <van-col span="24">
+          <van-button
+            style="width: 100%"
+            type="info"
+            :disabled="!validated"
+            @click="pay"
+          >{{$t('rewards.pay')}}</van-button>
+        </van-col>
+      </van-row>
+    </div>
+  </loading>
+</template>
+
+<script>
+import NavBar from "@/components/Nav";
+import RowSelect from "@/components/RowSelect";
+import Row from "@/components/Nav";
+import Loading from "@/components/Loading";
+import uuid from "uuid";
+import { Toast } from "vant";
+import { CLIENT_ID } from "@/constants";
+
+export default {
+  name: "Prepare-Packet",
+  props: {
+    msg: String
+  },
+  data() {
+    return {
+      loading: false,
+      recipients: [
+        {
+          user_id: "dac88ffd-0d6e-397a-97bc-965d7f1aa944",
+          full_name: "lyric",
+          selected: true
+        },
+        {
+          user_id: "e9a5b807-fa8b-455a-8dfa-b189d28310ff",
+          full_name: "ABC123",
+          selected: false
+        },
+        {
+          user_id: "e9a5b807-fa8b-455a-8dfa-b189d28310ff",
+          full_name: "john",
+          selected: false
+        }
+      ],
+      coversationId: "",
+      assets: [],
+      selectedAsset: null,
+      form: {
+        amount: ""
+      }
+    };
+  },
+  components: {
+    NavBar,
+    RowSelect,
+    Loading
+  },
+  async mounted() {
+    this.loading = true;
+    let prepareInfo = await this.GLOBAL.api.packet.prepare();
+    if (prepareInfo) {
+      this.assets = prepareInfo.data.assets.map(x => {
+        x.text = `${x.symbol} (${x.balance})`;
+        return x;
+      });
+      if (this.assets.length) {
+        this.selectedAsset = this.assets[0];
+        this.form.memo = this.$t("rewards.default_memo", {
+          symbol: this.selectedAsset.symbol
+        });
+      }
+      this.coversationId = prepareInfo.data.conversation.coversation_id;
+    }
+    this.loading = false;
+  },
+  computed: {
+    validated() {
+      if (
+        this.form.amount &&
+        this.selectedAsset &&
+        this.form.amount >= this.minAmount
+      ) {
+        return true;
+      }
+      return false;
+    },
+    esitmatedValue() {
+      let val = 0;
+      if (this.form.amount && this.selectedAsset) {
+        val = this.form.amount * this.selectedAsset.price_usd;
+      }
+      return "≈$" + val.toLocaleString();
+    },
+    minAmount() {
+      const base = 0.001; // 1 usd
+      if (this.selectedAsset) {
+        return (base / this.selectedAsset.price_usd).toFixed(4);
+      }
+      return 0;
+    },
+    selectedUser() {
+      for (let ix = 0; ix < this.recipients.length; ix++) {
+        if (this.recipients[ix].selected) {
+          return this.recipients[ix];
+        }
+      }
+      return this.recipients[0];
+    }
+  },
+  methods: {
+    async pay() {
+      this.loading = true;
+      window.location.href = `mixin://pay?recipient=${
+        this.selectedUser.user_id
+      }&asset=${this.selectedAsset.asset_id}&amount=${
+        this.form.amount
+      }&trace=${uuid.v4()}&memo=REWARDS`;
+    },
+    onChangeAsset(ix) {
+      this.selectedAsset = this.assets[ix];
+      this.form.memo = this.$t("rewards.default_memo", {
+        symbol: this.selectedAsset.symbol
+      });
+    }
+  }
+};
+</script>
+
+<!-- Add "scoped" attribute to limit CSS to this component only -->
+<style scoped>
+.rewards-page {
+  padding-top: 60px;
+}
+h3 {
+  margin: 40px 0 0;
+}
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+li {
+  display: inline-block;
+  margin: 0 10px;
+}
+a {
+  color: #42b983;
+}
+</style>
