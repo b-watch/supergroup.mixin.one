@@ -22,7 +22,7 @@ func registerRewardsRecipients(router *httptreemux.TreeMux) {
 
 	router.GET("/rewards/recipients", impl.index)
 	router.POST("/rewards/recipients", impl.create)
-	router.DELETE("/rewards/recipients", impl.delete)
+	router.DELETE("/rewards/recipients/:id", impl.delete)
 }
 
 func (impl *rewardsImpl) create(w http.ResponseWriter, r *http.Request, params map[string]string) {
@@ -50,7 +50,7 @@ func (impl *rewardsImpl) delete(w http.ResponseWriter, r *http.Request, params m
 		views.RenderErrorResponse(w, r, session.ForbiddenError(r.Context()))
 		return
 	}
-	err := models.RemoveRewardsRecipient(r.Context(), params["userId"])
+	err := models.RemoveRewardsRecipient(r.Context(), params["id"])
 	if err != nil {
 		views.RenderErrorResponse(w, r, err)
 	} else {
