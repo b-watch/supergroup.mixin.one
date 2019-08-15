@@ -3,6 +3,7 @@ package routes
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/MixinNetwork/supergroup.mixin.one/middlewares"
 	"github.com/MixinNetwork/supergroup.mixin.one/models"
@@ -14,7 +15,7 @@ import (
 type rewardsImpl struct{}
 
 type rewardsRequest struct {
-	UserId string `json:"user_id"`
+	UserIdentityNumber string `json:"identity_number"`
 }
 
 func registerRewardsRecipients(router *httptreemux.TreeMux) {
@@ -37,7 +38,15 @@ func (impl *rewardsImpl) create(w http.ResponseWriter, r *http.Request, params m
 		return
 	}
 
-	recipient, err := models.CreateRewardsRecipient(r.Context(), body.UserId)
+	var err error
+	var identityNum int64
+	var recipient *models.RewardsRecipient
+	identityNum, err = strconv.ParseInt(body.UserIdentityNumber, 10, 64)
+	if err != nil {
+		views.RenderErrorResponse(w, r, err)
+		return
+	}
+	recipient, err = models.CreateRewardsRecipient(r.Context(), identityNum)
 	if err != nil {
 		views.RenderErrorResponse(w, r, err)
 	} else {
@@ -54,7 +63,7 @@ func (impl *rewardsImpl) delete(w http.ResponseWriter, r *http.Request, params m
 	if err != nil {
 		views.RenderErrorResponse(w, r, err)
 	} else {
-		views.RenderDataResponse(w, r, nil)
+		views.RenderDataResponse(w, r, []interface{}{})
 	}
 }
 

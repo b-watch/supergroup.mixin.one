@@ -14,7 +14,7 @@ import (
 
 const rewards_recipient_DDL = `
 CREATE TABLE IF NOT EXISTS rewards_recipients (
-	user_id           VARCHAR(36) PRIMARY KEY CHECK (coupon_id ~* '^[0-9a-f-]{36,36}$'),
+	user_id           VARCHAR(36) PRIMARY KEY CHECK (user_id ~* '^[0-9a-f-]{36,36}$'),
 	full_name         VARCHAR(512) NOT NULL DEFAULT '',
 	avatar_url        VARCHAR(1024) NOT NULL DEFAULT '',
 	status			  VARCHAR(16) NOT NULL DEFAULT '',
@@ -25,11 +25,11 @@ CREATE UNIQUE INDEX IF NOT EXISTS rewards_recipients_userx ON rewards_recipients
 `
 
 type RewardsRecipient struct {
-	UserId    string
-	FullName  string
-	AvatarURL string
-	Status    string
-	CreatedAt time.Time
+	UserId    string    `json:"user_id"`
+	FullName  string    `json:"full_name"`
+	AvatarURL string    `json:"avatar_url"`
+	Status    string    `json:"status"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 var rewardsRecipientColums = []string{"user_id", "full_name", "avatar_url", "status", "created_at"}
@@ -40,12 +40,12 @@ func (c *RewardsRecipient) values() []interface{} {
 
 func rewardsRecipientFromRow(row durable.Row) (*RewardsRecipient, error) {
 	var c RewardsRecipient
-	err := row.Scan(&c.UserId, &c.Status, &c.CreatedAt)
+	err := row.Scan(&c.UserId, &c.FullName, &c.AvatarURL, &c.Status, &c.CreatedAt)
 	return &c, err
 }
 
 func GetRewardsRecipients(ctx context.Context) ([]*RewardsRecipient, error) {
-	query := fmt.Sprintf("SELECT %s FROM rewards_recipient WHERE created_at IS NULL LIMIT 10", strings.Join(rewardsRecipientColums, ","))
+	query := fmt.Sprintf("SELECT %s FROM rewards_recipients ORDER BY created_at desc LIMIT 10", strings.Join(rewardsRecipientColums, ","))
 	rows, err := session.Database(ctx).QueryContext(ctx, query)
 	if err != nil {
 		return nil, session.TransactionError(ctx, err)
@@ -63,15 +63,19 @@ func GetRewardsRecipients(ctx context.Context) ([]*RewardsRecipient, error) {
 	return recipients, nil
 }
 
-func CreateRewardsRecipient(ctx context.Context, userId string) (*RewardsRecipient, error) {
+func CreateRewardsRecipient(ctx context.Context, identityNumber int64) (*RewardsRecipient, error) {
 	var recipient RewardsRecipient
 	err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
-		var user *User
+		var users []*User
 		var err error
-		user, err = findUserById(ctx, tx, userId)
+		users, err = findUsersByIdentityNumber(ctx, identityNumber)
 		if err != nil {
 			return session.TransactionError(ctx, err)
 		}
+		if len(users) == 0 {
+			return session.NotFoundError(ctx)
+		}
+		user := users[0]
 		recipient.UserId = user.UserId
 		recipient.FullName = user.FullName
 		recipient.AvatarURL = user.AvatarURL
@@ -79,12 +83,12 @@ func CreateRewardsRecipient(ctx context.Context, userId string) (*RewardsRecipie
 		recipient.CreatedAt = time.Now()
 
 		values := fmt.Sprintf("('%s', '%s', '%s', '%s', '%s')", recipient.UserId, recipient.FullName, recipient.AvatarURL, recipient.Status, string(pq.FormatTimestamp(recipient.CreatedAt)))
-		query := fmt.Sprintf("INSERT INTO rewards_recipients (user_id, full_name, avatar_url, status, created_at) VALUES %s", values)
+		query := fmt.Sprintf("INSERT INTO rewards_recipients (user_id, full_name, avatar_url, status, created_at) VALUES %s ON CONFLICT (user_id) DO NOTHING", values)
 		_, err = session.Database(ctx).ExecContext(ctx, query)
 		return err
 	})
 	if err != nil {
-		return nil, session.TransactionError(ctx, err)
+		return nil, err
 	}
 	return &recipient, nil
 }

@@ -147,3 +147,13 @@ CREATE TABLE currency_rates (
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS currency_rates_pkey ON currency_rates(symbol);
+
+CREATE TABLE IF NOT EXISTS rewards_recipients (
+	user_id           VARCHAR(36) PRIMARY KEY CHECK (user_id ~* '^[0-9a-f-]{36,36}$'),
+	full_name         VARCHAR(512) NOT NULL DEFAULT '',
+	avatar_url        VARCHAR(1024) NOT NULL DEFAULT '',
+	status			  VARCHAR(16) NOT NULL DEFAULT '',
+	created_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS rewards_recipients_userx ON rewards_recipients(user_id);
