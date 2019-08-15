@@ -160,6 +160,10 @@
     "amount": "金额",
     "pay": "打赏",
     "recipient_section_title": "打赏给谁？",
-    "rewards_section_title": "打赏多少？"
+    "rewards_section_title": "打赏多少？",
+    "dialog_confrim_title": "打赏没？",
+    "dialog_confrim_desc": "有没有给 {name} 打赏支付？",
+    "dialog_confrim_ok": "已经打赏了！",
+    "dialog_confrim_cancel": "取消"
   }
 }

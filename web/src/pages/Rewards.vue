@@ -68,7 +68,12 @@
         </van-col>
       </van-row>
     </div>
-    <van-dialog v-model="showAddDialog" title="标题" show-cancel-button @confirm="addUser">
+    <van-dialog
+      v-model="showAddDialog"
+      title="Add Recipientss"
+      show-cancel-button
+      @confirm="addUser"
+    >
       <div style="padding: 20px 0;">
         <van-cell-group>
           <van-cell>
@@ -185,6 +190,18 @@ export default {
       }&asset=${this.selectedAsset.asset_id}&amount=${
         this.form.amount
       }&trace=${uuid.v4()}&memo=REWARDS`;
+      Dialog.confirm({
+        title: this.$t("rewards.dialog_confrim_title"),
+        confirmButtonText: this.$t("rewards.dialog_confrim_ok"),
+        cancelButtonText: this.$t("rewards.dialog_confrim_cancel"),
+        message: this.$t("rewards.dialog_confrim_desc", {
+          name: this.selectedUser.full_name
+        })
+      })
+        .then(() => {
+          window.close();
+        })
+        .catch(() => {});
     },
     onChangeAsset(ix) {
       this.selectedAsset = this.assets[ix];
@@ -199,7 +216,6 @@ export default {
         );
         utils.reloadPage();
       } catch (err) {
-        console.log(err);
         Toast(`User ${this.addUserId} not found.`);
       }
     },
