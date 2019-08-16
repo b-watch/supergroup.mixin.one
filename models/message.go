@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	bot "github.com/MixinNetwork/bot-api-go-client"
 	"github.com/MixinNetwork/supergroup.mixin.one/config"
@@ -242,6 +243,9 @@ func createSystemRewardsMessage(ctx context.Context, tx *sql.Tx, fromUser *User,
 	// 	host = host + config.RouterModeHashSymbol
 	// }
 	// actionURL := fmt.Sprintf(host + "/rewards")
+	if utf8.RuneCountInString(label) > 36 {
+		label = label[:36]
+	}
 	btns, err := json.Marshal([]interface{}{map[string]string{
 		"label":  label,
 		"action": actionURL,
