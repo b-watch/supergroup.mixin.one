@@ -235,9 +235,16 @@ func generateRandomColor() string {
 func createSystemRewardsMessage(ctx context.Context, tx *sql.Tx, fromUser *User, toUser *User, amount, symbol string) error {
 	label := fmt.Sprintf(config.AppConfig.MessageTemplate.MessageTipsRewards, fromUser.FullName, toUser.FullName, amount, symbol)
 	t := time.Now()
+	host := config.AppConfig.Service.HTTPResourceHost
+	actionURL := host
+	// @TODO uncomment followed lines when new Messenger iOS fix the transpile bug.
+	// if config.AppConfig.System.RouterMode == config.RouterModeHash {
+	// 	host = host + config.RouterModeHashSymbol
+	// }
+	// actionURL := fmt.Sprintf(host + "/rewards")
 	btns, err := json.Marshal([]interface{}{map[string]string{
 		"label":  label,
-		"action": config.AppConfig.Service.HTTPResourceHost,
+		"action": actionURL,
 		"color":  generateRandomColor(),
 	}})
 	message := &Message{

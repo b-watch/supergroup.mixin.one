@@ -28,7 +28,7 @@ const routes = [
   { path: "/members/", component: Members },
   { path: "/messages/", component: Messages },
   { path: "/coupons/", component: Coupons },
-  { path: "/Rewards/", component: Rewards },
+  { path: "/rewards/", component: Rewards },
   { path: "/auth", component: TestAuth },
   { path: "/invitations/", component: Invitations },
   // special route for wechat, no auth required.
