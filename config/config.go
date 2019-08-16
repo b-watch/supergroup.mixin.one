@@ -59,6 +59,7 @@ type Config struct {
 		VideoMessageEnable       bool     `yaml:"video_message_enable"`
 		ContactMessageEnable     bool     `yaml:"contact_message_enable"`
 		RewardsEnable            bool     `yaml:"rewards_enable"`
+		RewardsMinAmountBase     string   `yaml:"rewards_min_amount_base"`
 		LimitMessageFrequency    bool     `yaml:"limit_message_frequency"`
 		OperatorList             []string `yaml:"operator_list"`
 		Operators                map[string]bool
@@ -136,6 +137,7 @@ type ExportedConfig struct {
 	PayToJoin              bool            `json:"pay_to_join"`
 	InviteToJoin           bool            `json:"invite_to_join"`
 	RewardsEnable          bool            `json:"rewards_enable"`
+	RewardsMinAmountBase   string          `json:"rewards_min_amount_base"`
 	HomeWelcomeMessage     string          `json:"home_welcome_message"`
 	HomeShortcutGroups     []ShortcutGroup `json:"home_shortcut_groups"`
 	ServiceName            string          `json:"service_name"`
@@ -174,6 +176,7 @@ func GetExported() ExportedConfig {
 	exc.PayToJoin = AppConfig.System.PayToJoin
 	exc.InviteToJoin = AppConfig.System.InviteToJoin
 	exc.RewardsEnable = AppConfig.System.RewardsEnable
+	exc.RewardsMinAmountBase = AppConfig.System.RewardsMinAmountBase
 	exc.HomeWelcomeMessage = AppConfig.Appearance.HomeWelcomeMessage
 	exc.HomeShortcutGroups = AppConfig.Appearance.HomeShortcutGroups
 	exc.ServiceName = AppConfig.Service.Name

@@ -20,6 +20,8 @@ system:
   image_message_enable: true
   video_message_enable: false
   contact_message_enable: true
+  rewards_enable: true
+  rewards_min_amount_base: "0.01" # usd
   limit_message_frequency: false
   detect_image: false
   detect_link: false

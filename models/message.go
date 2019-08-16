@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"strings"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 	"github.com/MixinNetwork/supergroup.mixin.one/plugin"
 	"github.com/MixinNetwork/supergroup.mixin.one/session"
 	"github.com/gofrs/uuid"
+	colorful "github.com/lucasb-eyer/go-colorful"
 )
 
 const (
@@ -212,22 +214,36 @@ func createSystemJoinMessage(ctx context.Context, tx *sql.Tx, user *User) error 
 	return err
 }
 
+func generateRandomColor() string {
+	colorNum := rand.Intn(24)
+	totalColors := 24
+	color := colorful.Hsl(float64(colorNum*(360/totalColors)%360), 1, 0.5)
+	return color.Hex()
+}
+
 func createSystemRewardsMessage(ctx context.Context, tx *sql.Tx, fromUser *User, toUser *User, amount, symbol string) error {
-	b, err := readProhibitedStatus(ctx, tx)
-	if err != nil || b {
-		return nil
-	}
+	// b, err := readProhibitedStatus(ctx, tx)
+	// if err != nil || b {
+	// 	return nil
+	// }
+	label := fmt.Sprintf(config.AppConfig.MessageTemplate.MessageTipsRewards, fromUser.FullName, toUser.FullName, amount, symbol)
 	t := time.Now()
+	btns, err := json.Marshal([]interface{}{map[string]string{
+		"label":  label,
+		"action": "",
+		"color":  generateRandomColor(),
+	}})
 	message := &Message{
 		MessageId: bot.UuidNewV4().String(),
 		UserId:    config.AppConfig.Mixin.ClientId,
-		Category:  "PLAIN_TEXT",
+		Category:  "APP_BUTTON_GROUP",
 		Data: base64.StdEncoding.EncodeToString(
-			[]byte(fmt.Sprintf(config.AppConfig.MessageTemplate.MessageTipsRewards, fromUser.FullName, toUser.FullName, amount, symbol))),
+			btns),
 		CreatedAt: t,
 		UpdatedAt: t,
 		State:     MessageStatePending,
 	}
+
 	params, positions := compileTableQuery(messagesCols)
 	query := fmt.Sprintf("INSERT INTO messages (%s) VALUES (%s)", params, positions)
 	_, err = tx.ExecContext(ctx, query, message.values()...)

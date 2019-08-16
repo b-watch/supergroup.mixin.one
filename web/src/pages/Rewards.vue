@@ -105,9 +105,9 @@ export default {
       loading: false,
       showAddDialog: false,
       isAdmin: false,
+      rewardsMinAmountBase: "0.01",
       addUserId: "",
       recipients: [],
-      coversationId: "",
       assets: [],
       selectedAsset: null,
       form: {
@@ -122,6 +122,10 @@ export default {
   },
   async mounted() {
     this.loading = true;
+    let confInfo = await this.GLOBAL.api.website.config();
+    if (confInfo && confInfo.data) {
+      this.rewardsMinAmountBase = confInfo.data.rewards_min_amount_base;
+    }
     let prepareInfo = await this.GLOBAL.api.packet.prepare();
     if (prepareInfo) {
       this.assets = prepareInfo.data.assets.map(x => {
@@ -134,7 +138,6 @@ export default {
           symbol: this.selectedAsset.symbol
         });
       }
-      this.coversationId = prepareInfo.data.conversation.coversation_id;
     }
     let recipientsInfo = await this.GLOBAL.api.rewards.indexRecipients();
     if (recipientsInfo && recipientsInfo.data) {
@@ -168,7 +171,7 @@ export default {
       return "≈$" + val.toLocaleString();
     },
     minAmount() {
-      const base = 0.001; // 1 usd
+      const base = this.rewardsMinAmountBase; // 1 usd
       if (this.selectedAsset) {
         return (base / this.selectedAsset.price_usd).toFixed(4);
       }

@@ -21,6 +21,7 @@ require (
 	github.com/gorilla/websocket v1.4.0
 	github.com/lib/pq v1.1.1
 	github.com/lithammer/shortuuid v3.0.0+incompatible
+	github.com/lucasb-eyer/go-colorful v1.0.2
 	github.com/objcoding/wxpay v1.0.6
 	github.com/rs/xid v1.2.1 // indirect
 	github.com/silenceper/wechat v1.0.0
