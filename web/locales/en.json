@@ -161,6 +161,10 @@
     "amount": "Amount",
     "pay": "Send Rewards",
     "recipient_section_title": "Select a recipient",
-    "rewards_section_title": "Rewards"
+    "rewards_section_title": "Rewards",
+    "dialog_confrim_title": "Have you paid?",
+    "dialog_confrim_desc": "Have you paid to send rewards to {name}?",
+    "dialog_confrim_ok": "I've Paid",
+    "dialog_confrim_cancel": "Cancel"
   }
 }

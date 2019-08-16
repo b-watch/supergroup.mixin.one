@@ -157,7 +157,7 @@ export default {
       if (
         this.form.amount &&
         this.selectedAsset &&
-        this.form.amount >= this.minAmount
+        parseFloat(this.form.amount) >= parseFloat(this.minAmount)
       ) {
         return true;
       }
