@@ -16,7 +16,6 @@ import (
 	"github.com/MixinNetwork/supergroup.mixin.one/plugin"
 	"github.com/MixinNetwork/supergroup.mixin.one/session"
 	"github.com/gofrs/uuid"
-	colorful "github.com/lucasb-eyer/go-colorful"
 )
 
 const (
@@ -215,10 +214,22 @@ func createSystemJoinMessage(ctx context.Context, tx *sql.Tx, user *User) error 
 }
 
 func generateRandomColor() string {
-	colorNum := rand.Intn(13)
-	totalColors := 13
-	color := colorful.Hsl(float64(colorNum*(360/totalColors)%360), 1, 0.5)
-	return color.Hex()
+	colors := []string{
+		"#0C9C9C",
+		"#80C748",
+		"#E57C00",
+		"#E50000",
+		"#00D8E5",
+		"#4C7EFE",
+		"#854CFE",
+		"#E54CFE",
+		"#FE4C82",
+		"#FFA800",
+		"#3672CC",
+		"#88462A",
+	}
+	ix := rand.Intn(len(colors))
+	return colors[ix]
 }
 
 func createSystemRewardsMessage(ctx context.Context, tx *sql.Tx, fromUser *User, toUser *User, amount, symbol string) error {
@@ -226,7 +237,7 @@ func createSystemRewardsMessage(ctx context.Context, tx *sql.Tx, fromUser *User,
 	t := time.Now()
 	btns, err := json.Marshal([]interface{}{map[string]string{
 		"label":  label,
-		"action": "",
+		"action": config.AppConfig.Service.HTTPResourceHost,
 		"color":  generateRandomColor(),
 	}})
 	message := &Message{
