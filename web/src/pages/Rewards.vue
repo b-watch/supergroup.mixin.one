@@ -232,6 +232,7 @@ export default {
         const resp = await this.GLOBAL.api.rewards.deleteRecipient(
           user.user_id
         );
+        utils.reloadPage();
       } catch (err) {
         Toast(`User ${user.full_name} not found.`);
       }
