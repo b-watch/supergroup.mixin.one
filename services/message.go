@@ -349,6 +349,7 @@ func handleTransfer(ctx context.Context, mc *MessageContext, transfer TransferVi
 	}
 	user, err := models.FindUser(ctx, userId)
 	if user == nil || err != nil {
+		log.Println("No such a user", userId)
 		return err
 	}
 	if inst, err := crackTransferProtocol(ctx, mc, transfer, user); err == nil && inst.Action != "" {
@@ -358,6 +359,7 @@ func handleTransfer(ctx context.Context, mc *MessageContext, transfer TransferVi
 			log.Println("Unknown instruction", inst)
 		}
 	} else {
+		log.Println("Incorrect inst or err", inst, err)
 		if user.TraceId == transfer.TraceId {
 			if transfer.Amount == config.AppConfig.System.PaymentAmount && transfer.AssetId == config.AppConfig.System.PaymentAssetId {
 				return user.Payment(ctx)

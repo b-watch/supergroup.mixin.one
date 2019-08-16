@@ -175,7 +175,7 @@ func (message *Message) Distribute(ctx context.Context) error {
 			}
 			v := values.String()
 			if v != "" {
-				query := fmt.Sprintf("INSERT INTO distributed_messages (%s) VALUES %s", strings.Join(distributedMessagesCols, ","), values.String())
+				query := fmt.Sprintf("INSERT INTO distributed_messages (%s) VALUES %s ON CONFLICT (message_id) DO NOTHING", strings.Join(distributedMessagesCols, ","), values.String())
 				_, err = tx.ExecContext(ctx, query)
 				return err
 			}
