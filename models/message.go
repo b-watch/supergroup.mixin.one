@@ -215,17 +215,13 @@ func createSystemJoinMessage(ctx context.Context, tx *sql.Tx, user *User) error 
 }
 
 func generateRandomColor() string {
-	colorNum := rand.Intn(24)
-	totalColors := 24
+	colorNum := rand.Intn(13)
+	totalColors := 13
 	color := colorful.Hsl(float64(colorNum*(360/totalColors)%360), 1, 0.5)
 	return color.Hex()
 }
 
 func createSystemRewardsMessage(ctx context.Context, tx *sql.Tx, fromUser *User, toUser *User, amount, symbol string) error {
-	// b, err := readProhibitedStatus(ctx, tx)
-	// if err != nil || b {
-	// 	return nil
-	// }
 	label := fmt.Sprintf(config.AppConfig.MessageTemplate.MessageTipsRewards, fromUser.FullName, toUser.FullName, amount, symbol)
 	t := time.Now()
 	btns, err := json.Marshal([]interface{}{map[string]string{

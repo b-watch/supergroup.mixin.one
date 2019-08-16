@@ -354,6 +354,8 @@ func handleTransfer(ctx context.Context, mc *MessageContext, transfer TransferVi
 	if inst, err := crackTransferProtocol(ctx, mc, transfer, user); err == nil && inst.Action != "" {
 		if inst.Action == "rewards" {
 			return handleRewardsPayment(ctx, mc, transfer, user, inst)
+		} else {
+			log.Println("Unknown instruction", inst)
 		}
 	} else {
 		if user.TraceId == transfer.TraceId {
@@ -386,6 +388,7 @@ func handleRewardsPayment(ctx context.Context, mc *MessageContext, transfer Tran
 	userId := inst.Param1
 	targetUser, err := models.FindUser(ctx, userId)
 	if err != nil {
+		log.Println("can't find user to reward", userId, err)
 		return nil
 	}
 	log.Println("Rewards to ", userId)
@@ -397,9 +400,11 @@ func handleRewardsPayment(ctx context.Context, mc *MessageContext, transfer Tran
 		Memo:        "Rewards from " + user.FullName,
 	}
 	if err := bot.CreateTransfer(ctx, in, config.AppConfig.Mixin.ClientId, config.AppConfig.Mixin.SessionId, config.AppConfig.Mixin.SessionKey, config.AppConfig.Mixin.SessionAssetPIN, config.AppConfig.Mixin.PinToken); err != nil {
+		log.Println("can't transfer to recipient", err)
 		return err
 	}
 	if err := models.CreateRewardsMessage(ctx, user, targetUser, transfer.Amount, inst.Param2); err != nil {
+		log.Println("can't create rewards message", err)
 		return err
 	}
 	return nil
