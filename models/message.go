@@ -244,7 +244,7 @@ func createSystemRewardsMessage(ctx context.Context, tx *sql.Tx, fromUser *User,
 	// }
 	// actionURL := fmt.Sprintf(host + "/rewards")
 	if utf8.RuneCountInString(label) > 36 {
-		label = label[:36]
+		label = string([]rune(label)[:36])
 	}
 	btns, err := json.Marshal([]interface{}{map[string]string{
 		"label":  label,
