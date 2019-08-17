@@ -32,9 +32,10 @@
             size="small"
             @click="apply"
           >{{this.$t("invitation.apply")}}</van-button>
-          <p v-show="requiredAmount" class="subtitle">
-          {{this.$t("invitation.reject_reason", {amount: this.requiredAmount})}}
-          </p>
+          <p
+            v-show="requiredAmount"
+            class="subtitle"
+          >{{this.$t("invitation.reject_reason", {amount: this.requiredAmount.toFixed(8)})}}</p>
         </div>
       </van-tab>
       <van-tab :title="titleInvitees" name="invitees">
@@ -67,19 +68,21 @@ export default {
       invitationsHistory: [],
       invitationsCurrent: [],
       ableToInvite: false,
-      requiredAmount: null,
+      requiredAmount: null
     };
   },
 
   mounted() {
-    this.GLOBAL.api.invitation.checkRule().then(response => {
+    this.GLOBAL.api.invitation
+      .checkRule()
+      .then(response => {
         this.ableToInvite = true;
-    })
-    .catch(error => {
-      if (error.description != "") {
-        this.requiredAmount = error.description;
-      }
-    });
+      })
+      .catch(error => {
+        if (error.description != "") {
+          this.requiredAmount = error.description;
+        }
+      });
     this.GLOBAL.api.invitation.index(false).then(response => {
       this.invitationsCurrent = response.data;
     });
@@ -126,15 +129,17 @@ export default {
 
   methods: {
     apply() {
-      this.GLOBAL.api.invitation.create().then(response => {
-        this.invitationsCurrent.unshift(...response.data);
-      })
-      .catch(error => {
-        this.ableToInvite = false;
-        if (error.description != "") {
-          this.requiredAmount = error.description;
-        }
-      });
+      this.GLOBAL.api.invitation
+        .create()
+        .then(response => {
+          this.invitationsCurrent.unshift(...response.data);
+        })
+        .catch(error => {
+          this.ableToInvite = false;
+          if (error.description != "") {
+            this.requiredAmount = error.description;
+          }
+        });
     }
   }
 };
