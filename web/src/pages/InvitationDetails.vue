@@ -35,7 +35,7 @@
           <p
             v-show="requiredAmount"
             class="subtitle"
-          >{{this.$t("invitation.reject_reason", {amount: this.requiredAmount.toFixed(8)})}}</p>
+          >{{this.$t("invitation.reject_reason", {amount: this.requiredAmount })}}</p>
         </div>
       </van-tab>
       <van-tab :title="titleInvitees" name="invitees">
