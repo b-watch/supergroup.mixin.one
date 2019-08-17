@@ -234,6 +234,11 @@ func generateRandomColor() string {
 }
 
 func createSystemRewardsMessage(ctx context.Context, tx *sql.Tx, fromUser *User, toUser *User, amount, symbol string) error {
+	b, err := readProhibitedStatus(ctx, tx)
+	if err != nil || b {
+		return nil
+	}
+
 	label := fmt.Sprintf(config.AppConfig.MessageTemplate.MessageTipsRewards, fromUser.FullName, toUser.FullName, amount, symbol)
 	t := time.Now()
 	host := config.AppConfig.Service.HTTPResourceHost
