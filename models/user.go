@@ -417,7 +417,8 @@ func (user *User) GetRole() string {
 }
 
 func (user *User) isAdmin() bool {
-	if config.AppConfig.System.Operators[user.UserId] {
+	if config.AppConfig.Mixin.ClientId == user.UserId ||
+		config.AppConfig.System.Operators[user.UserId] {
 		return true
 	}
 	return false
