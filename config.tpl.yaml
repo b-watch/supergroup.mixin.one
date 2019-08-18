@@ -22,6 +22,7 @@ system:
   contact_message_enable: true
   rewards_enable: true
   rewards_min_amount_base: "0.01" # usd
+  redpacket_min_amount_base: "0.1" # usd
   limit_message_frequency: false
   detect_image: false
   detect_link: false
