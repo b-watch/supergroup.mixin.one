@@ -84,7 +84,8 @@
   "members": {
     "title": "成员管理",
     "kick": "踢出",
-    "block": "屏蔽"
+    "block": "屏蔽",
+    "unsubscribed": "未订阅"
   },
   "pay_wxqr": {
     "title": "微信支付",
@@ -130,7 +131,7 @@
     "invitees": "受邀者",
     "rule1": "* 未付费：被邀请用户已使用邀请码但未成功付费",
     "rule2": "* 当邀请码均被使用并成功付费后即可申请新邀请码",
-    "reject_reason": "距离下次申请还差 {amount} usdt 等值 BOX",
+    "reject_reason": "距离下次申请还差 {amount} USDT 等值 BOX。若符合要求但无法申请，请等候一小时，并确保 BOX 都在 Mixin 钱包，且确保已经完成授权。",
     "used_friends": "成功邀请好友：",
     "pending_friends": "待付费好友：",
     "status_used": "已使用",

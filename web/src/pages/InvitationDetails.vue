@@ -20,11 +20,7 @@
           />
         </van-list>
         <div class="layout">
-          <p class="subtitle">
-            {{this.$t("invitation.rule1")}}
-            <br />
-            {{this.$t("invitation.rule2")}}
-          </p>
+          <p class="subtitle">{{this.$t("invitation.rule1")}}</p>
           <van-button
             :disabled="applyDisabled"
             class="button"

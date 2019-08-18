@@ -84,7 +84,8 @@
   "members": {
     "title": "Members",
     "kick": "Kick",
-    "block": "Block"
+    "block": "Block",
+    "unsubscribed": "Unsubscribed"
   },
   "pay_wxqr": {
     "title": "WeChat Payment",
@@ -130,7 +131,7 @@
     "invitees": "Invitees",
     "rule1": "* Pending: code is used but unverified",
     "rule2": "* You can apply new invitation codes after all existed codes had been used and verified",
-    "reject_reason": "{amount} usdt valued BOX required before next request",
+    "reject_reason": "{amount} USDT valued BOX required before next request. If you meet the requirement, please wait for 1 hour and make sure all BOX Tokens are in Mixin Messenger Wallet.",
     "used_friends": "Invited passed: ",
     "pending_friends": "Invitation pending: ",
     "status_used": "Used",
