@@ -103,9 +103,10 @@ func (current *User) CreatePacket(ctx context.Context, assetId string, amount nu
 }
 
 func (current *User) createPacket(ctx context.Context, asset *Asset, amount number.Decimal, totalCount int64, greeting string) (*Packet, error) {
-	if amount.Cmp(number.FromString(config.AppConfig.System.RedPacketMinAmountBase)) < 0 {
-		return nil, session.BadDataError(ctx)
-	}
+	// @TODO should compare the amount.price_usd with RedPacketMinAmountBase
+	// if amount.Cmp(number.FromString(config.AppConfig.System.RedPacketMinAmountBase)) < 0 {
+	// 	return nil, session.BadDataError(ctx)
+	// }
 	if utf8.RuneCountInString(greeting) > 512 {
 		return nil, session.BadDataError(ctx)
 	}

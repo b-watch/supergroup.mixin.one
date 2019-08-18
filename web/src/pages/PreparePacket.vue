@@ -151,7 +151,7 @@ export default {
         asset_id: this.selectedAsset.asset_id
       };
 
-      if (payload.greeting.length > 512) {
+      if (payload.greeting.length > 512 / 3) {
         this.loading = false;
         Toast(this.$t("prepare_packet.memo_too_long_err"));
         return;
@@ -168,7 +168,7 @@ export default {
         }
       } catch (err) {
         this.loading = false;
-        Toast("Error: " + err.toString());
+        Toast("Error: " + err.description ? err.description : err.toString());
       }
 
       let pkt = createResp.data;
