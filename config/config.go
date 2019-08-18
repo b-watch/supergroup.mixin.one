@@ -49,17 +49,19 @@ type Config struct {
 		DatabaseName     string `yaml:"database_name"`
 	} `yaml:"database"`
 	System struct {
-		RouterMode               string   `yaml:"router_mode"`
-		MessageShardModifier     string   `yaml:"message_shard_modifier"`
-		MessageShardSize         int64    `yaml:"message_shard_size"`
-		PriceAssetsEnable        bool     `yaml:"price_asset_enable"`
-		ReadAssetsEnable         bool     `yaml:"read_assets_enable"`
-		AudioMessageEnable       bool     `yaml:"audio_message_enable"`
-		ImageMessageEnable       bool     `yaml:"image_message_enable"`
-		VideoMessageEnable       bool     `yaml:"video_message_enable"`
-		ContactMessageEnable     bool     `yaml:"contact_message_enable"`
-		RewardsEnable            bool     `yaml:"rewards_enable"`
-		RewardsMinAmountBase     string   `yaml:"rewards_min_amount_base"`
+		RouterMode             string `yaml:"router_mode"`
+		MessageShardModifier   string `yaml:"message_shard_modifier"`
+		MessageShardSize       int64  `yaml:"message_shard_size"`
+		PriceAssetsEnable      bool   `yaml:"price_asset_enable"`
+		ReadAssetsEnable       bool   `yaml:"read_assets_enable"`
+		AudioMessageEnable     bool   `yaml:"audio_message_enable"`
+		ImageMessageEnable     bool   `yaml:"image_message_enable"`
+		VideoMessageEnable     bool   `yaml:"video_message_enable"`
+		ContactMessageEnable   bool   `yaml:"contact_message_enable"`
+		RewardsEnable          bool   `yaml:"rewards_enable"`
+		RewardsMinAmountBase   string `yaml:"rewards_min_amount_base"`
+		RedPacketMinAmountBase string `yaml:"redpacket_min_amount_base"`
+
 		LimitMessageFrequency    bool     `yaml:"limit_message_frequency"`
 		OperatorList             []string `yaml:"operator_list"`
 		Operators                map[string]bool
@@ -138,6 +140,7 @@ type ExportedConfig struct {
 	InviteToJoin           bool            `json:"invite_to_join"`
 	RewardsEnable          bool            `json:"rewards_enable"`
 	RewardsMinAmountBase   string          `json:"rewards_min_amount_base"`
+	RedPacketMinAmountBase string          `json:"redpacket_min_amount_base"`
 	HomeWelcomeMessage     string          `json:"home_welcome_message"`
 	HomeShortcutGroups     []ShortcutGroup `json:"home_shortcut_groups"`
 	ServiceName            string          `json:"service_name"`
@@ -177,6 +180,7 @@ func GetExported() ExportedConfig {
 	exc.InviteToJoin = AppConfig.System.InviteToJoin
 	exc.RewardsEnable = AppConfig.System.RewardsEnable
 	exc.RewardsMinAmountBase = AppConfig.System.RewardsMinAmountBase
+	exc.RedPacketMinAmountBase = AppConfig.System.RedPacketMinAmountBase
 	exc.HomeWelcomeMessage = AppConfig.Appearance.HomeWelcomeMessage
 	exc.HomeShortcutGroups = AppConfig.Appearance.HomeShortcutGroups
 	exc.ServiceName = AppConfig.Service.Name

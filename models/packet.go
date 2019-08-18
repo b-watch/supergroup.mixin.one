@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS packets (
 	user_id	          VARCHAR(36) NOT NULL CHECK (user_id ~* '^[0-9a-f-]{36,36}$'),
 	asset_id          VARCHAR(36) NOT NULL CHECK (asset_id ~* '^[0-9a-f-]{36,36}$'),
 	amount            VARCHAR(128) NOT NULL,
-	greeting          VARCHAR(36) NOT NULL,
+	greeting          VARCHAR(512) NOT NULL,
 	total_count       BIGINT NOT NULL,
 	remaining_count   BIGINT NOT NULL,
 	remaining_amount  VARCHAR(128) NOT NULL,
@@ -77,14 +77,6 @@ func (current *User) Prepare(ctx context.Context) (int64, error) {
 }
 
 func (current *User) CreatePacket(ctx context.Context, assetId string, amount number.Decimal, totalCount int64, greeting string) (*Packet, error) {
-	if !current.isAdmin() {
-		b, err := ReadProhibitedProperty(ctx)
-		if err != nil {
-			return nil, err
-		} else if b {
-			return nil, session.ForbiddenError(ctx)
-		}
-	}
 	asset, err := current.ShowAsset(ctx, assetId)
 	if err != nil {
 		return nil, err
@@ -111,10 +103,10 @@ func (current *User) CreatePacket(ctx context.Context, assetId string, amount nu
 }
 
 func (current *User) createPacket(ctx context.Context, asset *Asset, amount number.Decimal, totalCount int64, greeting string) (*Packet, error) {
-	if amount.Cmp(number.FromString("0.0001")) < 0 {
+	if amount.Cmp(number.FromString(config.AppConfig.System.RedPacketMinAmountBase)) < 0 {
 		return nil, session.BadDataError(ctx)
 	}
-	if utf8.RuneCountInString(greeting) > 36 {
+	if utf8.RuneCountInString(greeting) > 512 {
 		return nil, session.BadDataError(ctx)
 	}
 	amount = amount.RoundFloor(8)

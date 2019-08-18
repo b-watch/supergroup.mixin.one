@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS packets (
   user_id           VARCHAR(36) NOT NULL CHECK (user_id ~* '^[0-9a-f-]{36,36}$'),
   asset_id          VARCHAR(36) NOT NULL CHECK (asset_id ~* '^[0-9a-f-]{36,36}$'),
   amount            VARCHAR(128) NOT NULL,
-  greeting          VARCHAR(36) NOT NULL,
+  greeting          VARCHAR(512) NOT NULL,
   total_count       BIGINT NOT NULL,
   remaining_count   BIGINT NOT NULL,
   remaining_amount  VARCHAR(128) NOT NULL,

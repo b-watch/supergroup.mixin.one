@@ -1,107 +1,115 @@
 <template>
   <loading :loading="loading" :fullscreen="true">
-  <div class="packet-page" :class="isClose ? '' : 'open'">
-    <div class="packet header">
-      <div class="user avatar">
-        <img v-if="hasAvatar" :src="user ? user.avatar_url : '#'" alt="user avatar"/>
-        <p v-else>{{firstLetter}}</p>
+    <div class="packet-page" :class="isClose ? '' : 'open'">
+      <div class="packet header">
+        <div class="user avatar">
+          <img v-if="hasAvatar" :src="user ? user.avatar_url : '#'" alt="user avatar" />
+          <p v-else>{{firstLetter}}</p>
+        </div>
+        <h1 class="user name">{{user ? user.full_name : '...'}}</h1>
+        <div class="greeting" v-if="pktData" v-html="formattedGreeting"></div>
       </div>
-      <h1 class="user name">{{user ? user.full_name : '...'}}</h1>
-      <h2 class="greeting" v-if="pktData">
-        <i class="icon-bubble"></i> 
-        {{pktData.greeting || '...'}}
-      </h2>
-    </div>
 
-    <div v-if="!isClose" class="packet lottery">
-      <template v-if="lottery">
-        <h3>{{lottery.amount}}<span>{{asset.symbol}}</span></h3>
-        <p>{{$t('packet.paid')}}</p>
-      </template>
-      <template v-else>
-        <h3 class="expire statement">{{$t('packet.completed')}}</h3>
-      </template>
-    </div>
-    <div v-else class="packet open button">
-      <button @click="openPacket">{{$t('packet.open')}}</button>
-    </div>
-
-    <template v-if="pktData">
-      <div v-if="!isClose" class="packet history">
-        <h4>{{$t('packet.opened', {opened_count: pktData.opened_count, total_count: pktData.total_count})}}, 
-          {{pktData.opened_amount}}/{{pktData.amount}} {{asset.symbol}}</h4>
-        <ul >
-          <li v-for="user in pktData.participants">
-            <div class="user avatar">
-              <p v-if="user.firstLetter">{{user.firstLetter}}</p>
-              <img v-else :src="user.avatar_url" alt="user avatar"/>
-            </div>
-            <div class="user info">
-              <h5>{{user.full_name}}</h5>
-              <time>{{user.created_at}}</time>
-            </div>
-            <div class="packet amount">{{user.amount}} {{user.symbol}}</div>
-          </li>
-        </ul>
+      <div v-if="!isClose" class="packet lottery">
+        <template v-if="lottery">
+          <h3>
+            {{lottery.amount}}
+            <span>{{asset.symbol}}</span>
+          </h3>
+          <p>{{$t('packet.paid')}}</p>
+        </template>
+        <template v-else>
+          <h3 class="expire statement">{{$t('packet.completed')}}</h3>
+        </template>
       </div>
-      <div class="submitting overlay">
-        <div class="spinner-container">
-          <div class="spinner">
-            <div class="rect1"></div>
-            <div class="rect2"></div>
-            <div class="rect3"></div>
-            <div class="rect4"></div>
-            <div class="rect5"></div>
+      <div v-else class="packet open button">
+        <button @click="openPacket">{{$t('packet.open')}}</button>
+      </div>
+
+      <template v-if="pktData">
+        <div v-if="!isClose" class="packet history">
+          <h4>
+            {{$t('packet.opened', {opened_count: pktData.opened_count, total_count: pktData.total_count})}},
+            {{pktData.opened_amount}}/{{pktData.amount}} {{asset.symbol}}
+          </h4>
+          <ul>
+            <li v-for="user in pktData.participants">
+              <a class="user avatar" :href="'mixin://users/' + user.user_id">
+                <p v-if="user.firstLetter">{{user.firstLetter}}</p>
+                <img v-else :src="user.avatar_url" alt="user avatar" />
+              </a>
+              <div class="user info">
+                <h5>{{user.full_name}}</h5>
+                <time>{{user.created_at}}</time>
+              </div>
+              <div class="packet amount">{{user.amount}} {{user.symbol}}</div>
+            </li>
+          </ul>
+        </div>
+        <div class="submitting overlay">
+          <div class="spinner-container">
+            <div class="spinner">
+              <div class="rect1"></div>
+              <div class="rect2"></div>
+              <div class="rect3"></div>
+              <div class="rect4"></div>
+              <div class="rect5"></div>
+            </div>
           </div>
         </div>
-      </div>     
-    </template> 
-  </div>
+      </template>
+    </div>
   </loading>
 </template>
 
 <script>
-import Loading from '@/components/Loading'
-import dayjs from 'dayjs'
-import utils from '@/utils'
+import Loading from "@/components/Loading";
+import dayjs from "dayjs";
+import utils from "@/utils";
 
 export default {
   name: "Packet",
   components: {
     Loading
   },
-  data () {
+  data() {
     return {
       loading: false,
       pktData: null,
       isClose: true,
-      asset: {symbol: 'BTC'},
+      asset: { symbol: "BTC" },
       lottery: null,
       user: null,
-      greeting: '',
+      greeting: "",
       openedCount: 0,
       totalCount: 0,
       openedAmount: 0,
-      Amount: 0,
-    }
+      Amount: 0
+    };
   },
   computed: {
-    hasAvatar () {
-      return this.user && this.user.avatar_url
+    hasAvatar() {
+      return this.user && this.user.avatar_url;
     },
-    firstLetter () {
-      return this.user ? this.user.full_name.trim()[0] : 'A'
+    firstLetter() {
+      return this.user ? this.user.full_name.trim()[0] : "A";
+    },
+    formattedGreeting() {
+      if (this.pktData) {
+        return this.urlify(this.pktData.greeting);
+      }
+      return "";
     }
   },
-  async mounted () {
-    this.loading = true
-    let pktId = this.$route.params.id
-    let pktInfo = await this.GLOBAL.api.packet.show(pktId)
+  async mounted() {
+    this.loading = true;
+    let pktId = this.$route.params.id;
+    let pktInfo = await this.GLOBAL.api.packet.show(pktId);
     if (pktInfo.error) {
-      this.loading = false
-      return 
+      this.loading = false;
+      return;
     }
-    let pktData = pktInfo.data
+    let pktData = pktInfo.data;
     for (var i in pktData.participants) {
       var p = pktData.participants[i];
       if (p.user_id === this.GLOBAL.api.account.userId()) {
@@ -110,37 +118,62 @@ export default {
       }
     }
 
-    if (pktData.lottery || pktData.state === 'EXPIRED' || pktData.state === 'REFUNDED') {
-      this.isClose = false
+    if (
+      pktData.lottery ||
+      pktData.state === "EXPIRED" ||
+      pktData.state === "REFUNDED"
+    ) {
+      this.isClose = false;
       for (var i in pktData.participants) {
         var participant = pktData.participants[i];
-        pktData.participants[i]['symbol'] = pktData.asset.symbol;
-        pktData.participants[i]['created_at'] = dayjs(pktData.participants[i].created_at).format('MM-DD HH:mm:ss')
-        pktData.participants[i]['firstLetter'] = pktData.participants[i].avatar_url === '' ? (participant.full_name.trim()[0] || '^_^') : undefined;
+        pktData.participants[i]["symbol"] = pktData.asset.symbol;
+        pktData.participants[i]["created_at"] = dayjs(
+          pktData.participants[i].created_at
+        ).format("MM-DD HH:mm:ss");
+        pktData.participants[i]["firstLetter"] =
+          pktData.participants[i].avatar_url === ""
+            ? participant.full_name.trim()[0] || "^_^"
+            : undefined;
       }
     } else {
-      this.isClose = true
+      this.isClose = true;
     }
-    this.pktData = pktData
-    this.user = pktData.user
-    this.asset = pktData.asset
-    this.lottery = pktData.lottery
-    this.loading = false
+    this.pktData = pktData;
+    this.user = pktData.user;
+    this.asset = pktData.asset;
+    this.lottery = pktData.lottery;
+    this.loading = false;
   },
   methods: {
+    urlify(text) {
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      const breakRegex = /\n\r?\n\r?/g;
+      text = text.replace(breakRegex, "<br/>");
+      console.log(text);
+      text = text.replace(urlRegex, function(url) {
+        return (
+          '<a href="' +
+          url +
+          '" style="color: #fff; text-decoration: underline">' +
+          url +
+          "</a>"
+        );
+      });
+      return text;
+    },
     async openPacket() {
-      this.loading = true
-      let packetId = this.$route.params.id
-      let claimInfo = await this.GLOBAL.api.packet.claim(packetId)
-      this.loading = false
-      utils.reloadPage()
+      this.loading = true;
+      let packetId = this.$route.params.id;
+      let claimInfo = await this.GLOBAL.api.packet.claim(packetId);
+      this.loading = false;
+      utils.reloadPage();
     }
   }
-}
+};
 </script>
 
 <style lang="scss" scoped>
-@import '../assets/scss/constant.scss';
+@import "../assets/scss/constant.scss";
 .packet-page {
   height: 100%;
   background: $color-main-highlight;
@@ -154,7 +187,7 @@ export default {
     padding-top: 64px;
   }
 }
-.open.button  {
+.open.button {
   text-align: center;
   padding: 32px 0 64px;
 
@@ -216,16 +249,17 @@ export default {
 
   .greeting {
     font-size: 16px;
-    font-weight: 100;
-    line-height: 1em;
+    line-height: 1.3;
     margin: 0;
+    color: white !important;
+    text-align: left;
   }
 }
 
 .packet.lottery {
   box-sizing: border-box;
   color: $color-main-highlight;
-  background: #EFEFEF;
+  background: #efefef;
   padding: 32px 16px;
   text-align: center;
   overflow: hidden;
@@ -276,14 +310,14 @@ export default {
     list-style: none;
     margin: 0;
     padding: 0;
-    border-bottom: 1px solid #EFEFEF;
+    border-bottom: 1px solid #efefef;
   }
 
   li {
     list-style: none;
     margin: 0;
     padding: 16px 0;
-    border-top: 1px solid #EFEFEF;
+    border-top: 1px solid #efefef;
     display: flex;
     width: 100%;
 
@@ -293,7 +327,7 @@ export default {
       width: 48px;
       height: 48px;
       border-radius: 24px;
-      background: #EFEFEF;
+      background: #efefef;
       color: $color-main-highlight;
       text-align: center;
       overflow: hidden;
@@ -346,5 +380,4 @@ export default {
     }
   }
 }
-
 </style>
