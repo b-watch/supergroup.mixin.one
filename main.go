@@ -12,6 +12,7 @@ import (
 
 	"github.com/MixinNetwork/supergroup.mixin.one/config"
 	"github.com/MixinNetwork/supergroup.mixin.one/durable"
+	"github.com/MixinNetwork/supergroup.mixin.one/interceptors"
 	"github.com/MixinNetwork/supergroup.mixin.one/plugin"
 	"github.com/MixinNetwork/supergroup.mixin.one/services"
 )
@@ -41,6 +42,8 @@ func main() {
 	if err != nil {
 		log.Panicln(err)
 	}
+
+	interceptors.LoadInterceptors()
 
 	plugin.LoadPlugins(database)
 
