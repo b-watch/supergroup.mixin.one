@@ -31,7 +31,7 @@
           <p
             v-show="requiredAmount"
             class="subtitle"
-          >{{this.$t("invitation.reject_reason", {amount: this.requiredAmount })}}</p>
+          >{{this.$t("invitation.reject_reason", {amount: this.requiredAmountApproximation })}}</p>
         </div>
       </van-tab>
       <van-tab :title="titleInvitees" name="invitees">
@@ -72,11 +72,10 @@ export default {
     this.GLOBAL.api.invitation
       .checkRule()
       .then(response => {
-        this.ableToInvite = true;
-      })
-      .catch(error => {
-        if (error.description != "") {
-          this.requiredAmount = error.description;
+        if (response.data.pass) {
+          this.ableToInvite = true;
+        } else if (response.data.reject_reason && response.data.reject_reason.required_amount) {
+          this.requiredAmount = response.data.reject_reason.required_amount;
         }
       });
     this.GLOBAL.api.invitation.index(false).then(response => {
@@ -115,6 +114,9 @@ export default {
       return this.invitationsCurrent.length === 0
         ? this.$t("invitation.no_code")
         : "";
+    },
+    requiredAmountApproximation() {
+      return Number.parseFloat(this.requiredAmount).toFixed(8);
     }
   },
 
@@ -128,12 +130,13 @@ export default {
       this.GLOBAL.api.invitation
         .create()
         .then(response => {
-          this.invitationsCurrent.unshift(...response.data);
-        })
-        .catch(error => {
-          this.ableToInvite = false;
-          if (error.description != "") {
-            this.requiredAmount = error.description;
+          if (Array.isArray(response.data)) {
+            this.invitationsCurrent.unshift(...response.data);
+          } else if (!response.data.pass) {
+            this.ableToInvite = false;
+            if (response.data.reject_reason.requiredAmount != "") {
+              this.requiredAmount = response.data.reject_reason.required_amount;
+            }
           }
         });
     }

@@ -40,6 +40,10 @@ func (impl *invitationsImpl) create(w http.ResponseWriter, r *http.Request, para
 	user := middlewares.CurrentUser(r)
 	quota, err := models.InviteQuota(r.Context(), user)
 	if err != nil {
+		if err.Error() == "Invite Rule Not Met" {
+			views.RenderInviteRule(w, r, err)
+			return
+		}
 		views.RenderErrorResponse(w, r, err)
 		return
 	}
@@ -63,13 +67,5 @@ func (impl *invitationsImpl) apply(w http.ResponseWriter, r *http.Request, param
 func (impl *invitationsImpl) validate(w http.ResponseWriter, r *http.Request, params map[string]string) {
 	user := middlewares.CurrentUser(r)
 	_, err := models.InviteQuota(r.Context(), user)
-	if err != nil {
-		views.RenderErrorResponse(w, r, err)
-	} else {
-		views.RenderDataResponse(w, r, inviteRuleResult{true})
-	}
-}
-
-type inviteRuleResult struct {
-	Pass bool `json:"pass"`
+	views.RenderInviteRule(w, r, err)
 }
