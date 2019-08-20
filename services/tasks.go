@@ -37,17 +37,29 @@ func loopPendingMessage(ctx context.Context) {
 		}
 		for _, message := range messages {
 			if !config.AppConfig.System.Operators[message.UserId] {
-				if config.AppConfig.System.DetectLinkEnabled && message.Category == "PLAIN_TEXT" {
+				if message.Category == "PLAIN_TEXT" {
 					data, err := base64.StdEncoding.DecodeString(message.Data)
 					if err != nil {
-						session.Logger(ctx).Errorf("DetectLink ERROR: %+v", err)
+						session.Logger(ctx).Errorf("Decode message ERROR: %+v", err)
 					}
-					if re.Match(data) {
-						if err := message.Leapfrog(ctx, "Message contains link"); err != nil {
+
+					if interceptors.TextInterceptor.Enabled() && interceptors.TextInterceptor.IsSensitive(string(data)) {
+						if err := message.Leapfrog(ctx, "Message contains sensitive words"); err != nil {
 							time.Sleep(500 * time.Millisecond)
 							session.Logger(ctx).Errorf("PendingMessages ERROR: %+v", err)
 						}
+
 						continue
+					}
+
+					if config.AppConfig.System.DetectLinkEnabled {
+						if re.Match(data) {
+							if err := message.Leapfrog(ctx, "Message contains link"); err != nil {
+								time.Sleep(500 * time.Millisecond)
+								session.Logger(ctx).Errorf("PendingMessages ERROR: %+v", err)
+							}
+							continue
+						}
 					}
 				}
 				if config.AppConfig.System.DetectQRCodeEnabled && message.Category == "PLAIN_IMAGE" {
