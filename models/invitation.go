@@ -27,6 +27,14 @@ CREATE TABLE IF NOT EXISTS invitations (
 CREATE INDEX IF NOT EXISTS invitations_inviterx ON invitations(inviter_id);
 `
 
+type InviteRuleNotMetError struct {
+	RequiredAmount string `json:"required_amount"`
+}
+
+func (e *InviteRuleNotMetError) Error() string {
+	return "Invite Rule Not Met"
+}
+
 const InvitationGroupSize = 3
 
 // allow new invitations only when all invitees in current invitation group has paid
@@ -37,7 +45,7 @@ var InviteQuota = func(ctx context.Context, user *User) (quota int, err error) {
 			if len(currentInvitations) > 0 {
 				for _, invitation := range currentInvitations {
 					if invitee := invitation.Invitee; invitee == nil || invitee.State != PaymentStatePaid {
-						err = session.InviteRuleNotMetError(ctx, "")
+						err = &InviteRuleNotMetError{}
 
 						return
 					}
