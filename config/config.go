@@ -49,18 +49,21 @@ type Config struct {
 		DatabaseName     string `yaml:"database_name"`
 	} `yaml:"database"`
 	System struct {
-		RouterMode             string `yaml:"router_mode"`
-		MessageShardModifier   string `yaml:"message_shard_modifier"`
-		MessageShardSize       int64  `yaml:"message_shard_size"`
-		PriceAssetsEnable      bool   `yaml:"price_asset_enable"`
-		ReadAssetsEnable       bool   `yaml:"read_assets_enable"`
-		AudioMessageEnable     bool   `yaml:"audio_message_enable"`
-		ImageMessageEnable     bool   `yaml:"image_message_enable"`
-		VideoMessageEnable     bool   `yaml:"video_message_enable"`
-		ContactMessageEnable   bool   `yaml:"contact_message_enable"`
-		RewardsEnable          bool   `yaml:"rewards_enable"`
-		RewardsMinAmountBase   string `yaml:"rewards_min_amount_base"`
-		RedPacketMinAmountBase string `yaml:"redpacket_min_amount_base"`
+		RouterMode           string `yaml:"router_mode"`
+		MessageShardModifier string `yaml:"message_shard_modifier"`
+		MessageShardSize     int64  `yaml:"message_shard_size"`
+		PriceAssetsEnable    bool   `yaml:"price_asset_enable"`
+		ReadAssetsEnable     bool   `yaml:"read_assets_enable"`
+		AudioMessageEnable   bool   `yaml:"audio_message_enable"`
+		ImageMessageEnable   bool   `yaml:"image_message_enable"`
+		VideoMessageEnable   bool   `yaml:"video_message_enable"`
+		ContactMessageEnable bool   `yaml:"contact_message_enable"`
+
+		RewardsEnable          bool     `yaml:"rewards_enable"`
+		RewardsMinAmountBase   string   `yaml:"rewards_min_amount_base"`
+		RewardsAssetList       []string `yaml:"rewards_asset_list"`
+		RedPacketMinAmountBase string   `yaml:"redpacket_min_amount_base"`
+		RedPacketAssetList     []string `yaml:"redpacket_asset_list"`
 
 		LimitMessageFrequency    bool     `yaml:"limit_message_frequency"`
 		OperatorList             []string `yaml:"operator_list"`

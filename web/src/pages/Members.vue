@@ -81,7 +81,7 @@ export default {
       }
       resp.data = resp.data.map(x => {
         x.time = dayjs(x.subscribed_at).format("YYYY.MM.DD");
-        x.subscribed = !dayjs().isBefore(dayjs("1900.01.01"));
+        x.subscribed = !dayjs(x.subscribed_at).isBefore(dayjs("1900-01-01"));
         return x;
       });
       if (append) {

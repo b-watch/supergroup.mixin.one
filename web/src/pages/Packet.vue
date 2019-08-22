@@ -2,47 +2,62 @@
   <loading :loading="loading" :fullscreen="true">
     <div class="packet-page" :class="isClose ? '' : 'open'">
       <div class="packet header">
-        <div class="user avatar">
-          <img v-if="hasAvatar" :src="user ? user.avatar_url : '#'" alt="user avatar" />
-          <p v-else>{{firstLetter}}</p>
-        </div>
-        <h1 class="user name">{{user ? user.full_name : '...'}}</h1>
+        <a
+          class="user avatar"
+          style="display: block; margin: 0 auto;"
+          :href="'mixin://users/' + user.user_id"
+        >
+          <img
+            v-if="hasAvatar"
+            :src="user ? user.avatar_url : '#'"
+            alt="user avatar"
+          />
+          <p v-else>{{ firstLetter }}</p>
+        </a>
+        <h1 class="user name">{{ user ? user.full_name : "..." }}</h1>
         <div class="greeting" v-if="pktData" v-html="formattedGreeting"></div>
       </div>
 
       <div v-if="!isClose" class="packet lottery">
         <template v-if="lottery">
           <h3>
-            {{lottery.amount}}
-            <span>{{asset.symbol}}</span>
+            {{ lottery.amount }}
+            <span>{{ asset.symbol }}</span>
           </h3>
-          <p>{{$t('packet.paid')}}</p>
+          <p>{{ $t("packet.paid") }}</p>
         </template>
         <template v-else>
-          <h3 class="expire statement">{{$t('packet.completed')}}</h3>
+          <h3 class="expire statement">{{ $t("packet.completed") }}</h3>
         </template>
       </div>
       <div v-else class="packet open button">
-        <button @click="openPacket">{{$t('packet.open')}}</button>
+        <button @click="openPacket">{{ $t("packet.open") }}</button>
       </div>
 
       <template v-if="pktData">
         <div v-if="!isClose" class="packet history">
           <h4>
-            {{$t('packet.opened', {opened_count: pktData.opened_count, total_count: pktData.total_count})}},
-            {{pktData.opened_amount}}/{{pktData.amount}} {{asset.symbol}}
+            {{
+              $t("packet.opened", {
+                opened_count: pktData.opened_count,
+                total_count: pktData.total_count
+              })
+            }}, {{ pktData.opened_amount }}/{{ pktData.amount }}
+            {{ asset.symbol }}
           </h4>
           <ul>
             <li v-for="user in pktData.participants">
               <a class="user avatar" :href="'mixin://users/' + user.user_id">
-                <p v-if="user.firstLetter">{{user.firstLetter}}</p>
+                <p v-if="user.firstLetter">{{ user.firstLetter }}</p>
                 <img v-else :src="user.avatar_url" alt="user avatar" />
               </a>
               <div class="user info">
-                <h5>{{user.full_name}}</h5>
-                <time>{{user.created_at}}</time>
+                <h5>{{ user.full_name }}</h5>
+                <time>{{ user.created_at }}</time>
               </div>
-              <div class="packet amount">{{user.amount}} {{user.symbol}}</div>
+              <div class="packet amount">
+                {{ user.amount }} {{ user.symbol }}
+              </div>
             </li>
           </ul>
         </div>
@@ -252,7 +267,6 @@ export default {
     line-height: 1.3;
     margin: 0;
     color: white !important;
-    text-align: left;
   }
 }
 

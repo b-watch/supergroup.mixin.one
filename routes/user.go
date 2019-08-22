@@ -29,10 +29,12 @@ func registerUsers(router *httptreemux.TreeMux) {
 	router.POST("/users/:id/remove", impl.remove)
 	router.POST("/users/:id/block", impl.block)
 	router.GET("/me", impl.me)
+	router.GET("/me/assets", impl.assets)
 	router.GET("/subscribers", impl.subscribers)
 	router.GET("/users/:id", impl.show)
 	router.GET("/amount", impl.amount)
 	router.GET("/config", impl.getConfig)
+
 }
 
 func (impl *usersImpl) authenticate(w http.ResponseWriter, r *http.Request, params map[string]string) {
@@ -64,6 +66,19 @@ func (impl *usersImpl) update(w http.ResponseWriter, r *http.Request, params map
 
 func (impl *usersImpl) me(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	views.RenderAccount(w, r, middlewares.CurrentUser(r))
+}
+
+func (impl *usersImpl) assets(w http.ResponseWriter, r *http.Request, params map[string]string) {
+	current := middlewares.CurrentUser(r)
+	scene := r.URL.Query().Get("scene")
+
+	if participantsCount, err := current.Prepare(r.Context()); err != nil {
+		views.RenderErrorResponse(w, r, err)
+	} else if assets, err := current.ListAssets(r.Context(), scene); err != nil {
+		views.RenderErrorResponse(w, r, err)
+	} else {
+		views.RenderPacketPreparation(w, r, participantsCount, assets)
+	}
 }
 
 func (impl *usersImpl) subscribers(w http.ResponseWriter, r *http.Request, _ map[string]string) {

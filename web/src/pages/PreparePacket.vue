@@ -1,7 +1,11 @@
 <template>
   <loading :loading="loading" :fullscreen="true">
     <div class="prepare-packet-page">
-      <nav-bar :title="$t('prepare_packet.title')" :hasTopRight="false" :hasBack="true"></nav-bar>
+      <nav-bar
+        :title="$t('prepare_packet.title')"
+        :hasTopRight="false"
+        :hasBack="true"
+      ></nav-bar>
       <van-cell-group title>
         <row-select
           :index="0"
@@ -10,16 +14,22 @@
           placeholder="Tap to Select"
           @change="onChangeAsset"
         >
-          <span slot="text">{{selectedAsset ? selectedAsset.text : 'Tap to Select'}}</span>
+          <span slot="text">{{
+            selectedAsset ? selectedAsset.text : "Tap to Select"
+          }}</span>
         </row-select>
         <van-cell>
           <van-field
             type="number"
             v-model="form.amount"
             :label="$t('prepare_packet.amount')"
-            :placeholder="$t('prepare_packet.placeholder_amount', {min: minAmount})"
+            :placeholder="
+              $t('prepare_packet.placeholder_amount', { min: minAmount })
+            "
           >
-            <span slot="right-icon">{{selectedAsset ? selectedAsset.symbol : ''}}</span>
+            <span slot="right-icon">{{
+              selectedAsset ? selectedAsset.symbol : ""
+            }}</span>
           </van-field>
         </van-cell>
         <van-cell title=" " :value="esitmatedValue"></van-cell>
@@ -28,7 +38,11 @@
             type="number"
             v-model="form.shares"
             :label="$t('prepare_packet.shares')"
-            :placeholder="$t('prepare_packet.placeholder_shares', {count: participantsCount})"
+            :placeholder="
+              $t('prepare_packet.placeholder_shares', {
+                count: participantsCount
+              })
+            "
           ></van-field>
         </van-cell>
         <van-cell>
@@ -49,7 +63,8 @@
             type="info"
             :disabled="!validated"
             @click="pay"
-          >{{$t('prepare_packet.pay')}}</van-button>
+            >{{ $t("prepare_packet.pay") }}</van-button
+          >
         </van-col>
       </van-row>
     </div>
@@ -97,7 +112,7 @@ export default {
       this.packetMinAmountBase = confInfo.data.redpacket_min_amount_base;
     }
 
-    let prepareInfo = await this.GLOBAL.api.packet.prepare();
+    let prepareInfo = await this.GLOBAL.api.account.assets("redpacket");
     if (prepareInfo) {
       this.assets = prepareInfo.data.assets.map(x => {
         x.text = `${x.symbol} (${x.balance})`;

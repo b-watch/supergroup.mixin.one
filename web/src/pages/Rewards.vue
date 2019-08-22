@@ -1,8 +1,15 @@
 <template>
   <loading :loading="loading" :fullscreen="true">
     <div class="rewards-page">
-      <nav-bar :title="$t('rewards.title')" :hasTopRight="false" :hasBack="true"></nav-bar>
-      <van-cell-group v-if="recipients.length !== 0" :title="$t('rewards.recipient_section_title')">
+      <nav-bar
+        :title="$t('rewards.title')"
+        :hasTopRight="false"
+        :hasBack="true"
+      ></nav-bar>
+      <van-cell-group
+        v-if="recipients.length !== 0"
+        :title="$t('rewards.recipient_section_title')"
+      >
         <van-swipe-cell v-bind:key="user.user_id" v-for="user in recipients">
           <van-cell :title="user.full_name" @click="selectUser(user)">
             <van-image
@@ -21,21 +28,33 @@
             />
           </van-cell>
           <template v-if="isAdmin" slot="right">
-            <van-button square type="danger" text="Remove" @click="removeUser(user)" />
+            <van-button
+              square
+              type="danger"
+              text="Remove"
+              @click="removeUser(user)"
+            />
           </template>
         </van-swipe-cell>
       </van-cell-group>
       <template v-else>
         <div v-if="!loading" style="text-align: center; margin-bottom: 20px;">
           <van-icon name="warning-o" size="64"></van-icon>
-          <div class>{{$t('rewards.no_recipient')}}</div>
+          <div class>{{ $t("rewards.no_recipient") }}</div>
         </div>
       </template>
       <van-cell-group v-if="isAdmin">
-        <van-cell :title="$t('rewards.add_label')" icon="plus" @click="showAddDialog = true"></van-cell>
+        <van-cell
+          :title="$t('rewards.add_label')"
+          icon="plus"
+          @click="showAddDialog = true"
+        ></van-cell>
       </van-cell-group>
 
-      <van-cell-group v-if="selectedUser" :title="$t('rewards.rewards_section_title')">
+      <van-cell-group
+        v-if="selectedUser"
+        :title="$t('rewards.rewards_section_title')"
+      >
         <row-select
           :index="0"
           :title="$t('rewards.select_assets')"
@@ -43,16 +62,20 @@
           placeholder="Tap to Select"
           @change="onChangeAsset"
         >
-          <span slot="text">{{selectedAsset ? selectedAsset.text : 'Tap to Select'}}</span>
+          <span slot="text">{{
+            selectedAsset ? selectedAsset.text : "Tap to Select"
+          }}</span>
         </row-select>
         <van-cell>
           <van-field
             type="number"
             v-model="form.amount"
             :label="$t('rewards.amount')"
-            :placeholder="$t('rewards.placeholder_amount', {min: minAmount})"
+            :placeholder="$t('rewards.placeholder_amount', { min: minAmount })"
           >
-            <span slot="right-icon">{{selectedAsset ? selectedAsset.symbol : ''}}</span>
+            <span slot="right-icon">{{
+              selectedAsset ? selectedAsset.symbol : ""
+            }}</span>
           </van-field>
         </van-cell>
         <van-cell title=" " :value="esitmatedValue"></van-cell>
@@ -64,7 +87,8 @@
             type="info"
             :disabled="!validated"
             @click="pay"
-          >{{$t('rewards.pay')}}</van-button>
+            >{{ $t("rewards.pay") }}</van-button
+          >
         </van-col>
       </van-row>
     </div>
@@ -77,7 +101,10 @@
       <div style="padding: 20px 0;">
         <van-cell-group>
           <van-cell>
-            <van-field v-model="addUserId" placeholder="identity number or user id"></van-field>
+            <van-field
+              v-model="addUserId"
+              placeholder="identity number or user id"
+            ></van-field>
           </van-cell>
         </van-cell-group>
       </div>
@@ -126,7 +153,7 @@ export default {
     if (confInfo && confInfo.data) {
       this.rewardsMinAmountBase = confInfo.data.rewards_min_amount_base;
     }
-    let prepareInfo = await this.GLOBAL.api.packet.prepare();
+    let prepareInfo = await this.GLOBAL.api.account.assets("rewards");
     if (prepareInfo) {
       this.assets = prepareInfo.data.assets.map(x => {
         x.text = `${x.symbol} (${x.balance})`;
