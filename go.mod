@@ -27,6 +27,7 @@ require (
 	github.com/objcoding/wxpay v1.0.6
 	github.com/onsi/ginkgo v1.9.0 // indirect
 	github.com/onsi/gomega v1.6.0 // indirect
+	github.com/robfig/cron v1.2.0
 	github.com/rs/xid v1.2.1 // indirect
 	github.com/silenceper/wechat v1.0.0
 	github.com/sirupsen/logrus v1.4.2
