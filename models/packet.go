@@ -18,6 +18,7 @@ import (
 	number "github.com/MixinNetwork/go-number"
 	"github.com/MixinNetwork/supergroup.mixin.one/config"
 	"github.com/MixinNetwork/supergroup.mixin.one/durable"
+	"github.com/MixinNetwork/supergroup.mixin.one/plugin"
 	"github.com/MixinNetwork/supergroup.mixin.one/session"
 	"github.com/gofrs/uuid"
 )
@@ -146,6 +147,9 @@ func (current *User) createPacket(ctx context.Context, asset *Asset, amount numb
 }
 
 func PayPacket(ctx context.Context, packetId string, assetId, amount string) (*Packet, error) {
+
+	plugin.Trigger(plugin.EventTypePacketPaid, Packet{PacketId: packetId, AssetId: assetId, Amount: amount})
+
 	var packet *Packet
 	err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
 		var err error
