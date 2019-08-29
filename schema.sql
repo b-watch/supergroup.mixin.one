@@ -138,7 +138,7 @@ CREATE TABLE IF NOT EXISTS invitations (
 
 CREATE INDEX IF NOT EXISTS invitations_inviterx ON invitations(inviter_id);
 
-CREATE TABLE currency_rates (
+CREATE TABLE IF NOT EXISTS currency_rates (
     symbol            VARCHAR(36) PRIMARY KEY,
     price_usd         VARCHAR(32) NOT NULL,
     price_cny         VARCHAR(32) NOT NULL,
