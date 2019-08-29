@@ -17,6 +17,7 @@ import (
 	number "github.com/MixinNetwork/go-number"
 	"github.com/MixinNetwork/supergroup.mixin.one/config"
 	"github.com/MixinNetwork/supergroup.mixin.one/models"
+	"github.com/MixinNetwork/supergroup.mixin.one/plugin"
 	"github.com/MixinNetwork/supergroup.mixin.one/session"
 	"github.com/gorilla/websocket"
 )
@@ -82,6 +83,7 @@ func (service *MessageService) Run(ctx context.Context) error {
 	go loopPendingMessage(ctx)
 	go handlePendingParticipants(ctx)
 	go handleExpiredPackets(ctx)
+	go schedulePluginCronJob(ctx)
 
 	for {
 		err := service.loop(ctx)
@@ -482,6 +484,10 @@ func handleExpiredPackets(ctx context.Context) {
 			continue
 		}
 	}
+}
+
+func schedulePluginCronJob(ctx context.Context) {
+	plugin.RunCron()
 }
 
 func handlePendingParticipants(ctx context.Context) {
