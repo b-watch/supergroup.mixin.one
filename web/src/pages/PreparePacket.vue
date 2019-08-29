@@ -149,7 +149,10 @@ export default {
       return "≈$" + val.toLocaleString();
     },
     minAmount() {
-      const base = this.packetMinAmountBase; // 1 usd
+      const base = parseFloat(this.packetMinAmountBase); // 1 usd
+      if (base < 0.0001) {
+        return 0;
+      }
       if (this.selectedAsset) {
         return (base / this.selectedAsset.price_usd).toFixed(8);
       }
