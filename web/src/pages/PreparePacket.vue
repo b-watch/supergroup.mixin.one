@@ -52,7 +52,10 @@
             autosize
             type="textarea"
             :label="$t('prepare_packet.memo')"
-            :placeholder="$t('prepare_packet.placeholder_memo')"
+            :placeholder="
+              $t('prepare_packet.placeholder_memo', { max: maxMemoLength })
+            "
+            :maxlength="maxMemoLength"
           ></van-field>
         </van-cell>
       </van-cell-group>
@@ -130,6 +133,9 @@ export default {
     this.loading = false;
   },
   computed: {
+    maxMemoLength() {
+      return 512;
+    },
     validated() {
       if (
         this.form.amount &&
@@ -169,7 +175,7 @@ export default {
         asset_id: this.selectedAsset.asset_id
       };
 
-      if (payload.greeting.length > 512 / 3) {
+      if (payload.greeting.length > 512) {
         this.loading = false;
         Toast(this.$t("prepare_packet.memo_too_long_err"));
         return;

@@ -64,7 +64,7 @@
     "select_assets": "选择",
     "placeholder_amount": "至少 {min}",
     "placeholder_shares": "最多不超过 {count} 人",
-    "placeholder_memo": "最多不超过 36 个字符",
+    "placeholder_memo": "最多不超过 {max} 个字符",
     "amount": "金额",
     "shares": "红包数",
     "memo": "祝福",

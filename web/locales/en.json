@@ -64,7 +64,7 @@
     "select_assets": "Select Assets",
     "placeholder_amount": "Min: {min}",
     "placeholder_shares": "Max: {count} people",
-    "placeholder_memo": "Max: 36 charactors",
+    "placeholder_memo": "Max: {max} charactors",
     "amount": "Amount",
     "shares": "People",
     "memo": "Memo",
