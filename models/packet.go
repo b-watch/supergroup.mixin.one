@@ -10,6 +10,7 @@ import (
 	"io"
 	"math"
 	"math/rand"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -45,7 +46,8 @@ CREATE TABLE IF NOT EXISTS packets (
 	remaining_count   BIGINT NOT NULL,
 	remaining_amount  VARCHAR(128) NOT NULL,
 	state             VARCHAR(36) NOT NULL,
-	created_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+	created_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+	pre_allocation    text[]
 );
 
 CREATE INDEX IF NOT EXISTS packets_state_createdx ON packets(state, created_at);
@@ -164,12 +166,14 @@ func packetPreAllocate(totalCount int64, amount number.Decimal) ([]string, error
 		return allocation, fmt.Errorf("amount too low")
 	}
 
+	ratio, _ := strconv.ParseFloat(config.AppConfig.System.RedPacketNormDistSigmaMeanRatio, 64)
+
 	for i := int64(0); i < totalCount; i++ {
 		var allocatedAmount number.Decimal
 		allocatedAmount = packetMinAmount
 
 		mean := pending.Div(number.NewDecimal(totalCount-i, 0)).Float64()
-		sigma := mean / 2
+		sigma := mean * ratio
 		noseValue := generateGaussianNoise(mean, sigma)
 		if noseValue < 0 {
 			noseValue = 0

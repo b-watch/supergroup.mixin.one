@@ -59,11 +59,12 @@ type Config struct {
 		VideoMessageEnable   bool   `yaml:"video_message_enable"`
 		ContactMessageEnable bool   `yaml:"contact_message_enable"`
 
-		RewardsEnable          bool     `yaml:"rewards_enable"`
-		RewardsMinAmountBase   string   `yaml:"rewards_min_amount_base"`
-		RewardsAssetList       []string `yaml:"rewards_asset_list"`
-		RedPacketMinAmountBase string   `yaml:"redpacket_min_amount_base"`
-		RedPacketAssetList     []string `yaml:"redpacket_asset_list"`
+		RewardsEnable                   bool     `yaml:"rewards_enable"`
+		RewardsMinAmountBase            string   `yaml:"rewards_min_amount_base"`
+		RewardsAssetList                []string `yaml:"rewards_asset_list"`
+		RedPacketMinAmountBase          string   `yaml:"redpacket_min_amount_base"`
+		RedPacketAssetList              []string `yaml:"redpacket_asset_list"`
+		RedPacketNormDistSigmaMeanRatio string   `yaml:"redpacket_normal_distribution_sigma_mean_ratio"`
 
 		LimitMessageFrequency    bool     `yaml:"limit_message_frequency"`
 		OperatorList             []string `yaml:"operator_list"`
