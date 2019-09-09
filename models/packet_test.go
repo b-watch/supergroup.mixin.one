@@ -119,14 +119,14 @@ func testReadPacketWithRelation(ctx context.Context, packetId string) (*Packet, 
 	return packet, err
 }
 
-func TestPacketPreAllocation(t *testing.T) {
+func TestPacketPreDistribution(t *testing.T) {
 	assert := assert.New(t)
 	ctx := setupTestContext()
 	defer teardownTestContext(ctx)
 
 	totalCount := int64(100)
 	amount := number.FromString("10")
-	allocation, err := packetPreAllocate(totalCount, amount)
+	allocation, err := packetPreDistribute(totalCount, amount)
 	assert.Nil(err)
 	assert.Len(allocation, int(totalCount))
 	t.Log(allocation)

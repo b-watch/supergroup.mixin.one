@@ -47,16 +47,16 @@ CREATE TABLE IF NOT EXISTS packets (
 	remaining_amount  VARCHAR(128) NOT NULL,
 	state             VARCHAR(36) NOT NULL,
 	created_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-	pre_allocation    text[]
+	pre_distribution    text[]
 );
 
 CREATE INDEX IF NOT EXISTS packets_state_createdx ON packets(state, created_at);
 `
 
-var packetsCols = []string{"packet_id", "user_id", "asset_id", "amount", "greeting", "total_count", "remaining_count", "remaining_amount", "state", "created_at", "pre_allocation"}
+var packetsCols = []string{"packet_id", "user_id", "asset_id", "amount", "greeting", "total_count", "remaining_count", "remaining_amount", "state", "created_at", "pre_distribution"}
 
 func (p *Packet) values() []interface{} {
-	return []interface{}{p.PacketId, p.UserId, p.AssetId, p.Amount, p.Greeting, p.TotalCount, p.RemainingCount, p.RemainingAmount, p.State, p.CreatedAt, pq.Array(p.PreAllocation)}
+	return []interface{}{p.PacketId, p.UserId, p.AssetId, p.Amount, p.Greeting, p.TotalCount, p.RemainingCount, p.RemainingAmount, p.State, p.CreatedAt, pq.Array(p.PreDistribution)}
 }
 
 type Packet struct {
@@ -70,7 +70,7 @@ type Packet struct {
 	RemainingAmount string
 	State           string
 	CreatedAt       time.Time
-	PreAllocation   []string
+	PreDistribution []string
 
 	User         *User
 	Asset        *Asset
@@ -127,7 +127,7 @@ func (current *User) createPacket(ctx context.Context, asset *Asset, amount numb
 	if totalCount <= 0 || totalCount > int64(participantsCount) {
 		return nil, session.BadDataError(ctx)
 	}
-	allocation, err := packetPreAllocate(totalCount, amount)
+	distribution, err := packetPreDistribute(totalCount, amount)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +144,7 @@ func (current *User) createPacket(ctx context.Context, asset *Asset, amount numb
 		CreatedAt:       time.Now(),
 		User:            current,
 		Asset:           asset,
-		PreAllocation:   allocation,
+		PreDistribution: distribution,
 	}
 
 	params, positions := compileTableQuery(packetsCols)
@@ -156,14 +156,14 @@ func (current *User) createPacket(ctx context.Context, asset *Asset, amount numb
 	return packet, nil
 }
 
-func packetPreAllocate(totalCount int64, amount number.Decimal) ([]string, error) {
+func packetPreDistribute(totalCount int64, amount number.Decimal) ([]string, error) {
 	var packetMinAmount number.Decimal = number.FromString("0.000001")
-	var allocation []string
-	allocation = make([]string, totalCount)
+	var distribution []string
+	distribution = make([]string, totalCount)
 
 	pending := amount.Sub(packetMinAmount.Mul(number.NewDecimal(totalCount, 0)))
 	if pending.Cmp(number.Zero()) < 0 {
-		return allocation, fmt.Errorf("amount too low")
+		return distribution, fmt.Errorf("amount too low")
 	}
 
 	ratio, _ := strconv.ParseFloat(config.AppConfig.System.RedPacketNormDistSigmaMeanRatio, 64)
@@ -186,20 +186,27 @@ func packetPreAllocate(totalCount int64, amount number.Decimal) ([]string, error
 			pending = pending.Sub(nose)
 			allocatedAmount = allocatedAmount.Add(nose)
 		}
-		allocation[i] = allocatedAmount.Persist()
+		distribution[i] = allocatedAmount.Persist()
 	}
 
 	if pending.Cmp(number.Zero()) > 0 {
 		if rest := pending.Div(number.NewDecimal(totalCount, 0)); rest.Cmp(packetMinAmount) > 0 {
 			rest = roundTillNotExhausted(rest)
-			for i := range allocation {
-				allocation[i] = number.FromString(allocation[i]).Add(rest).Persist()
+			for i := range distribution {
+				pending = pending.Sub(rest)
+				distribution[i] = number.FromString(distribution[i]).Add(rest).Persist()
 			}
-		} else {
-			allocation[totalCount-1] = number.FromString(allocation[totalCount-1]).Add(pending).Persist()
+		}
+		if pending.Cmp(number.Zero()) > 0 {
+			i := randomIndex(len(distribution))
+			distribution[i] = number.FromString(distribution[i]).Add(roundTillNotExhausted(pending)).Persist()
 		}
 	}
-	return allocation, nil
+	return distribution, nil
+}
+
+func randomIndex(length int) int {
+	return int(rand.Float64() * float64(length-1))
 }
 
 func roundTillNotExhausted(amount number.Decimal) (round number.Decimal) {
@@ -456,7 +463,7 @@ func handlePacketClaim(ctx context.Context, tx *sql.Tx, packet *Packet, userId s
 	}
 	var amount number.Decimal
 	if packet.RemainingCount > 0 {
-		amount = number.FromString(packet.PreAllocation[packet.RemainingCount-1])
+		amount = number.FromString(packet.PreDistribution[packet.RemainingCount-1])
 	} else {
 		return fmt.Errorf("all packet claimed")
 	}
@@ -522,7 +529,7 @@ func readPacket(ctx context.Context, tx *sql.Tx, packetId string) (*Packet, erro
 
 func packetFromRow(row durable.Row) (*Packet, error) {
 	var p Packet
-	err := row.Scan(&p.PacketId, &p.UserId, &p.AssetId, &p.Amount, &p.Greeting, &p.TotalCount, &p.RemainingCount, &p.RemainingAmount, &p.State, &p.CreatedAt, pq.Array(&p.PreAllocation))
+	err := row.Scan(&p.PacketId, &p.UserId, &p.AssetId, &p.Amount, &p.Greeting, &p.TotalCount, &p.RemainingCount, &p.RemainingAmount, &p.State, &p.CreatedAt, pq.Array(&p.PreDistribution))
 	return &p, err
 }
 
