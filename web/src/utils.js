@@ -60,7 +60,6 @@ export default {
     var reg = new RegExp(key + "\\d+");
     var timestamp = +new Date();
     let newUrl = url;
-    let hash = location.hash.replace(/token=[0-9a-zA-Z.]+/, "");
     if (url.indexOf(key) > -1) {
       // found timestamp
       newUrl = url.replace(reg, key + timestamp);
@@ -75,7 +74,7 @@ export default {
         }
       } else {
         if (url.indexOf("#") > -1) {
-          newUrl = url.split("#")[0] + "?" + key + timestamp + hash;
+          newUrl = url.split("#")[0] + "?" + key + timestamp + location.hash;
         } else {
           newUrl = url + "?" + key + timestamp;
         }
