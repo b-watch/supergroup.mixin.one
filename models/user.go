@@ -410,14 +410,14 @@ func (user *User) DeleteUser(ctx context.Context, id string) error {
 }
 
 func (user *User) GetRole() string {
-	if config.AppConfig.System.Operators[user.UserId] {
+	if user != nil && config.AppConfig.System.Operators[user.UserId] {
 		return "admin"
 	}
 	return "user"
 }
 
 func (user *User) isAdmin() bool {
-	if config.AppConfig.Mixin.ClientId == user.UserId ||
+	if user != nil && config.AppConfig.Mixin.ClientId == user.UserId ||
 		config.AppConfig.System.Operators[user.UserId] {
 		return true
 	}

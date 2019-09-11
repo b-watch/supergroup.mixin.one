@@ -3,12 +3,19 @@
     <div class="home home-page page">
       <van-panel
         :title="welcomeMessage || $t('home.welcome')"
-        :desc="$t('home.welcome_desc', {count: websiteInfo ? websiteInfo.data.users_count : '...'})"
+        :desc="
+          $t('home.welcome_desc', {
+            count: websiteInfo ? websiteInfo.data.users_count : '...'
+          })
+        "
       ></van-panel>
       <br />
       <template v-for="group in shortcutsGroups">
         <van-panel :title="group.label">
-          <cell-table :items="group.shortcuts" @open-external-link="openExternalLink"></cell-table>
+          <cell-table
+            :items="group.shortcuts"
+            @open-external-link="openExternalLink"
+          ></cell-table>
         </van-panel>
         <br />
       </template>
