@@ -55,30 +55,26 @@ export default {
     }
   },
   reloadPage: function() {
-    let url = window.location.href;
-    var key = "t=";
-    var reg = new RegExp(key + "\\d+");
-    var timestamp = +new Date();
+    /* case 1: /#/aa/xx?abc=123           ---> /?t=TS#/aa/xx?abc=123
+       case 2: /?abc=123#/aa/xx?abc=123   ---> /?t=TS&abc=123#/aa/xx?abc=123
+       case 3: /aa/xx?abc=124             ---> /aa/xx?t=TS&abc=124
+       case 4: /aa/xx                     ---> /aa/xx?t=TS
+       case 5: /#/aa/xx                   ---> /?t=TS#/aa/xx
+     */
+    let url = window.location.href.replace(/token=[0-9a-zA-Z.-]+/, "");
+    let tsQuery = `t=${Date.now()}`;
     let newUrl = url;
-    if (url.indexOf(key) > -1) {
+    if (url.indexOf("t=") !== -1) {
       // found timestamp
-      newUrl = url.replace(reg, key + timestamp);
+      newUrl = url.replace(/t=\d+/, tsQuery);
     } else {
-      // no timestamp
-      if (url.indexOf("?") > -1) {
-        var urlArr = url.split("?");
-        if (urlArr[1]) {
-          newUrl = urlArr[0] + "?" + key + timestamp + "&" + urlArr[1];
-        } else {
-          newUrl = urlArr[0] + "?" + key + timestamp;
-        }
-      } else {
-        if (url.indexOf("#") > -1) {
-          newUrl = url.split("#")[0] + "?" + key + timestamp + location.hash;
-        } else {
-          newUrl = url + "?" + key + timestamp;
-        }
+      // not found
+      let p = parseUrl(url);
+      let query = "?" + tsQuery;
+      if (p.search || p.search === "?") {
+        query = p.search + "&" + tsQuery;
       }
+      newUrl = `${p.protocol}//${p.hostname}${p.pathname}${query}${p.hash}`;
     }
     window.location.href = newUrl;
   }

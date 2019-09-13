@@ -31,6 +31,7 @@ import NavBar from "../components/Nav";
 import CellTable from "../components/CellTable";
 import Loading from "../components/Loading";
 import { mapState } from "vuex";
+import { Dialog } from "vant";
 import AssetItem from "@/components/partial/AssetItem";
 import utils from "@/utils";
 
@@ -94,15 +95,21 @@ export default {
         label: this.$t("home.op_unsubscribe"),
         click: async evt => {
           evt.preventDefault();
-          await this.GLOBAL.api.account.unsubscribe();
-          this.builtinItems.splice(
-            this.builtinItems.length - 1,
-            1,
-            this.subscribeItem
-          );
+          Dialog.confirm({
+            message: this.$t("home.op_unsubscribe_confirm_msg")
+          })
+            .then(async () => {
+              await this.GLOBAL.api.account.unsubscribe();
+              this.builtinItems.splice(
+                this.builtinItems.length - 1,
+                1,
+                this.subscribeItem
+              );
+            })
+            .catch(() => {});
         }
       },
-      // 禁言始终在倒数第二个位置
+      // 禁言/解除禁言始终在倒数第二个位置
       unprohibitItem: {
         icon: require("../assets/images/unprohibited.png"),
         label: this.$t("home.op_unmute"),
@@ -119,14 +126,20 @@ export default {
       prohibitItem: {
         icon: require("../assets/images/prohibited.png"),
         label: this.$t("home.op_mute"),
-        click: async evt => {
+        click: evt => {
           evt.preventDefault();
-          await this.GLOBAL.api.property.create(true);
-          this.builtinItems.splice(
-            this.builtinItems.length - 2,
-            1,
-            this.unprohibitItem
-          );
+          Dialog.confirm({
+            message: "Mute all non-admin users?"
+          })
+            .then(async () => {
+              await this.GLOBAL.api.property.create(true);
+              this.builtinItems.splice(
+                this.builtinItems.length - 2,
+                1,
+                this.unprohibitItem
+              );
+            })
+            .catch(() => {});
         }
       },
       shortcutsGroups: []

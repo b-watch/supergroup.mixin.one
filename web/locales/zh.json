@@ -33,6 +33,7 @@
     "op_luckycoin": "红包",
     "op_subscribe": "订阅",
     "op_unsubscribe": "取消订阅",
+    "op_unsubscribe_confirm_msg": "你确认要取消订阅吗？取消订阅后你将不会收到任何来自本群的消息。",
     "op_mute": "禁止发言",
     "op_unmute": "允许发言",
     "op_members": "成员",

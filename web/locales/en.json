@@ -33,6 +33,7 @@
     "op_luckycoin": "Lucky Coin",
     "op_subscribe": "Subscribe",
     "op_unsubscribe": "Unsubscribe",
+    "op_unsubscribe_confirm_msg": "Are you sure you want to unsubscribe this group? You won't receive any message from this group.",
     "op_mute": "Mute Others",
     "op_unmute": "Unmute Others",
     "op_members": "Members",
