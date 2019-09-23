@@ -462,10 +462,36 @@ func handlePacketClaim(ctx context.Context, tx *sql.Tx, packet *Packet, userId s
 		return nil
 	}
 	var amount number.Decimal
-	if packet.RemainingCount > 0 {
-		amount = number.FromString(packet.PreDistribution[packet.RemainingCount-1])
+	// old version packet before predispatch version
+	if len(packet.PreDistribution) == 0 {
+		amount = number.FromString(packet.RemainingAmount)
+		if packet.RemainingCount > 1 && amount.Cmp(number.FromString("0.000001")) > 0 {
+			amount = amount.Mul(number.FromString("2")).Div(number.FromString(fmt.Sprint(packet.RemainingCount)))
+			if amount.Cmp(number.FromString("0.000001")) > 0 {
+				rand.Seed(time.Now().UnixNano())
+				for {
+					amount = amount.Mul(number.FromString(fmt.Sprint(rand.Float64())))
+					for d := int32(1); d < 8; d++ {
+						round := amount.RoundFloor(d)
+						if !round.Exhausted() {
+							amount = round
+							break
+						}
+					}
+					if !amount.Exhausted() {
+						break
+					}
+				}
+			}
+		}
+		amount = number.FromString(amount.PresentFloor())
 	} else {
-		return fmt.Errorf("all packet claimed")
+		// normaldistribution algo packet
+		if packet.RemainingCount > 0 {
+			amount = number.FromString(packet.PreDistribution[packet.RemainingCount-1])
+		} else {
+			return fmt.Errorf("all packet claimed")
+		}
 	}
 	packet.RemainingCount = packet.RemainingCount - 1
 	packet.RemainingAmount = number.FromString(packet.RemainingAmount).Sub(amount).Persist()
