@@ -19,6 +19,12 @@ function iosCopyToClipboard(el) {
   document.execCommand("copy");
 }
 
+function parseUrl(url) {
+  var fakeLink = document.createElement("a");
+  fakeLink.href = url;
+  return fakeLink;
+}
+
 export default {
   copyEl: function(el) {
     let text = el.innerText;
