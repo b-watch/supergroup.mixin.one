@@ -49,27 +49,7 @@ var (
 	shortcutRWMutex sync.RWMutex
 )
 
-func (shortcutGroup ShortcutGroup) filter() *ShortcutGroup {
-	var items []*ShortcutItem
-	for _, item := range shortcutGroup.Items {
-		if !item.AdminOnly {
-			items = append(items, item)
-		}
-	}
-	filteredGroup := &shortcutGroup
-	filteredGroup.Items = items
-	return filteredGroup
-}
-
 func (shortcut) AllGroups() []*ShortcutGroup {
-	var shortcutGroupsFiltered []*ShortcutGroup
-	for _, group := range shortcutGroups {
-		shortcutGroupsFiltered = append(shortcutGroupsFiltered, group.filter())
-	}
-	return shortcutGroupsFiltered
-}
-
-func (shortcut) AllGroupsWithPrivilegedItem() []*ShortcutGroup {
 	return shortcutGroups
 }
 
