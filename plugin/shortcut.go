@@ -20,7 +20,7 @@ type ShortcutItem struct {
 	Icon      string `json:"icon"`
 	URL       string `json:"url"`
 	Sequence  int    `json:"-"`
-	AdminOnly bool   `json:"-"`
+	AdminOnly bool   `json:"admin_only"`
 }
 
 type ShortcutGroup struct {
