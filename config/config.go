@@ -90,22 +90,24 @@ type Config struct {
 		HomeShortcutGroups []ShortcutGroup `yaml:"home_shortcut_groups"`
 	} `yaml:"appearance"`
 	MessageTemplate struct {
-		WelcomeMessage          string `yaml:"welcome_message"`
-		GroupRedPacket          string `yaml:"group_redpacket"`
-		GroupRedPacketShortDesc string `yaml:"group_redpacket_short_desc"`
-		GroupRedPacketDesc      string `yaml:"group_redpacket_desc"`
-		GroupOpenedRedPacket    string `yaml:"group_opened_redpacket"`
-		MessageTipsGuest        string `yaml:"message_tips_guest"`
-		MessageProhibit         string `yaml:"message_prohibit"`
-		MessageAllow            string `yaml:"message_allow"`
-		MessageTipsJoin         string `yaml:"message_tips_join"`
-		MessageTipsHelp         string `yaml:"message_tips_help"`
-		MessageTipsHelpBtn      string `yaml:"message_tips_help_btn"`
-		MessageTipsUnsubscribe  string `yaml:"message_tips_unsubscribe"`
-		MessageTipsTooMany      string `yaml:"message_tips_too_many"`
-		MessageTipsRewards      string `yaml:"message_tips_rewards"`
-		MessageCommandsInfo     string `yaml:"message_commands_info"`
-		MessageCommandsInfoResp string `yaml:"message_commands_info_resp"`
+		WelcomeMessage                string `yaml:"welcome_message"`
+		GroupRedPacket                string `yaml:"group_redpacket"`
+		GroupRedPacketShortDesc       string `yaml:"group_redpacket_short_desc"`
+		GroupRedPacketDesc            string `yaml:"group_redpacket_desc"`
+		GroupOpenedRedPacket          string `yaml:"group_opened_redpacket"`
+		MessageTipsGuest              string `yaml:"message_tips_guest"`
+		MessageProhibit               string `yaml:"message_prohibit"`
+		MessageAllow                  string `yaml:"message_allow"`
+		MessageTipsJoin               string `yaml:"message_tips_join"`
+		MessageTipsJoinUser           string `yaml:"message_tips_join_user"`
+		MessageTipsJoinUserProhibited string `yaml:"message_tips_join_user_prohibited"`
+		MessageTipsHelp               string `yaml:"message_tips_help"`
+		MessageTipsHelpBtn            string `yaml:"message_tips_help_btn"`
+		MessageTipsUnsubscribe        string `yaml:"message_tips_unsubscribe"`
+		MessageTipsTooMany            string `yaml:"message_tips_too_many"`
+		MessageTipsRewards            string `yaml:"message_tips_rewards"`
+		MessageCommandsInfo           string `yaml:"message_commands_info"`
+		MessageCommandsInfoResp       string `yaml:"message_commands_info_resp"`
 	} `yaml:"message_template"`
 	Wechat struct {
 		AppId          string `yaml:"app_id"`
