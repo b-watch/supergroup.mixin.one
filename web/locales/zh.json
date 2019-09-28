@@ -31,13 +31,11 @@
     "pane_operations": "群操作",
     "pane_features": "扩展功能",
     "op_luckycoin": "红包",
-    "op_subscribe": "订阅",
-    "op_unsubscribe": "取消订阅",
-    "op_unsubscribe_confirm_msg": "你确认要取消订阅吗？取消订阅后你将不会收到任何来自本群的消息。",
+    "op_subscribed": "已订阅",
+    "op_unsubscribed": "未订阅",
+    "op_unsubscribe_confirm_msg": "不再订阅本群吗？确认后你将不会收到任何来自本群的消息。",
     "op_mute": "禁止发言",
     "op_unmute": "允许发言",
-    "op_members": "成员",
-    "op_messages": "消息管理",
     "op_coupons": "兑换码"
   },
   "pay": {

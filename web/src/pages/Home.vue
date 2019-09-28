@@ -8,7 +8,64 @@
             count: websiteInfo ? websiteInfo.data.users_count : '...'
           })
         "
-      ></van-panel>
+      >
+        <div class="panel-header" slot="header">
+          <h1>{{ websiteConf ? websiteConf.data.service_name : "..." }}</h1>
+          <div class="announcement">
+            {{
+              websiteConf
+                ? websiteConf.data.home_welcome_message
+                : "一个没有描述的群"
+            }}
+          </div>
+          <div class="btns">
+            <van-button
+              type="primary"
+              :type="isSubscribed ? 'primary' : 'warning'"
+              size="small"
+              round
+              :plain="!isSubscribed"
+              hairline
+              @click="togglSubscribe"
+              >{{
+                isSubscribed
+                  ? this.$t("home.op_subscribed")
+                  : this.$t("home.op_unsubscribed")
+              }}</van-button
+            >
+            <van-button
+              type="default"
+              size="small"
+              round
+              @click="gotoMembers"
+              icon="friends-o"
+              >{{
+                websiteInfo ? websiteInfo.data.users_count : "..."
+              }}</van-button
+            >
+            <van-button
+              v-if="isAdmin"
+              :type="isProhibited ? 'danger' : 'primary'"
+              plain
+              hairline
+              size="small"
+              round
+              class="icon-btn"
+              @click="toggleProhibit"
+              :icon="isProhibited ? 'close' : 'comment-circle-o'"
+            ></van-button>
+            <van-button
+              v-if="isAdmin"
+              type="default"
+              size="small"
+              round
+              class="icon-btn"
+              @click="gotoMessages"
+              icon="comment-o"
+            ></van-button>
+          </div>
+        </div>
+      </van-panel>
       <br />
       <template v-for="group in shortcutsGroups">
         <van-panel :title="group.label">
@@ -43,17 +100,14 @@ export default {
       welcomeMessage: "",
       websiteInfo: null,
       websiteConf: null,
+      isProhibited: false,
+      isSubscribed: false,
       builtinItems: [
         // builtin
         {
           icon: require("../assets/images/luckymoney-circle.png"),
           label: this.$t("home.op_luckycoin"),
           url: "/packets/prepare"
-        },
-        {
-          icon: require("../assets/images/users-circle.png"),
-          label: this.$t("home.op_members"),
-          url: "/members"
         }
       ],
       invitationItem: {
@@ -66,96 +120,20 @@ export default {
         label: this.$t("rewards.entry"),
         url: "/rewards"
       },
-      messagesItem: {
-        icon: require("../assets/images/messages-circle.png"),
-        label: this.$t("home.op_messages"),
-        url: "/messages"
-      },
       couponsItem: {
         icon: require("../assets/images/coupons.png"),
         label: this.$t("home.op_coupons"),
         url: "/coupons"
       },
-      // 订阅始终在倒数第一个位置
-      subscribeItem: {
-        icon: require("../assets/images/notification-circle.png"),
-        label: this.$t("home.op_subscribe"),
-        click: async evt => {
-          evt.preventDefault();
-          await this.GLOBAL.api.account.subscribe();
-          this.builtinItems.splice(
-            this.builtinItems.length - 1,
-            1,
-            this.unsubscribeItem
-          );
-        }
-      },
-      unsubscribeItem: {
-        icon: require("../assets/images/notification-off-circle.png"),
-        label: this.$t("home.op_unsubscribe"),
-        click: async evt => {
-          evt.preventDefault();
-          Dialog.confirm({
-            message: this.$t("home.op_unsubscribe_confirm_msg")
-          })
-            .then(async () => {
-              await this.GLOBAL.api.account.unsubscribe();
-              this.builtinItems.splice(
-                this.builtinItems.length - 1,
-                1,
-                this.subscribeItem
-              );
-            })
-            .catch(() => {});
-        }
-      },
-      // 禁言/解除禁言始终在倒数第二个位置
-      unprohibitItem: {
-        icon: require("../assets/images/unprohibited.png"),
-        label: this.$t("home.op_unmute"),
-        click: async evt => {
-          evt.preventDefault();
-          await this.GLOBAL.api.property.create(false);
-          this.builtinItems.splice(
-            this.builtinItems.length - 2,
-            1,
-            this.prohibitItem
-          );
-        }
-      },
-      prohibitItem: {
-        icon: require("../assets/images/prohibited.png"),
-        label: this.$t("home.op_mute"),
-        click: evt => {
-          evt.preventDefault();
-          Dialog.confirm({
-            message: "Mute all non-admin users?"
-          })
-            .then(async () => {
-              await this.GLOBAL.api.property.create(true);
-              this.builtinItems.splice(
-                this.builtinItems.length - 2,
-                1,
-                this.unprohibitItem
-              );
-            })
-            .catch(() => {});
-        }
-      },
       shortcutsGroups: []
     };
   },
   computed: {
-    isSubscribed() {
+    isAdmin() {
       if (this.meInfo) {
-        if (new Date(this.meInfo.data.subscribed_at).getYear() < 0) {
-          return false;
-        }
+        return this.meInfo.data.role === "admin";
       }
-      return true;
-    },
-    isProhibited() {
-      return this.websiteInfo && this.websiteInfo.data.prohibited;
+      return false;
     },
     isZh() {
       return this.$i18n.locale.indexOf("zh") !== -1;
@@ -169,30 +147,23 @@ export default {
   async mounted() {
     try {
       this.loading = true;
-      this.GLOBAL.api.website.config().then(conf => {
-        this.websiteConf = conf;
-        if (conf.data.home_shortcut_groups) {
-          this.shortcutsGroups = this.addToGroups(
-            conf.data.home_shortcut_groups,
-            false
-          );
-        }
-        this.GLOBAL.api.plugin.shortcuts().then(resp => {
-          if (
-            resp.data &&
-            resp.data[0] &&
-            resp.data[0].items &&
-            resp.data[0].items.length
-          ) {
-            this.shortcutsGroups = this.addToGroups(resp.data, true);
-          }
-        });
-        this.welcomeMessage = this.websiteConf.data.home_welcome_message;
-        this.loading = false;
-      });
-
       this.websiteInfo = await this.GLOBAL.api.website.amount();
       this.meInfo = await this.GLOBAL.api.account.me();
+
+      this.isProhibited = this.websiteInfo.data.prohibited;
+      this.isSubscribed =
+        new Date(this.meInfo.data.subscribed_at).getYear() > 1;
+
+      this.websiteConf = await this.GLOBAL.api.website.config();
+      if (this.websiteConf.data.home_shortcut_groups) {
+        this.shortcutsGroups = this.addToGroups(
+          this.websiteConf.data.home_shortcut_groups,
+          false
+        );
+      }
+      this.welcomeMessage = this.websiteConf.data.home_welcome_message;
+      this.loading = false;
+
       if (this.meInfo.data.state === "pending") {
         this.$router.push("/pay");
         return;
@@ -205,13 +176,19 @@ export default {
       if (this.websiteConf.data.invite_to_join) {
         this.builtinItems.push(this.invitationItem);
       }
-      // entries for admin
-      if (this.meInfo.data.role === "admin") {
-        this.builtinItems.push(this.couponsItem);
-        this.builtinItems.push(this.messagesItem);
-        this.updateProhibitedState();
-      }
-      this.updateSubscribeState();
+      console.log(this.builtinItems);
+      // plugins
+      this.GLOBAL.api.plugin.shortcuts().then(resp => {
+        if (
+          resp.data &&
+          resp.data[0] &&
+          resp.data[0].items &&
+          resp.data[0].items.length
+        ) {
+          let aa = this.buildShortcuts(resp.data[0].items, true);
+          this.builtinItems = this.builtinItems.concat(aa);
+        }
+      });
     } catch (err) {
       console.log("error", err);
     }
@@ -225,26 +202,31 @@ export default {
       }, 5000);
     },
     addToGroups(groups, isPlugin) {
-      return this.shortcutsGroups.concat(
-        groups.map(x => {
-          x.label = this.isZh ? x.label_zh : x.label_en;
-          const items = x.items || x.shortcuts;
-          x.shortcuts = items.map(z => {
-            z.label = this.isZh ? z.label_zh : z.label_en;
-            if (isPlugin) {
-              // z.click = this.handlePluginRedirect(x.id, z.id)
-              // z.url = ''
-              // for plugin SPA, use hash mode to pass query
-              z.isPlugin = true;
-              z.url +=
-                "/#/?token=" +
-                encodeURIComponent(localStorage.getItem("token"));
-            }
-            return z;
-          });
-          return x;
+      return groups.map(x => {
+        x.label = this.isZh ? x.label_zh : x.label_en;
+        const items = x.items || x.shortcuts;
+        x.shortcuts = this.buildShortcuts(items, isPlugin);
+        return x;
+      });
+    },
+    buildShortcuts(items, isPlugin) {
+      return items
+        .map(z => {
+          z.label = this.isZh ? z.label_zh : z.label_en;
+          if (isPlugin) {
+            // for plugin SPA, use hash mode to pass query
+            z.isPlugin = true;
+            z.url +=
+              "/#/?token=" + encodeURIComponent(localStorage.getItem("token"));
+          }
+          return z;
         })
-      );
+        .filter(z => {
+          if (isPlugin && z.admin_only === true) {
+            return this.isAdmin;
+          }
+          return true;
+        });
     },
     handlePluginRedirect(groupId, itemId) {
       return () => {
@@ -258,19 +240,37 @@ export default {
           });
       };
     },
-    updateSubscribeState() {
+    gotoMembers() {
+      this.$router.push("/members");
+    },
+    gotoMessages() {
+      this.$router.push("/messages");
+    },
+    async togglSubscribe() {
       if (this.isSubscribed) {
-        this.builtinItems.push(this.unsubscribeItem);
+        Dialog.confirm({
+          message: this.$t("home.op_unsubscribe_confirm_msg")
+        })
+          .then(async () => {
+            await this.GLOBAL.api.account.unsubscribe();
+            this.isSubscribed = false;
+          })
+          .cancel(() => {});
       } else {
-        this.builtinItems.push(this.subscribeItem);
+        await this.GLOBAL.api.account.subscribe();
+        this.isSubscribed = true;
       }
     },
-    updateProhibitedState() {
+    async toggleProhibit() {
+      console.log("this.isProhibited");
       if (this.isProhibited) {
-        this.builtinItems.push(this.unprohibitItem);
+        await this.GLOBAL.api.property.create(false);
+        this.isProhibited = false;
       } else {
-        this.builtinItems.push(this.prohibitItem);
+        await this.GLOBAL.api.property.create(true);
+        this.isProhibited = true;
       }
+      return;
     }
   }
 };
@@ -279,6 +279,28 @@ export default {
 <style lang="scss" scoped>
 .home-page {
   // padding-top: 60px;
+}
+.panel-header {
+  padding: 15px;
+  h1 {
+    font-size: 18px;
+    margin: 0 0 10px 0;
+  }
+  .announcement {
+  }
+  .btns {
+    margin-top: 10px;
+    .van-button {
+      margin-right: 6px;
+    }
+    .van-button.icon-btn {
+      min-width: 16px;
+      padding: 0;
+      min-height: 16px;
+      width: 30px;
+      height: 30px;
+    }
+  }
 }
 </style>
 
