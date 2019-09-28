@@ -195,23 +195,19 @@ func createSystemMessage(ctx context.Context, tx *sql.Tx, category, data string)
 
 func createSystemJoinMessage(ctx context.Context, tx *sql.Tx, user *User) error {
 	b, err := readProhibitedStatus(ctx, tx)
-	if err != nil || b {
-		return nil
+	prohibited := err != nil || b
+	if prohibited {
+		// send MessageTipsJoinUserProhibited to joined user
+		CreateSystemDistributedMessage(ctx, user, "PLAIN_TEXT", base64.StdEncoding.EncodeToString([]byte(config.AppConfig.MessageTemplate.MessageTipsJoinUserProhibited)))
+	} else {
+		// send MessageTipsJoinUser to joined user while send MessageTipsJoin to all users
+		CreateSystemDistributedMessage(ctx, user, "PLAIN_TEXT", base64.StdEncoding.EncodeToString([]byte(config.AppConfig.MessageTemplate.MessageTipsJoinUser)))
+		err = createSystemMessage(ctx, tx, "PLAIN_TEXT", base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf(config.AppConfig.MessageTemplate.MessageTipsJoin, user.FullName))))
+		if err != nil {
+			return err
+		}
 	}
-	t := time.Now()
-	message := &Message{
-		MessageId: bot.UuidNewV4().String(),
-		UserId:    config.AppConfig.Mixin.ClientId,
-		Category:  "PLAIN_TEXT",
-		Data:      base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf(config.AppConfig.MessageTemplate.MessageTipsJoin, user.FullName))),
-		CreatedAt: t,
-		UpdatedAt: t,
-		State:     MessageStatePending,
-	}
-	params, positions := compileTableQuery(messagesCols)
-	query := fmt.Sprintf("INSERT INTO messages (%s) VALUES (%s)", params, positions)
-	_, err = tx.ExecContext(ctx, query, message.values()...)
-	return err
+	return nil
 }
 
 func generateRandomColor() string {
