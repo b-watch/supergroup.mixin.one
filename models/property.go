@@ -15,13 +15,14 @@ import (
 )
 
 const (
-	ProhibitedMessage = "prohibited-message-property"
+	ProhibitedMessage   = "prohibited-message-property"
+	AnnouncementMessage = "announcement-message-property"
 )
 
 const properties_DDL = `
 CREATE TABLE IF NOT EXISTS properties (
 	name               VARCHAR(512) PRIMARY KEY,
-	value              VARCHAR(1024) NOT NULL,
+	value              VARCHAR(2048) NOT NULL,
 	created_at         TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 `
@@ -107,6 +108,18 @@ func readPropertyAsBool(ctx context.Context, tx *sql.Tx, name string) (bool, err
 	return property.Value == "true", nil
 }
 
+func readPropertyAsString(ctx context.Context, tx *sql.Tx, name string) (string, error) {
+	query := fmt.Sprintf("SELECT %s FROM properties WHERE name=$1", strings.Join(propertiesColumns, ","))
+	row := tx.QueryRowContext(ctx, query, name)
+	property, err := propertyFromRow(row)
+	if err == sql.ErrNoRows {
+		return "", nil
+	} else if err != nil {
+		return "", err
+	}
+	return property.Value, nil
+}
+
 func ReadProhibitedProperty(ctx context.Context) (bool, error) {
 	if config.AppConfig.System.ProhibitedMessageEnabled {
 		var b bool
@@ -121,6 +134,19 @@ func ReadProhibitedProperty(ctx context.Context) (bool, error) {
 		return b, nil
 	}
 	return false, nil
+}
+
+func ReadAnnouncementProperty(ctx context.Context) (string, error) {
+	var b string
+	err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
+		var err error
+		b, err = readPropertyAsString(ctx, tx, AnnouncementMessage)
+		return err
+	})
+	if err != nil {
+		return "", session.TransactionError(ctx, err)
+	}
+	return b, nil
 }
 
 func readProhibitedStatus(ctx context.Context, tx *sql.Tx) (bool, error) {
