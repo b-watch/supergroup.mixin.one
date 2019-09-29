@@ -70,6 +70,7 @@ message_template:
   group_opened_redpacket: "%s 打开了你的红包"
   message_prohibit: "群主开启了禁言，暂时不能发言了。"
   message_allow: "群主关闭了禁言，你可以发言了。"
+  message_announcement: "公告更新：%s"
   message_tips_guest: "您需要先点击机器图标授权。"
   message_tips_join: "%s 加入了群组"
   message_tips_join_user: "你已经加入了群组"

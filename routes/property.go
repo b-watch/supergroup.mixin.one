@@ -21,7 +21,8 @@ func registerProperties(router *httptreemux.TreeMux) {
 
 func (impl *propertyImpl) create(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	var body struct {
-		Value bool `json:"value"`
+		Key   string `json:"key"`
+		Value string `json:"value"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -32,7 +33,7 @@ func (impl *propertyImpl) create(w http.ResponseWriter, r *http.Request, _ map[s
 		views.RenderErrorResponse(w, r, session.ForbiddenError(r.Context()))
 		return
 	}
-	_, err := models.CreateProperty(r.Context(), models.ProhibitedMessage, body.Value)
+	_, err := models.CreateProperty(r.Context(), body.Key, body.Value)
 	if err != nil {
 		views.RenderErrorResponse(w, r, err)
 	} else {

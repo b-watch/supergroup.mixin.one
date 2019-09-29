@@ -1,9 +1,9 @@
-const api = require('./net').default
+const api = require("./net").default;
 
 let Property = {
-  async create (state) {
-    return await api.post('/properties', {'value': state}, {})
+  async create(key, val) {
+    return await api.post("/properties", { key: key, value: val }, {});
   }
-}
+};
 
 export default Property;

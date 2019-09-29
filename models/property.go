@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/MixinNetwork/supergroup.mixin.one/config"
 	"github.com/MixinNetwork/supergroup.mixin.one/durable"
@@ -45,14 +46,13 @@ type Property struct {
 	CreatedAt time.Time
 }
 
-func CreateProperty(ctx context.Context, name string, value bool) (*Property, error) {
-	v := config.AppConfig.System.ProhibitedMessageEnabled
-	if v {
-		v = value
+func CreateProperty(ctx context.Context, name string, value string) (*Property, error) {
+	if utf8.RuneCountInString(value) > 512 {
+		return nil, session.BadDataError(ctx)
 	}
 	property := &Property{
 		Name:      name,
-		Value:     fmt.Sprint(v),
+		Value:     fmt.Sprint(value),
 		CreatedAt: time.Now(),
 	}
 	params, positions := compileTableQuery(propertiesColumns)
@@ -63,11 +63,14 @@ func CreateProperty(ctx context.Context, name string, value bool) (*Property, er
 			return err
 		}
 		data := config.AppConfig
-		if data.System.ProhibitedMessageEnabled {
+		if name == ProhibitedMessage {
 			text := data.MessageTemplate.MessageAllow
-			if value {
+			if value == "true" {
 				text = data.MessageTemplate.MessageProhibit
 			}
+			return createSystemMessage(ctx, tx, "PLAIN_TEXT", base64.StdEncoding.EncodeToString([]byte(text)))
+		} else if name == AnnouncementMessage {
+			text := fmt.Sprintf(data.MessageTemplate.MessageAnnouncement, value)
 			return createSystemMessage(ctx, tx, "PLAIN_TEXT", base64.StdEncoding.EncodeToString([]byte(text)))
 		}
 		return nil
@@ -121,19 +124,16 @@ func readPropertyAsString(ctx context.Context, tx *sql.Tx, name string) (string,
 }
 
 func ReadProhibitedProperty(ctx context.Context) (bool, error) {
-	if config.AppConfig.System.ProhibitedMessageEnabled {
-		var b bool
-		err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
-			var err error
-			b, err = readPropertyAsBool(ctx, tx, ProhibitedMessage)
-			return err
-		})
-		if err != nil {
-			return false, session.TransactionError(ctx, err)
-		}
-		return b, nil
+	var b bool
+	err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
+		var err error
+		b, err = readPropertyAsBool(ctx, tx, ProhibitedMessage)
+		return err
+	})
+	if err != nil {
+		return false, session.TransactionError(ctx, err)
 	}
-	return false, nil
+	return b, nil
 }
 
 func ReadAnnouncementProperty(ctx context.Context) (string, error) {
@@ -141,6 +141,7 @@ func ReadAnnouncementProperty(ctx context.Context) (string, error) {
 	err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
 		var err error
 		b, err = readPropertyAsString(ctx, tx, AnnouncementMessage)
+		fmt.Println(b)
 		return err
 	})
 	if err != nil {
@@ -150,8 +151,5 @@ func ReadAnnouncementProperty(ctx context.Context) (string, error) {
 }
 
 func readProhibitedStatus(ctx context.Context, tx *sql.Tx) (bool, error) {
-	if config.AppConfig.System.ProhibitedMessageEnabled {
-		return readPropertyAsBool(ctx, tx, ProhibitedMessage)
-	}
-	return false, nil
+	return readPropertyAsBool(ctx, tx, ProhibitedMessage)
 }

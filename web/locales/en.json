@@ -167,5 +167,11 @@
     "dialog_confrim_desc": "Have you paid to send rewards to {name}?",
     "dialog_confrim_ok": "I've Paid",
     "dialog_confrim_cancel": "Cancel"
+  },
+  "announcement": {
+    "title": "Announcment",
+    "label": "Content",
+    "placeholder": "Max: {max} charactors",
+    "send": "Send"
   }
 }

@@ -66,24 +66,23 @@ type Config struct {
 		RedPacketAssetList              []string `yaml:"redpacket_asset_list"`
 		RedPacketNormDistSigmaMeanRatio string   `yaml:"redpacket_normal_distribution_sigma_mean_ratio"`
 
-		LimitMessageFrequency    bool     `yaml:"limit_message_frequency"`
-		OperatorList             []string `yaml:"operator_list"`
-		Operators                map[string]bool
-		DetectQRCodeEnabled      bool           `yaml:"detect_image"`
-		DetectLinkEnabled        bool           `yaml:"detect_link"`
-		SensitiveWords           string         `yaml:"sensitive_words"`
-		ProhibitedMessageEnabled bool           `yaml:"prohibited_message"`
-		PaymentAssetId           string         `yaml:"payment_asset_id"`
-		PaymentAmount            string         `yaml:"payment_amount"`
-		PayToJoin                bool           `yaml:"pay_to_join"`
-		InviteToJoin             bool           `yaml:"invite_to_join"`
-		AutoEstimate             bool           `yaml:"auto_estimate"`
-		AutoEstimateCurrency     string         `yaml:"auto_estimate_currency"`
-		AutoEstimateBase         string         `yaml:"auto_estimate_base"`
-		AccpetPaymentAssetList   []PaymentAsset `yaml:"accept_asset_list"`
-		AccpetWeChatPayment      bool           `yaml:"accept_wechat_payment"`
-		WeChatPaymentAmount      string         `yaml:"wechat_payment_amount"`
-		AccpetCouponPayment      bool           `yaml:"accept_coupon_payment"`
+		LimitMessageFrequency  bool     `yaml:"limit_message_frequency"`
+		OperatorList           []string `yaml:"operator_list"`
+		Operators              map[string]bool
+		DetectQRCodeEnabled    bool           `yaml:"detect_image"`
+		DetectLinkEnabled      bool           `yaml:"detect_link"`
+		SensitiveWords         string         `yaml:"sensitive_words"`
+		PaymentAssetId         string         `yaml:"payment_asset_id"`
+		PaymentAmount          string         `yaml:"payment_amount"`
+		PayToJoin              bool           `yaml:"pay_to_join"`
+		InviteToJoin           bool           `yaml:"invite_to_join"`
+		AutoEstimate           bool           `yaml:"auto_estimate"`
+		AutoEstimateCurrency   string         `yaml:"auto_estimate_currency"`
+		AutoEstimateBase       string         `yaml:"auto_estimate_base"`
+		AccpetPaymentAssetList []PaymentAsset `yaml:"accept_asset_list"`
+		AccpetWeChatPayment    bool           `yaml:"accept_wechat_payment"`
+		WeChatPaymentAmount    string         `yaml:"wechat_payment_amount"`
+		AccpetCouponPayment    bool           `yaml:"accept_coupon_payment"`
 	} `yaml:"system"`
 	Appearance struct {
 		HomeWelcomeMessage string          `yaml:"home_welcome_message"`
@@ -98,6 +97,7 @@ type Config struct {
 		MessageTipsGuest              string `yaml:"message_tips_guest"`
 		MessageProhibit               string `yaml:"message_prohibit"`
 		MessageAllow                  string `yaml:"message_allow"`
+		MessageAnnouncement           string `yaml:"message_announcement"`
 		MessageTipsJoin               string `yaml:"message_tips_join"`
 		MessageTipsJoinUser           string `yaml:"message_tips_join_user"`
 		MessageTipsJoinUserProhibited string `yaml:"message_tips_join_user_prohibited"`

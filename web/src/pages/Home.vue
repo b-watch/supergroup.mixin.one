@@ -13,10 +13,17 @@
           <h1>{{ websiteConf ? websiteConf.data.service_name : "..." }}</h1>
           <div class="announcement">
             {{
-              websiteConf
-                ? websiteConf.data.home_welcome_message
-                : "一个没有描述的群"
+              websiteConf ? websiteInfo.data.announcement : "一个没有描述的群"
             }}
+            <van-button
+              v-if="isAdmin"
+              type="default"
+              size="mini"
+              round
+              @click="gotoEditAnnouncement"
+              icon="edit"
+            >
+            </van-button>
           </div>
           <div class="btns">
             <van-button
@@ -240,6 +247,9 @@ export default {
           });
       };
     },
+    gotoEditAnnouncement() {
+      this.$router.push("/announcement/edit");
+    },
     gotoMembers() {
       this.$router.push("/members");
     },
@@ -264,10 +274,16 @@ export default {
     async toggleProhibit() {
       console.log("this.isProhibited");
       if (this.isProhibited) {
-        await this.GLOBAL.api.property.create(false);
+        await this.GLOBAL.api.property.create(
+          "prohibited-message-property",
+          "false"
+        );
         this.isProhibited = false;
       } else {
-        await this.GLOBAL.api.property.create(true);
+        await this.GLOBAL.api.property.create(
+          "prohibited-message-property",
+          "true"
+        );
         this.isProhibited = true;
       }
       return;
@@ -287,6 +303,7 @@ export default {
     margin: 0 0 10px 0;
   }
   .announcement {
+    margin-bottom: 15px;
   }
   .btns {
     margin-top: 10px;

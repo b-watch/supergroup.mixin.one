@@ -17,6 +17,7 @@ import GrantToken from "./pages/GrantToken";
 import { ROUTER_MODE } from "@/constants.js";
 import InvitationDetails from "./pages/InvitationDetails";
 import InvitationEntry from "./pages/InvitationEntry";
+import EditAnnouncement from "./pages/EditAnnouncement";
 
 Vue.use(VueRouter);
 
@@ -37,7 +38,8 @@ const routes = [
   { path: "/wxpay", component: WxPay },
   { path: "/wxpay/done", component: WxPayDone },
   { path: "/invitation/details", component: InvitationDetails },
-  { path: "/invitation/entry", component: InvitationEntry }
+  { path: "/invitation/entry", component: InvitationEntry },
+  { path: "/announcement/edit", component: EditAnnouncement }
 ];
 
 const router = new VueRouter({
