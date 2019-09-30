@@ -12,9 +12,7 @@
         <div class="panel-header" slot="header">
           <h1>{{ websiteConf ? websiteConf.data.service_name : "..." }}</h1>
           <div class="announcement">
-            {{
-              websiteConf ? websiteInfo.data.announcement : "一个没有描述的群"
-            }}
+            <p v-html="announcementText"></p>
             <van-button
               v-if="isAdmin"
               type="default"
@@ -144,6 +142,12 @@ export default {
     },
     isZh() {
       return this.$i18n.locale.indexOf("zh") !== -1;
+    },
+    announcementText() {
+      if (this.websiteInfo) {
+        return utils.urlify(this.websiteInfo.data.announcement);
+      }
+      return "";
     }
   },
   components: {
@@ -272,7 +276,6 @@ export default {
       }
     },
     async toggleProhibit() {
-      console.log("this.isProhibited");
       if (this.isProhibited) {
         await this.GLOBAL.api.property.create(
           "prohibited-message-property",

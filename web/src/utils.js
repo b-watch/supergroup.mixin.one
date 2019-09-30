@@ -83,5 +83,16 @@ export default {
       newUrl = `${p.protocol}//${p.hostname}${p.pathname}${query}${p.hash}`;
     }
     window.location.href = newUrl;
+  },
+  urlify: function(text) {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const breakRegex = /\n\r?\n\r?/g;
+    text = text.replace(breakRegex, "<br/>");
+    text = text.replace(urlRegex, function(url) {
+      return (
+        '<a href="' + url + '" text-decoration: underline">' + url + "</a>"
+      );
+    });
+    return text;
   }
 };
