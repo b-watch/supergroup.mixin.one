@@ -2,7 +2,10 @@
   <loading :loading="loading" :fullscreen="true">
     <div class="pay-page" style="padding-top: 60px;">
       <nav-bar :title="$t('pay.title')" :hasTopRight="false"></nav-bar>
-      <van-panel :title="$t('pay.welcome')" :desc="$t('pay.welcome_desc')"></van-panel>
+      <van-panel
+        :title="$t('pay.welcome')"
+        :desc="$t('pay.welcome_desc')"
+      ></van-panel>
       <br />
       <van-panel :title="$t('pay.method_crypto')">
         <row-select
@@ -12,14 +15,22 @@
           placeholder="Tap to Select"
           @change="onChangeAsset"
         >
-          <span slot="text">{{selectedAsset ? selectedAsset.text : 'Tap to Select'}}</span>
+          <span slot="text">{{
+            selectedAsset ? selectedAsset.text : "Tap to Select"
+          }}</span>
         </row-select>
         <van-cell
-          :title="$t('pay.price_label', {price: currentCryptoPrice, unit: selectedAsset ? selectedAsset.text : '...'})"
+          :title="
+            $t('pay.price_label', {
+              price: currentCryptoPrice,
+              unit: selectedAsset ? selectedAsset.text : '...'
+            })
+          "
         >
-          <span
-            v-if="currentEstimatedPrice"
-          >≈{{currencySymbol}}{{currentEstimatedPrice.toLocaleString()}}</span>
+          <span v-if="currentEstimatedPrice"
+            >≈{{ currencySymbol
+            }}{{ currentEstimatedPrice.toLocaleString() }}</span
+          >
         </van-cell>
         <div slot="footer">
           <van-cell>
@@ -28,7 +39,8 @@
               type="info"
               :disabled="selectedAsset === null || loading"
               @click="payCrypto"
-            >{{$t('pay.pay_crypto')}}</van-button>
+              >{{ $t("pay.pay_crypto") }}</van-button
+            >
           </van-cell>
           <!-- <van-cell>
           <van-button style="width: 100%" type="warning" :disabled="selectedAsset === null" @click="payCrypto">{{$t('pay.pay_foxone')}}</van-button>
@@ -38,7 +50,12 @@
       <br />
       <van-panel v-if="acceptWechatPayment" :title="$t('pay.method_wechat')">
         <van-cell
-          :title="$t('pay.price_label', {price: wechatPaymentAmount, unit: $t('currency.' + autoEstimateCurrency)})"
+          :title="
+            $t('pay.price_label', {
+              price: wechatPaymentAmount,
+              unit: $t('currency.' + autoEstimateCurrency)
+            })
+          "
         ></van-cell>
         <div slot="footer">
           <van-cell>
@@ -46,23 +63,29 @@
               style="width: 100%"
               type="primary"
               @click="payWechatMobile"
-            >{{$t('pay.pay_wechat')}}</van-button>
+              >{{ $t("pay.pay_wechat") }}</van-button
+            >
           </van-cell>
         </div>
       </van-panel>
       <br />
       <van-panel v-if="acceptCouponPayment" :title="$t('pay.method_coupon')">
         <van-cell>
-          <van-field :placeholder="$t('pay.coupon_placeholder')" v-model="couponCode"></van-field>
+          <van-field
+            :placeholder="$t('pay.coupon_placeholder')"
+            v-model="couponCode"
+          ></van-field>
         </van-cell>
         <div slot="footer">
           <van-cell>
             <van-button
               style="width: 100%"
               type="info"
+              plain
               @click="payCoupon"
               :disabled="loading"
-            >{{$t('pay.pay_coupon')}}</van-button>
+              >{{ $t("pay.pay_coupon") }}</van-button
+            >
           </van-cell>
         </div>
       </van-panel>

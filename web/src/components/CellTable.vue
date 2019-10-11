@@ -46,7 +46,6 @@ export default {
   },
   methods: {
     openExternalLink(item) {
-      console.log("openExternalLink 1");
       this.$emit("external", item);
     }
   }

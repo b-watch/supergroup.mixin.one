@@ -82,7 +82,10 @@
         <br />
       </template>
       <van-panel :title="$t('home.pane_operations')">
-        <cell-table :items="builtinItems"></cell-table>
+        <cell-table
+          :items="builtinItems"
+          @external="openExternalLink"
+        ></cell-table>
       </van-panel>
     </div>
   </loading>
@@ -206,7 +209,6 @@ export default {
   },
   methods: {
     openExternalLink(item) {
-      console.log("openExternalLink 2");
       this.loading = true;
       window.location.href = item.url;
       setTimeout(() => {
