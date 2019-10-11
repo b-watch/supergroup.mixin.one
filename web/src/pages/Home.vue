@@ -76,7 +76,7 @@
         <van-panel :title="group.label">
           <cell-table
             :items="group.shortcuts"
-            @open-external-link="openExternalLink"
+            @external="openExternalLink"
           ></cell-table>
         </van-panel>
         <br />
@@ -187,7 +187,6 @@ export default {
       if (this.websiteConf.data.invite_to_join) {
         this.builtinItems.push(this.invitationItem);
       }
-      console.log(this.builtinItems);
       // plugins
       this.GLOBAL.api.plugin.shortcuts().then(resp => {
         if (
@@ -198,6 +197,7 @@ export default {
         ) {
           let aa = this.buildShortcuts(resp.data[0].items, true);
           this.builtinItems = this.builtinItems.concat(aa);
+          console.log(this.builtinItems);
         }
       });
     } catch (err) {
@@ -206,6 +206,7 @@ export default {
   },
   methods: {
     openExternalLink(item) {
+      console.log("openExternalLink 2");
       this.loading = true;
       window.location.href = item.url;
       setTimeout(() => {

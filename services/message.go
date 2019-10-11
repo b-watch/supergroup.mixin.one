@@ -363,6 +363,7 @@ func handleTransfer(ctx context.Context, mc *MessageContext, transfer TransferVi
 	} else {
 		log.Println("Incorrect inst or err", transfer.TraceId, transfer.Memo, err)
 		if user.TraceId == transfer.TraceId {
+			log.Println("New legacy payment", userId, transfer.TraceId)
 			if transfer.Amount == config.AppConfig.System.PaymentAmount && transfer.AssetId == config.AppConfig.System.PaymentAssetId {
 				return user.Payment(ctx)
 			}
@@ -372,10 +373,13 @@ func handleTransfer(ctx context.Context, mc *MessageContext, transfer TransferVi
 				}
 			}
 		} else if order, err := models.GetOrder(ctx, transfer.TraceId); err == nil && order != nil {
+			log.Println("New order received", userId, transfer.TraceId)
 			return handleOrderPayment(ctx, mc, transfer, order)
 		} else if packet, err := models.PayPacket(ctx, id.String(), transfer.AssetId, transfer.Amount); err != nil || packet == nil {
+			log.Println("New packet paid", userId, transfer.TraceId, id)
 			return err
 		} else if packet.State == models.PacketStatePaid {
+			log.Println("New packet prepared", userId, transfer.TraceId, packet.PacketId)
 			return sendAppCard(ctx, mc, packet)
 		}
 	}

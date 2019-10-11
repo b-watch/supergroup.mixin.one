@@ -4,19 +4,19 @@
       <van-col span="6" v-for="item in group">
         <a v-if="item.click" class="item" @click="item.click">
           <img :src="item.icon" />
-          <span>{{item.label}}</span>
+          <span>{{ item.label }}</span>
         </a>
         <a
           v-else-if="item.url.indexOf('http') === 0 || item.isPlugin"
-          class="item"
+          class="item plugin-item"
           @click="openExternalLink(item)"
         >
           <img :src="item.icon" />
-          <span>{{item.label}}</span>
+          <span>{{ item.label }}</span>
         </a>
-        <router-link v-else="item.url" class="item" :to="item.url">
+        <router-link v-else="item.url" class="item url-item" :to="item.url">
           <img :src="item.icon" />
-          <span>{{item.label}}</span>
+          <span>{{ item.label }}</span>
         </router-link>
       </van-col>
     </van-row>
@@ -46,8 +46,8 @@ export default {
   },
   methods: {
     openExternalLink(item) {
-      this.$emit("open-external-link", item);
-      // window.location.href = url
+      console.log("openExternalLink 1");
+      this.$emit("external", item);
     }
   }
 };
