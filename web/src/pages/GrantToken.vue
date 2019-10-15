@@ -24,6 +24,7 @@ export default {
   async mounted() {
     try {
       this.loading = true;
+      await this.GLOBAL.api.account.me();
       this.GLOBAL.api.plugin.shortcuts().then(resp => {
         const pluginMap = this.getPlugins(resp);
         const pluginId = this.$route.query.plugin || "";
