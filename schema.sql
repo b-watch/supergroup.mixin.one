@@ -59,6 +59,7 @@ CREATE TABLE IF NOT EXISTS packets (
   remaining_count   BIGINT NOT NULL,
   remaining_amount  VARCHAR(128) NOT NULL,
   state             VARCHAR(36) NOT NULL,
+  pre_distribution text
   created_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 

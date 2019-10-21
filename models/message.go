@@ -238,12 +238,10 @@ func createSystemRewardsMessage(ctx context.Context, tx *sql.Tx, fromUser *User,
 	label := fmt.Sprintf(config.AppConfig.MessageTemplate.MessageTipsRewards, fromUser.FullName, toUser.FullName, amount, symbol)
 	t := time.Now()
 	host := config.AppConfig.Service.HTTPResourceHost
-	actionURL := host
-	// @TODO uncomment followed lines when new Messenger iOS fix the transpile bug.
-	// if config.AppConfig.System.RouterMode == config.RouterModeHash {
-	// 	host = host + config.RouterModeHashSymbol
-	// }
-	// actionURL := fmt.Sprintf(host + "/rewards")
+	if config.AppConfig.System.RouterMode == config.RouterModeHash {
+		host = host + config.RouterModeHashSymbol
+	}
+	actionURL := fmt.Sprintf(host + "/rewards")
 	if utf8.RuneCountInString(label) > 36 {
 		label = string([]rune(label)[:36])
 	}
