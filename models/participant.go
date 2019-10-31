@@ -6,9 +6,9 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
+	"log"
 	"strings"
 	"time"
-	"unicode/utf8"
 
 	bot "github.com/MixinNetwork/bot-api-go-client"
 	number "github.com/MixinNetwork/go-number"
@@ -95,10 +95,8 @@ func SendParticipantTransfer(ctx context.Context, packetId, userId string, amoun
 		if strings.TrimSpace(packet.User.FullName) == "" {
 			memo = config.AppConfig.MessageTemplate.GroupRedPacketShortDesc
 		}
-		if count := utf8.RuneCountInString(memo); count > 100 {
-			name := string([]rune(packet.User.FullName)[:16])
-			memo = fmt.Sprintf(config.AppConfig.MessageTemplate.GroupRedPacketDesc, name)
-		}
+		name := string([]rune(packet.User.FullName)[:16])
+		memo = fmt.Sprintf(config.AppConfig.MessageTemplate.GroupRedPacketDesc, name)
 		in := &bot.TransferInput{
 			AssetId:     packet.AssetId,
 			RecipientId: userId,
@@ -109,6 +107,7 @@ func SendParticipantTransfer(ctx context.Context, packetId, userId string, amoun
 		if !number.FromString(amount).Exhausted() {
 			err = bot.CreateTransfer(ctx, in, config.AppConfig.Mixin.ClientId, config.AppConfig.Mixin.SessionId, config.AppConfig.Mixin.SessionKey, config.AppConfig.Mixin.SessionAssetPIN, config.AppConfig.Mixin.PinToken)
 			if err != nil {
+				log.Println(packetId, in)
 				return err
 			}
 		}
