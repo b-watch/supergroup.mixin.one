@@ -16,7 +16,7 @@ import (
 	"github.com/MixinNetwork/supergroup.mixin.one/session"
 )
 
-const currencyUrl = "https://api.gbi.news/currency"
+const currencyUrl = "https://gbi-api.fox.one/currency"
 
 type CnyTicker struct {
 	Timestamp   int64  `json:"timestamp"`
