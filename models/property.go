@@ -135,7 +135,7 @@ func ReadGroupModeProperty(ctx context.Context) (string, error) {
 		return err
 	})
 	if err != nil {
-		return "", session.TransactionError(ctx, err)
+		return "free", session.TransactionError(ctx, err)
 	}
 	return mode, nil
 }
