@@ -22,7 +22,9 @@
     "cny": "CNY"
   },
   "errors": {
-    "more_than_available": "More than available"
+    "more_than_available": "More than available",
+    "no_luckycoin_in_lecture_mode": "You can't send luckycoin in lecture mode.",
+    "no_rewards_in_lecture_mode": "You can't send rewards in lecture mode."
   },
   "home": {
     "title": "Group Home",
@@ -173,5 +175,17 @@
     "label": "Content",
     "placeholder": "Max: {max} charactors",
     "send": "Send"
+  },
+  "group_mode": {
+    "title": "Group Mode",
+    "mode_title": "Choose a mode",
+    "mode_title_alt": "Current mode:",
+    "mode_free_title": "Chit-Chat",
+    "mode_free_text": "Everyone is chatting in this mode",
+    "mode_mute_title": "Mute",
+    "mode_mute_text": "Speakers speak, others send rewards and luckycoins",
+    "mode_lecture_title": "Lecture",
+    "mode_lecture_text": "Only speakers speak.",
+    "switch_btn_label": "Switch Mode"
   }
 }

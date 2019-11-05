@@ -8,10 +8,11 @@
       ></nav-bar>
 
       <van-cell-group
-        :title="$t('group_mode.mode_title')"
+        :title="isAdmin ? $t('group_mode.mode_title') : $t('group_mode.mode_title_alt') "
       >
         <van-cell v-bind:key="mode.name" v-for="mode in modes"
           :title="mode.label" :label="mode.desc" :icon="mode.icon"
+          :class="!isAdmin && !mode.selected ? 'faded': ''"
           @click="selectMode(mode)">
           <van-image
             round
@@ -30,13 +31,13 @@
         </van-cell>
       </van-cell-group>
 
-      <van-row style="padding: 20px">
+      <van-row v-if="isAdmin" style="padding: 20px">
         <van-col span="24">
           <van-button
             style="width: 100%"
             type="info"
             @click="applyMode()"
-            >{{ $t("group_mode.switch") }}</van-button>
+            >{{ $t("group_mode.switch_btn_label") }}</van-button>
         </van-col>
       </van-row>
 
@@ -67,23 +68,23 @@ export default {
       modes: [
         {
           name: 'free',
-          label: 'Chit-Chat',
+          label: this.$t('group_mode.mode_free_title'),
           icon: require('@/assets/images/mode_free.png'),
-          desc: 'Everyone is chatting in this mode',
+          desc: this.$t('group_mode.mode_free_text'),
           selected: false
         },
         {
           name: 'mute',
-          label: 'Mute',
+          label: this.$t('group_mode.mode_mute_title'),
           icon: require('@/assets/images/mode_mute.png'),
-          desc: 'Speakers speak, others send rewards and lucky coins',
+          desc: this.$t('group_mode.mode_mute_text'),
           selected: false
         },
         {
           name: 'lecture',
-          label: 'Lecture',
+          label: this.$t('group_mode.mode_lecture_title'),
           icon: require('@/assets/images/mode_lecture.png'),
-          desc: 'Only speakers speak',
+          desc: this.$t('group_mode.mode_lecture_text'),
           selected: false
         }
       ]
@@ -118,17 +119,19 @@ export default {
   },
   methods: {
     async applyMode() {
-      console.log('switch to', this.selectedMode)
       await this.GLOBAL.api.property.create(
         "group-mode-property",
         this.selectedMode.name
       );
+      this.$router.back()
     },
     selectMode(mode) {
-      this.modes = this.modes.map(x => {
-        x.selected = x.name === mode.name;
-        return x;
-      });
+      if (this.isAdmin) {
+        this.modes = this.modes.map(x => {
+          x.selected = x.name === mode.name;
+          return x;
+        });
+      }
     }
   }
 };
@@ -152,5 +155,8 @@ li {
 }
 a {
   color: #42b983;
+}
+.faded {
+  display: none;
 }
 </style>

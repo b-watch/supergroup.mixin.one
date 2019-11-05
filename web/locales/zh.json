@@ -22,7 +22,9 @@
     "cny": "人民币"
   },
   "errors": {
-    "more_than_available": "超过可用数量"
+    "more_than_available": "超过可用数量",
+    "no_luckycoin_in_lecture_mode": "在讲座模式不可以发红包，请等待讲座结束",
+    "no_rewards_in_lecture_mode": "在讲座模式不可以打赏，请等待讲座结束"
   },
   "home": {
     "title": "大群主页",
@@ -173,5 +175,17 @@
     "label": "内容",
     "placeholder": "最多 {max} 字",
     "send": "发送"
+  },
+  "group_mode": {
+    "title": "发言模式",
+    "mode_title": "选择群模式",
+    "mode_title_alt": "当前群模式：",
+    "mode_free_title": "闲聊模式",
+    "mode_free_text": "每个人都可以发言，除非被拉黑了",
+    "mode_mute_title": "禁言模式",
+    "mode_mute_text": "演讲者可以发言，其他人可以打赏或者发红包",
+    "mode_lecture_title": "讲座模式",
+    "mode_lecture_text": "只有演讲者可以发言",
+    "switch_btn_label": "切换模式"
   }
 }

@@ -50,14 +50,14 @@
             >
             <van-button
               v-if="isAdmin"
-              :type="isProhibited ? 'danger' : 'primary'"
+              :type="groupMode === 'mute' ? 'danger' : 'primary'"
               plain
               hairline
               size="small"
               round
               class="icon-btn"
               @click="toggleProhibit"
-              :icon="isProhibited ? 'close' : 'comment-circle-o'"
+              :icon="groupMode === 'free' ? 'comment-circle-o' : ( groupMode === 'lecture' ? 'service-o': 'close')"
             ></van-button>
             <van-button
               v-if="isAdmin"
@@ -75,6 +75,7 @@
       <template v-for="group in shortcutsGroups">
         <van-panel :title="group.label">
           <cell-table
+            :groupMode="groupMode"
             :items="group.shortcuts"
             @external="openExternalLink"
           ></cell-table>
@@ -108,16 +109,15 @@ export default {
       welcomeMessage: "",
       websiteInfo: null,
       websiteConf: null,
-      isProhibited: false,
+      groupMode: 'free',
       isSubscribed: false,
       builtinItems: [
-        // builtin
-        {
-          icon: require("../assets/images/luckymoney-circle.png"),
-          label: this.$t("home.op_luckycoin"),
-          url: "/packets/prepare"
-        }
       ],
+      luckyCoinItem: {
+        icon: require("../assets/images/luckymoney-circle.png"),
+        label: this.$t("home.op_luckycoin"),
+        url: "/packets/prepare"
+      },
       invitationItem: {
         icon: require("../assets/images/invitation.png"),
         label: this.$t("invitation.entry"),
@@ -164,7 +164,7 @@ export default {
       this.websiteInfo = await this.GLOBAL.api.website.amount();
       this.meInfo = await this.GLOBAL.api.account.me();
 
-      this.isProhibited = this.websiteInfo.data.prohibited;
+      this.groupMode = this.websiteInfo.data.mode;
       this.isSubscribed =
         new Date(this.meInfo.data.subscribed_at).getYear() > 1;
 
@@ -182,6 +182,16 @@ export default {
         this.$router.push("/pay");
         return;
       }
+      if (this.websiteInfo.data.mode === 'lecture') {
+        this.rewardsItem.click = () => {
+          this.$toast(this.$t('errors.no_luckycoin_in_lecture_mode'))
+        }
+        this.luckyCoinItem.click = () => {
+          this.$toast(this.$t('errors.no_rewards_in_lecture_mode'))
+        }
+      }
+      this.builtinItems.push(this.luckyCoinItem);
+
       // tips visbility
       if (this.websiteConf.data.rewards_enable) {
         this.builtinItems.push(this.rewardsItem);
@@ -279,19 +289,7 @@ export default {
       }
     },
     async toggleProhibit() {
-      if (this.isProhibited) {
-        await this.GLOBAL.api.property.create(
-          "prohibited-message-property",
-          "false"
-        );
-        this.isProhibited = false;
-      } else {
-        await this.GLOBAL.api.property.create(
-          "prohibited-message-property",
-          "true"
-        );
-        this.isProhibited = true;
-      }
+      this.$router.push('/settings/mode')
       return;
     }
   }

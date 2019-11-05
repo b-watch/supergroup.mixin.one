@@ -12,7 +12,6 @@ func ReadStatistic(ctx context.Context, user *User) (map[string]interface{}, err
 		return nil, err
 	}
 	s["users_count"] = count
-	s["prohibited"] = false
 	s["announcement"] = ""
 	if user != nil && user.isAdmin() {
 		s["mode"], _ = ReadGroupModeProperty(ctx)
