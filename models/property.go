@@ -128,7 +128,7 @@ func readPropertyAsString(ctx context.Context, tx *sql.Tx, name string) (string,
 }
 
 func ReadGroupModeProperty(ctx context.Context) (string, error) {
-	var mode string
+	mode := "free"
 	err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
 		var err error
 		mode, err = readPropertyAsString(ctx, tx, GroupMode)
