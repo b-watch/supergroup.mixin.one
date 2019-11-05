@@ -93,7 +93,7 @@ func CreateMessage(ctx context.Context, user *User, messageId, category, quoteMe
 		mode, err := ReadGroupModeProperty(ctx)
 		if err != nil {
 			return nil, err
-		} else if mode != "free" {
+		} else if mode == "lecture" {
 			return nil, nil
 		}
 	}
