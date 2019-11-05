@@ -17,7 +17,8 @@ import GrantToken from "./pages/GrantToken";
 import { ROUTER_MODE } from "@/constants.js";
 import InvitationDetails from "./pages/InvitationDetails";
 import InvitationEntry from "./pages/InvitationEntry";
-import EditAnnouncement from "./pages/EditAnnouncement";
+import EditAnnouncement from "./pages/settings/EditAnnouncement";
+import GroupMode from "./pages/settings/GroupMode";
 
 Vue.use(VueRouter);
 
@@ -27,8 +28,6 @@ const routes = [
   { path: "/pay/wxqr", component: PayWxQr },
   { path: "/packets/prepare", component: PreparePacket },
   { path: "/packets/:id", component: Packet },
-  { path: "/members/", component: Members },
-  { path: "/messages/", component: Messages },
   { path: "/coupons/", component: Coupons },
   { path: "/rewards/", component: Rewards },
   { path: "/auth", component: TestAuth },
@@ -39,7 +38,10 @@ const routes = [
   { path: "/wxpay/done", component: WxPayDone },
   { path: "/invitation/details", component: InvitationDetails },
   { path: "/invitation/entry", component: InvitationEntry },
-  { path: "/announcement/edit", component: EditAnnouncement }
+  { path: "/settings/announcement/edit", component: EditAnnouncement },
+  { path: "/settings/mode", component: GroupMode },
+  { path: "/members/", component: Members },
+  { path: "/messages/", component: Messages }
 ];
 
 const router = new VueRouter({
