@@ -90,10 +90,10 @@ func CreateMessage(ctx context.Context, user *User, messageId, category, quoteMe
 		}
 	}
 	if !user.isAdmin() {
-		b, err := ReadProhibitedProperty(ctx)
+		mode, err := ReadGroupModeProperty(ctx)
 		if err != nil {
 			return nil, err
-		} else if b {
+		} else if mode != "free" {
 			return nil, nil
 		}
 	}

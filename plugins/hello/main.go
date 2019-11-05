@@ -20,8 +20,8 @@ func PluginInit(plugCtx *plugin.PluginContext) {
 		fmt.Println("new message", m.(models.Message).Data)
 	})
 
-	pluginContext.On(plugin.EventTypeProhibitedStatusChanged, func(s interface{}) {
-		fmt.Println("prohibited status changed to", s.(bool))
+	pluginContext.On(plugin.EventTypeGroupModeChanged, func(s interface{}) {
+		fmt.Println("group mode status changed to", s)
 	})
 
 	r := gin.Default()

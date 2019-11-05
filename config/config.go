@@ -95,8 +95,9 @@ type Config struct {
 		GroupRedPacketDesc            string `yaml:"group_redpacket_desc"`
 		GroupOpenedRedPacket          string `yaml:"group_opened_redpacket"`
 		MessageTipsGuest              string `yaml:"message_tips_guest"`
-		MessageProhibit               string `yaml:"message_prohibit"`
-		MessageAllow                  string `yaml:"message_allow"`
+		MessageGroupModeFree          string `yaml:"message_group_mode_free"`
+		MessageGroupModeMute          string `yaml:"message_group_mode_mute"`
+		MessageGroupModeLecture       string `yaml:"message_group_mode_lecture"`
 		MessageAnnouncement           string `yaml:"message_announcement"`
 		MessageTipsJoin               string `yaml:"message_tips_join"`
 		MessageTipsJoinUser           string `yaml:"message_tips_join_user"`

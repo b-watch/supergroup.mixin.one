@@ -17,6 +17,7 @@ import (
 
 const (
 	ProhibitedMessage   = "prohibited-message-property"
+	GroupMode           = "group-mode-property"
 	AnnouncementMessage = "announcement-message-property"
 )
 
@@ -63,14 +64,17 @@ func CreateProperty(ctx context.Context, name string, value string) (*Property, 
 			return err
 		}
 		data := config.AppConfig
-		if name == ProhibitedMessage {
-			text := data.MessageTemplate.MessageAllow
-			if value == "true" {
-				text = data.MessageTemplate.MessageProhibit
-			}
-			return createSystemMessage(ctx, tx, "PLAIN_TEXT", base64.StdEncoding.EncodeToString([]byte(text)))
-		} else if name == AnnouncementMessage {
+		if name == AnnouncementMessage {
 			text := fmt.Sprintf(data.MessageTemplate.MessageAnnouncement, value)
+			return createSystemMessage(ctx, tx, "PLAIN_TEXT", base64.StdEncoding.EncodeToString([]byte(text)))
+		} else if name == GroupMode {
+			text := data.MessageTemplate.MessageGroupModeFree
+			if value == "lecture" {
+				text = data.MessageTemplate.MessageGroupModeLecture
+			} else if value == "mute" {
+				text = data.MessageTemplate.MessageGroupModeMute
+			}
+			text = fmt.Sprintf(text, value)
 			return createSystemMessage(ctx, tx, "PLAIN_TEXT", base64.StdEncoding.EncodeToString([]byte(text)))
 		}
 		return nil
@@ -80,8 +84,8 @@ func CreateProperty(ctx context.Context, name string, value string) (*Property, 
 		return nil, session.TransactionError(ctx, err)
 	}
 
-	if name == ProhibitedMessage {
-		plugin.Trigger(plugin.EventTypeProhibitedStatusChanged, value)
+	if name == GroupMode {
+		plugin.Trigger(plugin.EventTypeGroupModeChanged, value)
 	}
 
 	return property, nil
@@ -123,17 +127,17 @@ func readPropertyAsString(ctx context.Context, tx *sql.Tx, name string) (string,
 	return property.Value, nil
 }
 
-func ReadProhibitedProperty(ctx context.Context) (bool, error) {
-	var b bool
+func ReadGroupModeProperty(ctx context.Context) (string, error) {
+	var mode string
 	err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
 		var err error
-		b, err = readPropertyAsBool(ctx, tx, ProhibitedMessage)
+		mode, err = readPropertyAsString(ctx, tx, GroupMode)
 		return err
 	})
 	if err != nil {
-		return false, session.TransactionError(ctx, err)
+		return "", session.TransactionError(ctx, err)
 	}
-	return b, nil
+	return mode, nil
 }
 
 func ReadAnnouncementProperty(ctx context.Context) (string, error) {
