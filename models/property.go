@@ -16,7 +16,6 @@ import (
 )
 
 const (
-	ProhibitedMessage   = "prohibited-message-property"
 	GroupMode           = "group-mode-property"
 	AnnouncementMessage = "announcement-message-property"
 )
@@ -74,7 +73,6 @@ func CreateProperty(ctx context.Context, name string, value string) (*Property, 
 			} else if value == "mute" {
 				text = data.MessageTemplate.MessageGroupModeMute
 			}
-			text = fmt.Sprintf(text, value)
 			return createSystemMessage(ctx, tx, "PLAIN_TEXT", base64.StdEncoding.EncodeToString([]byte(text)))
 		}
 		return nil
@@ -154,6 +152,6 @@ func ReadAnnouncementProperty(ctx context.Context) (string, error) {
 	return b, nil
 }
 
-func readProhibitedStatus(ctx context.Context, tx *sql.Tx) (bool, error) {
-	return readPropertyAsBool(ctx, tx, ProhibitedMessage)
+func readGroupModeProperty(ctx context.Context, tx *sql.Tx) (string, error) {
+	return readPropertyAsString(ctx, tx, GroupMode)
 }

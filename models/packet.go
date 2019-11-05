@@ -351,8 +351,8 @@ func (current *User) ClaimPacket(ctx context.Context, packetId string) (*Packet,
 				if err != nil {
 					return err
 				}
-				b, err := readProhibitedStatus(ctx, tx)
-				if err == nil && !b {
+				mode, err := readGroupModeProperty(ctx, tx)
+				if err == nil && mode != "lecture" {
 					dm, err := CreateDistributeMessage(ctx, bot.UuidNewV4().String(), bot.UuidNewV4().String(), "", config.AppConfig.Mixin.ClientId, packet.UserId, "PLAIN_TEXT", base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf(config.AppConfig.MessageTemplate.GroupOpenedRedPacket, current.FullName))))
 					if err != nil {
 						return err
