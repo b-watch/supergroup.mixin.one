@@ -60,8 +60,10 @@ func main() {
 			log.Println(err)
 		}
 	default:
+		WsBroadcastChan := make(chan services.WsBroadcastMessage, 3)
+		go services.StartWebsocketService(*service, database, WsBroadcastChan)
 		go func() {
-			hub := services.NewHub(database)
+			hub := services.NewHub(database, WsBroadcastChan)
 			err := hub.StartService(*service)
 			if err != nil {
 				log.Println(err)

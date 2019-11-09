@@ -78,7 +78,7 @@ type TransferMemoInst struct {
 	Param2 string `json:"p2"`
 }
 
-func (service *MessageService) Run(ctx context.Context) error {
+func (service *MessageService) Run(ctx context.Context, broadcastChan chan WsBroadcastMessage) error {
 	go distribute(ctx)
 	go loopPendingMessage(ctx)
 	go handlePendingParticipants(ctx)
@@ -86,7 +86,7 @@ func (service *MessageService) Run(ctx context.Context) error {
 	go schedulePluginCronJob(ctx)
 
 	for {
-		err := service.loop(ctx)
+		err := service.loop(ctx, broadcastChan)
 		if err != nil {
 			session.Logger(ctx).Error(err)
 		}
@@ -96,7 +96,7 @@ func (service *MessageService) Run(ctx context.Context) error {
 	return nil
 }
 
-func (service *MessageService) loop(ctx context.Context) error {
+func (service *MessageService) loop(ctx context.Context, broadcastChan chan WsBroadcastMessage) error {
 	conn, err := ConnectMixinBlaze(config.AppConfig.Mixin.ClientId, config.AppConfig.Mixin.SessionId, config.AppConfig.Mixin.SessionKey)
 	if err != nil {
 		return err
@@ -141,7 +141,7 @@ func (service *MessageService) loop(ctx context.Context) error {
 					return session.BlazeServerError(ctx, err)
 				}
 			} else if msg.ConversationId == models.UniqueConversationId(config.AppConfig.Mixin.ClientId, msg.UserId) {
-				if err := handleMessage(ctx, mc, &msg); err != nil {
+				if err := handleMessage(ctx, mc, &msg, broadcastChan); err != nil {
 					return err
 				}
 			}
@@ -519,7 +519,7 @@ func handlePendingParticipants(ctx context.Context) {
 	}
 }
 
-func handleMessage(ctx context.Context, mc *MessageContext, message *MessageView) error {
+func handleMessage(ctx context.Context, mc *MessageContext, message *MessageView, broadcastChan chan WsBroadcastMessage) error {
 	user, err := models.FindUser(ctx, message.UserId)
 	if err != nil {
 		return err
@@ -548,6 +548,20 @@ func handleMessage(ctx context.Context, mc *MessageContext, message *MessageView
 			}
 		}
 	}
+	// broadcast
+	go func() {
+		var bmsg WsBroadcastMessage
+		bmsg.Category = message.Category
+		bmsg.MessageId = message.MessageId
+		bmsg.CreatedAt = message.UpdatedAt
+		bmsg.Data = message.Data
+		bmsg.SpeakerId = user.UserId
+		bmsg.SpeakerName = user.FullName
+		bmsg.SpeakerAvatar = user.AvatarURL
+		log.Printf("Messages: %d\n", bmsg)
+		broadcastChan <- bmsg
+		log.Println("write to chan")
+	}()
 	if _, err := models.CreateMessage(ctx, user, message.MessageId, message.Category, message.QuoteMessageId, message.Data, message.CreatedAt, message.UpdatedAt); err != nil {
 		return err
 	}

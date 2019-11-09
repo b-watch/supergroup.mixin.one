@@ -9,11 +9,12 @@ import (
 )
 
 type Hub struct {
-	context  context.Context
-	services map[string]Service
+	context       context.Context
+	services      map[string]Service
+	broadcastChan chan WsBroadcastMessage
 }
 
-func NewHub(db *durable.Database) *Hub {
+func NewHub(db *durable.Database, broadcastChan chan WsBroadcastMessage) *Hub {
 	hub := &Hub{services: make(map[string]Service)}
 	hub.context = session.WithDatabase(context.Background(), db)
 	hub.registerServices()
@@ -27,7 +28,7 @@ func (hub *Hub) StartService(name string) error {
 	}
 
 	ctx := session.WithLogger(hub.context, durable.BuildLogger())
-	return service.Run(ctx)
+	return service.Run(ctx, hub.broadcastChan)
 }
 
 func (hub *Hub) registerServices() {

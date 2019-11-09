@@ -265,7 +265,7 @@ export default {
       };
     },
     gotoEditAnnouncement() {
-      this.$router.push("/announcement/edit");
+      this.$router.push("/settings/announcement/edit");
     },
     gotoMembers() {
       this.$router.push("/members");
