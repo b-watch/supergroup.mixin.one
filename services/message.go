@@ -558,9 +558,7 @@ func handleMessage(ctx context.Context, mc *MessageContext, message *MessageView
 		bmsg.SpeakerId = user.UserId
 		bmsg.SpeakerName = user.FullName
 		bmsg.SpeakerAvatar = user.AvatarURL
-		log.Printf("Messages: %d\n", bmsg)
 		broadcastChan <- bmsg
-		log.Println("write to chan")
 	}()
 	if _, err := models.CreateMessage(ctx, user, message.MessageId, message.Category, message.QuoteMessageId, message.Data, message.CreatedAt, message.UpdatedAt); err != nil {
 		return err

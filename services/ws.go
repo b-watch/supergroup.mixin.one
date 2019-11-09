@@ -4,13 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
 	"time"
 
-	"github.com/gobwas/ws"
-	"github.com/gobwas/ws/wsutil"
-
 	"github.com/MixinNetwork/supergroup.mixin.one/durable"
+	"github.com/gin-gonic/gin"
+	"gopkg.in/olahol/melody.v1"
 )
 
 type WsBroadcastMessage struct {
@@ -25,35 +23,26 @@ type WsBroadcastMessage struct {
 
 func StartWebsocketService(name string, db *durable.Database, broadcastChan chan WsBroadcastMessage) {
 	log.Println("Init websocket service")
-	http.ListenAndServe(":7023", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		conn, _, _, err := ws.UpgradeHTTP(r, w)
-		if err != nil {
-			// handle error
-		}
-		log.Println("handle conn")
+	r := gin.Default()
+	m := melody.New()
 
-		go func() {
-			defer conn.Close()
+	r.GET("/messages", func(c *gin.Context) {
+		m.HandleRequest(c.Writer, c.Request)
+	})
 
-			for {
-				log.Println("check chan")
-				select {
-				case msg := <-broadcastChan:
-					log.Println("new message:", msg)
-					bts, err := json.Marshal(msg)
-					if err != nil {
-						fmt.Printf("StartWebsockService: %s\n", err)
-						return
-					}
-					err = wsutil.WriteServerMessage(conn, ws.OpText, []byte(bts))
-					if err != nil {
-						// handle error
-					}
-					// default:
-					// log.Println("no activity")
+	m.HandleMessage(func(s *melody.Session, msg []byte) {
+		for {
+			select {
+			case msg := <-broadcastChan:
+				bts, err := json.Marshal(msg)
+				if err != nil {
+					fmt.Printf("StartWebsockService: %s\n", err)
+					return
 				}
-				// time.Sleep(3000 * time.Millisecond)
+				m.Broadcast(bts)
 			}
-		}()
-	}))
+		}
+	})
+
+	r.Run(":7023")
 }
