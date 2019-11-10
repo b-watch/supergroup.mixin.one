@@ -31,7 +31,7 @@
         </van-cell>
       </van-cell-group>
 
-      <van-cell-group :title="$t('group_mode.broadcast_title')">
+      <van-cell-group v-if="isAdmin" :title="$t('group_mode.broadcast_title')">
         <van-cell :title="$t('group_mode.broadcast_label')">
           <van-switch v-model="isBroadcast" />
         </van-cell>
