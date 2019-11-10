@@ -186,6 +186,9 @@
     "mode_mute_text": "Speakers speak, others send rewards and luckycoins",
     "mode_lecture_title": "Lecture",
     "mode_lecture_text": "Only speakers speak.",
-    "switch_btn_label": "Switch Mode"
+    "switch_btn_label": "Switch Mode",
+    "broadcast_title": "Broadcast Settings",
+    "btn_copy_broadcast_url": "Copy Url",
+    "broadcast_label": "On/Off broadcast"
   }
 }

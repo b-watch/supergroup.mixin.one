@@ -31,6 +31,15 @@
         </van-cell>
       </van-cell-group>
 
+      <van-cell-group :title="$t('group_mode.broadcast_title')">
+        <van-cell :title="$t('group_mode.broadcast_label')">
+          <van-switch v-model="isBroadcast" />
+        </van-cell>
+        <van-cell :title="broadcastUrl">
+          <van-button type="info" plain size="small">{{$t('group_mode.btn_copy_broadcast_url')}}</van-button>
+        </van-cell>
+      </van-cell-group>
+
       <van-row v-if="isAdmin" style="padding: 20px">
         <van-col span="24">
           <van-button
@@ -65,6 +74,7 @@ export default {
     return {
       loading: false,
       isAdmin: false,
+      isBroadcast: false,
       modes: [
         {
           name: 'free',
@@ -93,17 +103,22 @@ export default {
   components: {
     NavBar,
     RowSelect,
-    Loading
+    Loading,
   },
   async mounted() {
     this.loading = true;
+    this.GLOBAL.api.website.config().then((resp) => {
+      this.broadcastUrl = resp.data.broadcast_host
+    })
     let amountInfo = await this.GLOBAL.api.website.amount();
     if (amountInfo && amountInfo.data) {
       for (let ix = 0; ix < this.modes.length; ix++) {
         this.modes[ix];
         this.modes[ix].selected = amountInfo.data.mode === this.modes[ix].name
       }
+      this.isBroadcast = amountInfo.data.broadcast === 'on'
     }
+
     this.isAdmin = window.localStorage.getItem("role") === "admin";
     this.loading = false;
   },
@@ -119,10 +134,16 @@ export default {
   },
   methods: {
     async applyMode() {
+      this.loading = true
       await this.GLOBAL.api.property.create(
         "group-mode-property",
         this.selectedMode.name
       );
+      await this.GLOBAL.api.property.create(
+        "broadcast-property",
+        this.isBroadcast ? 'on' : 'off'
+      );
+      this.loading = false
       this.$router.back()
     },
     selectMode(mode) {

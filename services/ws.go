@@ -4,33 +4,46 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/MixinNetwork/supergroup.mixin.one/durable"
-	"github.com/gin-gonic/gin"
 	"gopkg.in/olahol/melody.v1"
 )
 
 type WsBroadcastMessage struct {
-	MessageId     string    `json:"id"`
-	SpeakerName   string    `json:"speaker_name"`
-	SpeakerAvatar string    `json:"speaker_avatar"`
-	SpeakerId     string    `json:"speaker_id"`
-	Category      string    `json:"category"`
-	Data          string    `json:"data"`
-	CreatedAt     time.Time `json:"created_at"`
+	MessageId     string                       `json:"id"`
+	SpeakerName   string                       `json:"speaker_name"`
+	SpeakerAvatar string                       `json:"speaker_avatar"`
+	SpeakerId     string                       `json:"speaker_id"`
+	Category      string                       `json:"category"`
+	Data          string                       `json:"data"`
+	Text          string                       `json:"text"`
+	Attachment    WsBroadcastMessageAttachment `json:"attachment"`
+	CreatedAt     time.Time                    `json:"created_at"`
+}
+
+type WsBroadcastMessageAttachment struct {
+	ID        string `json:"id"`
+	Size      int    `json:"size"`
+	MimeType  string `json:"mime_type"`
+	Persisted bool   `json:"-"`
+
+	Name      *string `json:"name,omitempty"`
+	Duration  *uint   `json:"duration,omitempty"`
+	Waveform  []byte  `json:"waveform,omitempty"`
+	Width     *uint   `json:"width,omitempty"`
+	Height    *uint   `json:"height,omitempty"`
+	Thumbnail []byte  `json:"thumbnail,omitempty"`
+
+	ViewUrl string `json:"view_url"`
 }
 
 func StartWebsocketService(name string, db *durable.Database, broadcastChan chan WsBroadcastMessage) {
 	log.Println("Init websocket service")
-	r := gin.Default()
 	m := melody.New()
 
-	r.GET("/messages", func(c *gin.Context) {
-		m.HandleRequest(c.Writer, c.Request)
-	})
-
-	m.HandleMessage(func(s *melody.Session, msg []byte) {
+	go func() {
 		for {
 			select {
 			case msg := <-broadcastChan:
@@ -39,10 +52,13 @@ func StartWebsocketService(name string, db *durable.Database, broadcastChan chan
 					fmt.Printf("StartWebsockService: %s\n", err)
 					return
 				}
+
 				m.Broadcast(bts)
 			}
 		}
-	})
+	}()
 
-	r.Run(":7023")
+	http.ListenAndServe(":7023", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		m.HandleRequest(w, r)
+	}))
 }

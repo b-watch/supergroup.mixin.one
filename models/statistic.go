@@ -12,10 +12,8 @@ func ReadStatistic(ctx context.Context, user *User) (map[string]interface{}, err
 		return nil, err
 	}
 	s["users_count"] = count
-	s["announcement"] = ""
-	if user != nil && user.isAdmin() {
-		s["mode"], _ = ReadGroupModeProperty(ctx)
-		s["announcement"], _ = ReadAnnouncementProperty(ctx)
-	}
+	s["mode"], _ = ReadGroupModeProperty(ctx)
+	s["announcement"], _ = ReadAnnouncementProperty(ctx)
+	s["broadcast"], _ = ReadBroadcastProperty(ctx)
 	return s, nil
 }
