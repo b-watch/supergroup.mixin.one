@@ -45,8 +45,9 @@
 import ChatArea from './components/ChatArea';
 import ws from '@/ws';
 import api from '@/api';
+import { WS_BASE_URL } from '@/constants';
 
-const wsUrl = "ws://localhost:7023/messages";
+const wsUrl = WS_BASE_URL + "/messages";
 
 export default {
   name: 'App',

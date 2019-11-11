@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
+
+	"github.com/MixinNetwork/supergroup.mixin.one/config"
 
 	"github.com/MixinNetwork/supergroup.mixin.one/durable"
 	"gopkg.in/olahol/melody.v1"
@@ -58,7 +61,7 @@ func StartWebsocketService(name string, db *durable.Database, broadcastChan chan
 		}
 	}()
 
-	http.ListenAndServe(":7023", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	http.ListenAndServe(":"+strconv.Itoa(config.AppConfig.Service.HTTPWebsocketPort), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		m.HandleRequest(w, r)
 	}))
 }
