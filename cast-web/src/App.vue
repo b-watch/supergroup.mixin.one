@@ -103,7 +103,7 @@ export default {
       console.log('connected')
     },
     onMessage (msg) {
-      if (supportedCategories.hasProperty(msg.category)) {
+      if (supportedCategories.hasOwnProperty(msg.category)) {
         this.messages.push(msg)
         setTimeout(()=> {
           let html = document.documentElement;
