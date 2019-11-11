@@ -1,7 +1,7 @@
 import { Base64 } from "js-base64";
 
 const ws = {
-  init: function(url, opts) {
+  connect: function(url, opts) {
     this.websocket = new WebSocket(url);
     this.websocket.onopen = opts.onopen || this._onopen;
     this.websocket.onclose = opts.onclose || this._onclose;

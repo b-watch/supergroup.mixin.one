@@ -38,6 +38,11 @@
     <v-content>
       <ChatArea :messages="messages" />
     </v-content>
+
+    <div v-if="disconnected" class="mask flex">
+      <div class="hint font-weight-bold">Can’t establish a connection to the server</div>
+      <div class="hint">Try to connect in {{(waitingTime - waitingTick)/1000}} sec</div>
+    </div>
   </v-app>
 </template>
 
@@ -48,6 +53,13 @@ import api from '@/api';
 import { WS_BASE_URL } from '@/constants';
 
 const wsUrl = WS_BASE_URL + "/messages";
+
+const supportedCategories = {
+  'PLAIN_TEXT': 1,
+  'PLAIN_IMAGE': 1,
+  'PLAIN_VIDEO': 1,
+  'PLAIN_AUDIO': 1
+}
 
 export default {
   name: 'App',
@@ -62,11 +74,15 @@ export default {
     usersCount: 0,
     announcement: "",
     isPanelExpand: false,
-    messages: [
-    ]
+    disconnected: false,
+    waitingTick: 0,
+    waitingTime: 1000,
+    last2ndWaitingTime: 0,
+    last1stWaitingTime: 1000,
+    messages: []
   }),
 
-  async mounted () {
+  mounted () {
     api.website.amount().then((resp) => {
       this.usersCount = resp.data.users_count
       this.announcement = resp.data.announcement
@@ -74,32 +90,67 @@ export default {
     api.website.config().then((resp) => {
       this.groupName = resp.data.service_name
     })
-    ws.init(wsUrl, {
-      onopen: this.onOpen,
-      onmessage: this.onMessage,
-      onerror: this.onError,
-    })
+    this.connect()
   },
 
   methods: {
+    onClose (evt) {
+      console.log('disconnected')
+      this.disconnected = true
+      this.reconnect()
+    },
     onOpen (evt) {
       console.log('connected')
     },
     onMessage (msg) {
-      this.messages.push(msg)
-      setTimeout(()=> {
-        let html = document.documentElement;
-        let height = Math.max(html.clientHeight, html.scrollHeight, html.offsetHeight);
-        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
-          window.scrollTo(0, height)
-        }
-      }, 1000)
+      if (supportedCategories.hasProperty(msg.category)) {
+        this.messages.push(msg)
+        setTimeout(()=> {
+          let html = document.documentElement;
+          let height = Math.max(html.clientHeight, html.scrollHeight, html.offsetHeight);
+          if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
+            window.scrollTo(0, height)
+          }
+        }, 1000)
+      }
     },
-    onError (evt) {
-      console.log(evt.data)
+    onError (err) {
+      console.log('error', err)
+      this.disconnected = true
+    },
+    reconnect () {
+      // reconnect
+      this.waitingTick = 0
+      this.waitingTime = this.genNextWaitingTime()
+      console.log('wait for', this.waitingTime/1000, 'sec')
+      this.retry()
     },
     togglePanel () {
       this.isPanelExpand = !this.isPanelExpand
+    },
+    connect () {
+      this.disconnected = false
+      ws.connect(wsUrl, {
+        onopen: this.onOpen,
+        onmessage: this.onMessage,
+        onclose: this.onClose,
+        onerror: this.onError,
+      })
+    },
+    retry () {
+      setTimeout(() => {
+        if (this.waitingTick >= this.waitingTime) {
+          this.connect()
+        } else {
+          this.waitingTick += 1000
+          this.retry()
+        }
+      }, 1000)
+    },
+    genNextWaitingTime () {
+      this.last2ndWaitingTime = this.last1stWaitingTime
+      this.last1stWaitingTime = this.waitingTime
+      return this.last2ndWaitingTime + this.last1stWaitingTime
     }
   }
 };
@@ -116,6 +167,24 @@ export default {
   /* max-height = line-height (1.2) * lines max number (5) */
   height: 6em;
   overflow: hidden;
+}
+.mask {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 10000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  .hint {
+    font-size: 16px;
+    color: white;
+    text-align: center;
+  }
 }
 
 </style>
