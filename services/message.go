@@ -400,17 +400,24 @@ func handleRewardsPayment(ctx context.Context, mc *MessageContext, transfer Tran
 		return nil
 	}
 	log.Println("Rewards to ", userId)
+	traceID := bot.UuidNewV4().String()
 	in := &bot.TransferInput{
 		AssetId:     transfer.AssetId,
 		RecipientId: targetUser.UserId,
 		Amount:      number.FromString(transfer.Amount),
-		TraceId:     bot.UuidNewV4().String(),
+		TraceId:     traceID,
 		Memo:        "Rewards from " + user.FullName,
 	}
 	if err := bot.CreateTransfer(ctx, in, config.AppConfig.Mixin.ClientId, config.AppConfig.Mixin.SessionId, config.AppConfig.Mixin.SessionKey, config.AppConfig.Mixin.SessionAssetPIN, config.AppConfig.Mixin.PinToken); err != nil {
 		log.Println("can't transfer to recipient", err)
 		return err
 	}
+
+	if err := models.CreateTip(ctx, user.UserId, targetUser.UserId, transfer.AssetId, transfer.Amount, traceID); err != nil {
+		log.Println("can't record tip", err)
+		return err
+	}
+
 	if err := models.CreateRewardsMessage(ctx, user, targetUser, transfer.Amount, inst.Param2); err != nil {
 		log.Println("can't create rewards message", err)
 		return err

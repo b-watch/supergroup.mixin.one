@@ -55,6 +55,7 @@ func main() {
 		if config.AppConfig.System.AutoEstimate {
 			go services.StartCurrencySync(*service, database)
 		}
+		go services.StartRank(*service, database, connStr)
 		err := StartServer(database)
 		if err != nil {
 			log.Println(err)
