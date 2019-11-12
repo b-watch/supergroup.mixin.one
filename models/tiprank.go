@@ -84,8 +84,8 @@ type Tip struct {
 }
 
 type RankResult struct {
-	Ranks       map[string]Rank `json:"ranks"`
 	CurrentRank TipSum          `json:"current_rank"`
+	Ranks       map[string]Rank `json:"ranks"`
 }
 
 func (tr TimeRange) IsInfinite() bool {
