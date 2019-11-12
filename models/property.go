@@ -16,8 +16,9 @@ import (
 )
 
 const (
-	GroupMode           = "group-mode-property"
-	AnnouncementMessage = "announcement-message-property"
+	PropGroupMode           = "group-mode-property"
+	PropAnnouncementMessage = "announcement-message-property"
+	PropBroadcast           = "broadcast-property"
 )
 
 const properties_DDL = `
@@ -63,10 +64,10 @@ func CreateProperty(ctx context.Context, name string, value string) (*Property, 
 			return err
 		}
 		data := config.AppConfig
-		if name == AnnouncementMessage {
+		if name == PropAnnouncementMessage {
 			text := fmt.Sprintf(data.MessageTemplate.MessageAnnouncement, value)
 			return createSystemMessage(ctx, tx, "PLAIN_TEXT", base64.StdEncoding.EncodeToString([]byte(text)))
-		} else if name == GroupMode {
+		} else if name == PropGroupMode {
 			text := data.MessageTemplate.MessageGroupModeFree
 			if value == "lecture" {
 				text = data.MessageTemplate.MessageGroupModeLecture
@@ -82,7 +83,7 @@ func CreateProperty(ctx context.Context, name string, value string) (*Property, 
 		return nil, session.TransactionError(ctx, err)
 	}
 
-	if name == GroupMode {
+	if name == PropGroupMode {
 		plugin.Trigger(plugin.EventTypeGroupModeChanged, value)
 	}
 
@@ -101,18 +102,6 @@ func ReadProperty(ctx context.Context, name string) (*Property, error) {
 	return property, nil
 }
 
-func readPropertyAsBool(ctx context.Context, tx *sql.Tx, name string) (bool, error) {
-	query := fmt.Sprintf("SELECT %s FROM properties WHERE name=$1", strings.Join(propertiesColumns, ","))
-	row := tx.QueryRowContext(ctx, query, name)
-	property, err := propertyFromRow(row)
-	if err == sql.ErrNoRows {
-		return false, nil
-	} else if err != nil {
-		return false, err
-	}
-	return property.Value == "true", nil
-}
-
 func readPropertyAsString(ctx context.Context, tx *sql.Tx, name string) (string, error) {
 	query := fmt.Sprintf("SELECT %s FROM properties WHERE name=$1", strings.Join(propertiesColumns, ","))
 	row := tx.QueryRowContext(ctx, query, name)
@@ -125,11 +114,31 @@ func readPropertyAsString(ctx context.Context, tx *sql.Tx, name string) (string,
 	return property.Value, nil
 }
 
+func ReadPropertyAsString(ctx context.Context, name string) (string, error) {
+	var property *Property
+	err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
+		var err error
+		query := fmt.Sprintf("SELECT %s FROM properties WHERE name=$1", strings.Join(propertiesColumns, ","))
+		row := tx.QueryRowContext(ctx, query, name)
+		property, err = propertyFromRow(row)
+		if err == sql.ErrNoRows {
+			return nil
+		} else if err != nil {
+			return err
+		}
+		return err
+	})
+	if err != nil {
+		return "free", session.TransactionError(ctx, err)
+	}
+	return property.Value, nil
+}
+
 func ReadGroupModeProperty(ctx context.Context) (string, error) {
 	mode := "free"
 	err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
 		var err error
-		mode, err = readPropertyAsString(ctx, tx, GroupMode)
+		mode, err = readPropertyAsString(ctx, tx, PropGroupMode)
 		return err
 	})
 	if err != nil {
@@ -142,8 +151,7 @@ func ReadAnnouncementProperty(ctx context.Context) (string, error) {
 	var b string
 	err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
 		var err error
-		b, err = readPropertyAsString(ctx, tx, AnnouncementMessage)
-		fmt.Println(b)
+		b, err = readPropertyAsString(ctx, tx, PropAnnouncementMessage)
 		return err
 	})
 	if err != nil {
@@ -152,6 +160,20 @@ func ReadAnnouncementProperty(ctx context.Context) (string, error) {
 	return b, nil
 }
 
+func ReadBroadcastProperty(ctx context.Context) (string, error) {
+	broadcast := "on"
+	var err error
+	broadcast, err = ReadPropertyAsString(ctx, PropBroadcast)
+	if err != nil {
+		return broadcast, session.TransactionError(ctx, err)
+	}
+	return broadcast, nil
+}
+
 func readGroupModeProperty(ctx context.Context, tx *sql.Tx) (string, error) {
-	return readPropertyAsString(ctx, tx, GroupMode)
+	return readPropertyAsString(ctx, tx, PropGroupMode)
+}
+
+func readBroadcastProperty(ctx context.Context, tx *sql.Tx) (string, error) {
+	return readPropertyAsString(ctx, tx, PropBroadcast)
 }

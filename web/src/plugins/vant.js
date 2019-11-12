@@ -18,7 +18,8 @@ import {
   Tabs,
   Image,
   Icon,
-  SwipeCell
+  SwipeCell,
+  Switch
 } from "vant";
 import { Locale } from "vant";
 import enUS from "vant/lib/locale/lang/en-US";
@@ -50,4 +51,5 @@ Vue.use(Tab);
 Vue.use(Tabs);
 Vue.use(Image);
 Vue.use(Icon);
+Vue.use(Switch);
 Vue.use(SwipeCell);

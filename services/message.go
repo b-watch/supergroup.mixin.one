@@ -78,7 +78,7 @@ type TransferMemoInst struct {
 	Param2 string `json:"p2"`
 }
 
-func (service *MessageService) Run(ctx context.Context) error {
+func (service *MessageService) Run(ctx context.Context, broadcastChan chan WsBroadcastMessage) error {
 	go distribute(ctx)
 	go loopPendingMessage(ctx)
 	go handlePendingParticipants(ctx)
@@ -86,7 +86,7 @@ func (service *MessageService) Run(ctx context.Context) error {
 	go schedulePluginCronJob(ctx)
 
 	for {
-		err := service.loop(ctx)
+		err := service.loop(ctx, broadcastChan)
 		if err != nil {
 			session.Logger(ctx).Error(err)
 		}
@@ -96,7 +96,7 @@ func (service *MessageService) Run(ctx context.Context) error {
 	return nil
 }
 
-func (service *MessageService) loop(ctx context.Context) error {
+func (service *MessageService) loop(ctx context.Context, broadcastChan chan WsBroadcastMessage) error {
 	conn, err := ConnectMixinBlaze(config.AppConfig.Mixin.ClientId, config.AppConfig.Mixin.SessionId, config.AppConfig.Mixin.SessionKey)
 	if err != nil {
 		return err
@@ -141,7 +141,7 @@ func (service *MessageService) loop(ctx context.Context) error {
 					return session.BlazeServerError(ctx, err)
 				}
 			} else if msg.ConversationId == models.UniqueConversationId(config.AppConfig.Mixin.ClientId, msg.UserId) {
-				if err := handleMessage(ctx, mc, &msg); err != nil {
+				if err := handleMessage(ctx, mc, &msg, broadcastChan); err != nil {
 					return err
 				}
 			}
@@ -519,7 +519,7 @@ func handlePendingParticipants(ctx context.Context) {
 	}
 }
 
-func handleMessage(ctx context.Context, mc *MessageContext, message *MessageView) error {
+func handleMessage(ctx context.Context, mc *MessageContext, message *MessageView, broadcastChan chan WsBroadcastMessage) error {
 	user, err := models.FindUser(ctx, message.UserId)
 	if err != nil {
 		return err
@@ -547,6 +547,15 @@ func handleMessage(ctx context.Context, mc *MessageContext, message *MessageView
 				return sendTextMessage(ctx, mc, message.ConversationId, fmt.Sprintf(config.AppConfig.MessageTemplate.MessageCommandsInfoResp, count))
 			}
 		}
+	}
+	// broadcast
+	if isBroadcastOn, err := models.ReadBroadcastProperty(ctx); err == nil && isBroadcastOn == "on" {
+		go func() {
+			bmsg, err := decodeMessage(ctx, user, message)
+			if err == nil {
+				broadcastChan <- bmsg
+			}
+		}()
 	}
 	if _, err := models.CreateMessage(ctx, user, message.MessageId, message.Category, message.QuoteMessageId, message.Data, message.CreatedAt, message.UpdatedAt); err != nil {
 		return err
@@ -588,4 +597,83 @@ func (m *tmap) set(key string, t mixinTransaction) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	m.m[key] = t
+}
+
+func decodeMessage(ctx context.Context, user *models.User, message *MessageView) (WsBroadcastMessage, error) {
+	var bmsg WsBroadcastMessage
+	bmsg.Category = message.Category
+	bmsg.MessageId = message.MessageId
+	bmsg.CreatedAt = message.UpdatedAt
+	bmsg.Data = message.Data
+	bmsg.SpeakerId = user.UserId
+	bmsg.SpeakerName = user.FullName
+	bmsg.SpeakerAvatar = user.AvatarURL
+
+	if message.Category == "PLAIN_TEXT" {
+		bytes, _ := base64.StdEncoding.DecodeString(message.Data)
+		bmsg.Text = string(bytes)
+		return bmsg, nil
+	}
+
+	if message.Category != "PLAIN_IMAGE" && message.Category != "PLAIN_VIDEO" && message.Category != "PLAIN_AUDIO" && message.Category != "PLAIN_DATA" {
+		return bmsg, nil
+	}
+
+	data, err := base64.StdEncoding.DecodeString(message.Data)
+	if err != nil {
+		log.Println("message data decode error", err)
+		return bmsg, err
+	}
+
+	att, err := attachmentFromMixinJSON(string(data))
+	if err != nil {
+		log.Println("decode attachment error", err)
+		return bmsg, err
+	}
+	attResp, err := bot.AttachemntShow(ctx, config.AppConfig.Mixin.ClientId, config.AppConfig.Mixin.SessionId, config.AppConfig.Mixin.SessionKey, att.ID)
+	if err != nil {
+		log.Println("get attachment details error", err)
+	}
+	att.ViewUrl = attResp.ViewURL
+	bmsg.Attachment = att
+	return bmsg, nil
+}
+
+func attachmentFromMixinJSON(jsonString string) (att WsBroadcastMessageAttachment, err error) {
+	var data struct {
+		ID        string  `json:"attachment_id"`
+		Size      int     `json:"size"`
+		MimeType  string  `json:"mime_type"`
+		Name      *string `json:"name"`
+		Duration  *uint   `json:"duration"`
+		Waveform  *string `json:"waveform"`
+		Width     *uint   `json:"width"`
+		Height    *uint   `json:"height"`
+		Thumbnail *string `json:"thumbnail"`
+	}
+	err = json.Unmarshal([]byte(jsonString), &data)
+	if err != nil {
+		return
+	}
+
+	att.ID = data.ID
+	att.Size = data.Size
+	att.MimeType = data.MimeType
+	att.Duration = data.Duration
+	if data.Waveform != nil {
+		att.Waveform, err = base64.StdEncoding.DecodeString(*data.Waveform)
+		if err != nil {
+			return
+		}
+	}
+	att.Name = data.Name
+	att.Width = data.Width
+	att.Height = data.Height
+	if data.Thumbnail != nil {
+		att.Thumbnail, err = base64.StdEncoding.DecodeString(*data.Thumbnail)
+		if err != nil {
+			return
+		}
+	}
+	return
 }

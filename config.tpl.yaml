@@ -2,8 +2,11 @@ service:
   name: "Mixin 中文群"
   enviroment: "production or development"
   port: 7001
+  websocket_port: 7023
   host: "https://you-domain-name"
+  broadcast_host: "https://you-domain-name"
   api_host: "https://you-domain-name"
+  websocket_host: "ws://you-domain-name"
 database:
   username: "postgres"
   password: ""

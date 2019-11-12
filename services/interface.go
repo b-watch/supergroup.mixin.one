@@ -3,5 +3,5 @@ package services
 import "context"
 
 type Service interface {
-	Run(context.Context) error
+	Run(context.Context, chan WsBroadcastMessage) error
 }

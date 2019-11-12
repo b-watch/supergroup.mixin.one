@@ -186,6 +186,9 @@
     "mode_mute_text": "演讲者可以发言，其他人可以打赏或者发红包",
     "mode_lecture_title": "讲座模式",
     "mode_lecture_text": "只有演讲者可以发言",
-    "switch_btn_label": "切换模式"
+    "switch_btn_label": "切换模式",
+    "broadcast_title": "广播设置",
+    "btn_copy_broadcast_url": "复制广播链接",
+    "broadcast_label": "开启/关闭广播模式"
   }
 }

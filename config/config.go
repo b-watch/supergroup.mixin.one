@@ -35,11 +35,14 @@ type ShortcutGroup struct {
 
 type Config struct {
 	Service struct {
-		Name             string `yaml:"name"`
-		Environment      string `yaml:"enviroment"`
-		HTTPListenPort   int    `yaml:"port"`
-		HTTPResourceHost string `yaml:"host"`
-		HTTPApiHost      string `yaml:"api_host"`
+		Name              string `yaml:"name"`
+		Environment       string `yaml:"enviroment"`
+		HTTPListenPort    int    `yaml:"port"`
+		HTTPWebsocketPort int    `yaml:"websocket_port"`
+		HTTPResourceHost  string `yaml:"host"`
+		HTTPBroadcastHost string `yaml:"broadcast_host"`
+		HTTPApiHost       string `yaml:"api_host"`
+		HTTPWebsocketHost string `yaml:"websocket_host"`
 	} `yaml:"service"`
 	Database struct {
 		DatebaseUser     string `yaml:"username"`
@@ -137,6 +140,8 @@ type ExportedConfig struct {
 	MixinClientId          string          `json:"mixin_client_id"`
 	HTTPResourceHost       string          `json:"host"`
 	HTTPApiHost            string          `json:"api_host"`
+	HTTPWebsocketHost      string          `json:"websocket_host"`
+	HTTPBroadcastHost      string          `json:"broadcast_host"`
 	AutoEstimate           bool            `json:"auto_estimate"`
 	AutoEstimateCurrency   string          `json:"auto_estimate_currency"`
 	AutoEstimateBase       string          `json:"auto_estimate_base"`
@@ -177,6 +182,8 @@ func GetExported() ExportedConfig {
 	exc.MixinClientId = AppConfig.Mixin.ClientId
 	exc.HTTPResourceHost = AppConfig.Service.HTTPResourceHost
 	exc.HTTPApiHost = AppConfig.Service.HTTPApiHost
+	exc.HTTPWebsocketHost = AppConfig.Service.HTTPWebsocketHost
+	exc.HTTPBroadcastHost = AppConfig.Service.HTTPBroadcastHost
 	exc.AutoEstimate = AppConfig.System.AutoEstimate
 	exc.AutoEstimateCurrency = AppConfig.System.AutoEstimateCurrency
 	exc.AutoEstimateBase = AppConfig.System.AutoEstimateBase
