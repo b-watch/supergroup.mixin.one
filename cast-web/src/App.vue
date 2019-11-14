@@ -1,8 +1,9 @@
 <template>
   <v-app class=".app">
+      <!-- color="#00926F" -->
     <v-app-bar
+      class="app-bar"
       app
-      color="#00926F"
       dark
       :height="isPanelExpand ? '256px' : '74px'"
     >
@@ -157,12 +158,17 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "./assets/scss/constant.scss";
+
 .app {
   background-color: #f3f3f3;
 }
+.app-bar {
+  background-color: $color-main-highlight !important;
+}
 .announcement {
   font-size: 14px;
-  opacity: 0.5;
+  opacity: 0.7;
   line-height: 1.2em;
   /* max-height = line-height (1.2) * lines max number (5) */
   height: 6em;
