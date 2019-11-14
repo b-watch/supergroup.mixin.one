@@ -102,6 +102,8 @@ func (current *User) ShowTiprank(ctx context.Context) (*RankResult, error) {
 	}
 	var tipSum TipSum
 	tipSum, err = RankManager.pullUser(ctx, current.UserId, TimeRange{})
+	tipSum.AvatarURL = current.AvatarURL
+	tipSum.FullName = current.FullName
 	tipSum.TipUSD = tipSum.TotalUSD()
 	rankRes := RankResult{Ranks: ranks, CurrentRank: tipSum}
 	return &rankRes, nil
@@ -220,25 +222,25 @@ func (rm *rankManager) pullUsers(ctx context.Context, timeRange TimeRange) (tips
 		if timeRange.IsInfinite() {
 			rows, err = tx.QueryContext(
 				ctx,
-				`select sender_id as user_id, jsonb_object_agg(key, val) as tip_detail, tip_count
+				`select sender_id as user_id, jsonb_object_agg(key, val) as tip_detail, sum(tip_count)
 				from (
 					select sender_id, key, sum(value::numeric) val, count(sender_id) tip_count
 					from tips t, jsonb_each_text(detail)
 					group by t.sender_id, key
 				) s
-				group by user_id, tip_count;`,
+				group by user_id;`,
 			)
 		} else {
 			rows, err = tx.QueryContext(
 				ctx,
-				`select sender_id as user_id, jsonb_object_agg(key, val) as tip_detail, tip_count
+				`select sender_id as user_id, jsonb_object_agg(key, val) as tip_detail, sum(tip_count)
 				from (
 					select sender_id, key, sum(value::numeric) val, count(sender_id) tip_count
 					from tips t, jsonb_each_text(detail)
 					where t.time between $1 and $2
 					group by t.sender_id, key
 				) s
-				group by user_id, tip_count;`,
+				group by user_id;`,
 				timeRange.TimeStart,
 				timeRange.TimeEnd,
 			)
@@ -270,27 +272,27 @@ func (rm *rankManager) pullUser(ctx context.Context, userID string, timeRange Ti
 		if timeRange.IsInfinite() {
 			row = tx.QueryRowContext(
 				ctx,
-				`select sender_id as user_id, jsonb_object_agg(key, val) as tip_detail, tip_count
+				`select sender_id as user_id, jsonb_object_agg(key, val) as tip_detail, sum(tip_count)
 				from (
 					select sender_id, key, sum(value::numeric) val, count(sender_id) tip_count
 					from tips t, jsonb_each_text(detail)
 					where t.sender_id = $1
 					group by sender_id, key
 				) s
-				group by user_id, tip_count;`,
+				group by user_id;`,
 				userID,
 			)
 		} else {
 			row = tx.QueryRowContext(
 				ctx,
-				`select sender_id as user_id, jsonb_object_agg(key, val) as tip_detail, tip_count
+				`select sender_id as user_id, jsonb_object_agg(key, val) as tip_detail, sum(tip_count)
 				from (
 					select sender_id, key, sum(value::numeric) val, count(sender_id) tip_count
 					from tips t, jsonb_each_text(detail)
 					where t.sender_id = $1 and t.time between $2 and $3
 					group by sender_id, key
 				) s
-				group by user_id, tip_count;`,
+				group by user_id;`,
 				userID,
 				timeRange.TimeStart,
 				timeRange.TimeEnd,
