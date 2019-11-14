@@ -13,7 +13,7 @@
     </div>
     <div class="cell rank-member-list-role">
       <div class="rank-member-usd">${{ member.tip_usd}}</div>
-      <div class="rank-member-count">{{ $('reward_rank.item_count_text', {count: member.tip_count}) }}</div>
+      <div class="rank-member-count">{{ $t('reward_rank.item_count_text', {count: member.tip_count}) }}</div>
     </div>
   </div>
 </template>
