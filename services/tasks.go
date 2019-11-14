@@ -36,7 +36,7 @@ func loopPendingMessage(ctx context.Context) {
 			continue
 		}
 		for _, message := range messages {
-			if !config.AppConfig.System.Operators[message.UserId] || message.UserId != config.AppConfig.Mixin.ClientId {
+			if !config.AppConfig.System.Operators[message.UserId] && message.UserId != config.AppConfig.Mixin.ClientId {
 				if message.Category == "PLAIN_TEXT" {
 					data, err := base64.StdEncoding.DecodeString(message.Data)
 					if err != nil {
