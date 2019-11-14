@@ -168,7 +168,8 @@
     "dialog_confrim_title": "打赏没？",
     "dialog_confrim_desc": "有没有给 {name} 打赏支付？",
     "dialog_confrim_ok": "已经打赏了！",
-    "dialog_confrim_cancel": "取消"
+    "dialog_confrim_cancel": "取消",
+    "rank": "查看打赏排名"
   },
   "reward_rank": {
     "title": "打赏排名",
