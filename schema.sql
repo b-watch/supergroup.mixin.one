@@ -161,3 +161,12 @@ CREATE TABLE IF NOT EXISTS rewards_recipients (
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS rewards_recipients_userx ON rewards_recipients(user_id);
+
+CREATE TABLE IF NOT EXISTS tips (
+	sender_id VARCHAR(36) NOT NULL,
+  recipient_id VARCHAR(36) NOT NULL,
+	detail JSONB NOT NULL,
+	trace_id VARCHAR(36) NOT NULL,
+	time TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+	PRIMARY KEY(time, sender_id, trace_id)
+);

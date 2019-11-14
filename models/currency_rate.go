@@ -78,6 +78,12 @@ func GetCurrencyRate(ctx context.Context, symbol string) (*CurrencyRate, error) 
 	return rate, err
 }
 
+func GetCurrencyRateByAssetID(ctx context.Context, assetID string) (*CurrencyRate, error) {
+	row := session.Database(ctx).QueryRowContext(ctx, "SELECT currency_rates.* from currency_rates INNER JOIN assets ON currency_rates.symbol = assets.symbol WHERE assets.asset_id=$1", assetID)
+	rate, err := rateFromRow(row)
+	return rate, err
+}
+
 func GetCurrencyRates(ctx context.Context) ([]*CurrencyRate, error) {
 	query := fmt.Sprintf("SELECT %s FROM currency_rates LIMIT 100", strings.Join(rateColumns, ","))
 	rows, err := session.Database(ctx).QueryContext(ctx, query)

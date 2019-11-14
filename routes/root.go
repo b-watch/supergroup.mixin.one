@@ -35,6 +35,7 @@ func RegisterRoutes(router *httptreemux.TreeMux) {
 	registerPluginRoutes(router)
 	registerPayment(router)
 	registerRewardsRecipients(router)
+	registerTipranks(router)
 }
 
 func root(w http.ResponseWriter, r *http.Request, params map[string]string) {
