@@ -155,6 +155,7 @@ func (rm *rankManager) Push(ctx context.Context, senderID string) {
 		tipSum, err := rm.pullUser(ctx, senderID, rc.RankRange)
 		if err != nil {
 			fmt.Println(err)
+			return
 		}
 		rc.push(&tipSum)
 	}
