@@ -10,6 +10,8 @@ import (
 	"sync"
 	"time"
 
+	bot "github.com/MixinNetwork/bot-api-go-client"
+	"github.com/MixinNetwork/supergroup.mixin.one/config"
 	"github.com/MixinNetwork/supergroup.mixin.one/session"
 	"github.com/jinzhu/now"
 	"github.com/lib/pq"
@@ -60,7 +62,6 @@ type Rank []*TipSum
 
 type rankManager struct {
 	Ranks map[string]*RankContainer
-	ctx   context.Context
 }
 
 type RankContainer struct {
@@ -138,7 +139,6 @@ func CreateTip(ctx context.Context, senderID, recipientID, assetID, amount, trac
 }
 
 func (rm *rankManager) Init(ctx context.Context, dsn string) error {
-	rm.ctx = ctx
 	rm.Ranks = map[string]*RankContainer{}
 	for rankName, timeFn := range rankRanges {
 		timeRange := timeFn(time.Now())
@@ -357,6 +357,7 @@ func (tipSum TipSum) TotalUSD() (totalUSD decimal.Decimal) {
 		usdPrice := assetPriceUSD(assetID)
 		totalUSD = totalUSD.Add(amount.Mul(usdPrice))
 	}
+	totalUSD = totalUSD.Round(3)
 	return
 }
 
@@ -460,20 +461,37 @@ func (r *Rank) Pop() interface{} {
 }
 
 func assetPriceUSD(assetID string) (usdPrice decimal.Decimal) {
-	// TODO: cache asset price
 	if p, found := rankPriceCache.Get(assetID); found {
 		usdPrice = p.(decimal.Decimal)
 	} else {
-		assetRate, err := GetCurrencyRateByAssetID(RankManager.ctx, assetID)
+		assetUSDPrice, err := botReadAssetUSDPrice(assetID)
 		if err != nil {
 			fmt.Printf("currency price not found %s\n", assetID)
 		}
 
-		usdPrice, err = decimal.NewFromString(assetRate.PriceUsd)
+		usdPrice, err = decimal.NewFromString(assetUSDPrice)
 		if err != nil {
 			fmt.Printf("price converion failed %s\n", assetID)
 		}
 		rankPriceCache.Set(assetID, usdPrice, cache.DefaultExpiration)
 	}
+	return
+}
+
+func botReadAssetUSDPrice(assetID string) (string, error) {
+	accessToken, err := botAuthenticationToken("GET", "/assets/"+assetID, "")
+	if err != nil {
+		return "", err
+	}
+
+	asset, err := bot.AssetShow(context.TODO(), assetID, accessToken)
+	if err != nil {
+		return "", err
+	}
+	return asset.PriceUSD, nil
+}
+
+func botAuthenticationToken(httpMethod string, uri string, body string) (token string, err error) {
+	token, err = bot.SignAuthenticationToken(config.AppConfig.Mixin.ClientId, config.AppConfig.Mixin.SessionId, config.AppConfig.Mixin.SessionKey, httpMethod, uri, body)
 	return
 }
