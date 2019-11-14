@@ -126,7 +126,7 @@ export default {
       rewardsItem: {
         icon: require("../assets/images/rewards.png"),
         label: this.$t("rewards.entry"),
-        url: "/rewards"
+        url: "/rewards/send"
       },
       couponsItem: {
         icon: require("../assets/images/coupons.png"),
