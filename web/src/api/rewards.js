@@ -15,6 +15,10 @@ const Rewards = {
 
   deleteRecipient: async function(userId) {
     return await api.delete("/rewards/recipients/" + userId, {}, {});
+  },
+
+  ranks: async function(userId) {
+    return await api.get("/rewards/tipranks", {}, {});
   }
 };
 export default Rewards;

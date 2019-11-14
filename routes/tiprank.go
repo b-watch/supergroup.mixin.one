@@ -13,7 +13,7 @@ type tiprankImpl struct{}
 func registerTipranks(router *httptreemux.TreeMux) {
 	impl := &tiprankImpl{}
 
-	router.GET("/tipranks", impl.index)
+	router.GET("/rewards/tipranks", impl.index)
 }
 
 func (impl *tiprankImpl) index(w http.ResponseWriter, r *http.Request, params map[string]string) {

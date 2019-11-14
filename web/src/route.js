@@ -6,7 +6,8 @@ import Pay from "./pages/Pay";
 import PayWxQr from "./pages/PayWxQr";
 import PreparePacket from "./pages/PreparePacket";
 import Packet from "./pages/Packet";
-import Rewards from "./pages/Rewards";
+import SendReward from "./pages/rewards/Send";
+import RewardRank from "./pages/rewards/Rank";
 import Members from "./pages/Members";
 import Coupons from "./pages/Coupons";
 import Invitations from "./pages/Invitations";
@@ -29,7 +30,8 @@ const routes = [
   { path: "/packets/prepare", component: PreparePacket },
   { path: "/packets/:id", component: Packet },
   { path: "/coupons/", component: Coupons },
-  { path: "/rewards/", component: Rewards },
+  { path: "/rewards/send", component: SendReward },
+  { path: "/rewards/rank", component: RewardRank },
   { path: "/auth", component: TestAuth },
   { path: "/invitations/", component: Invitations },
   { path: "/grant-token/", component: GrantToken },

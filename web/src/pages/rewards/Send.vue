@@ -123,7 +123,7 @@ import { Toast, Dialog } from "vant";
 import { CLIENT_ID } from "@/constants";
 
 export default {
-  name: "Prepare-Packet",
+  name: "SendReward",
   props: {
     msg: String
   },
