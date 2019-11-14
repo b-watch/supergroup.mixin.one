@@ -102,6 +102,8 @@ func (current *User) ShowTiprank(ctx context.Context) (*RankResult, error) {
 	}
 	var tipSum TipSum
 	tipSum, err = RankManager.pullUser(ctx, current.UserId, TimeRange{})
+	tipSum.AvatarURL = current.AvatarURL
+	tipSum.FullName = current.FullName
 	tipSum.TipUSD = tipSum.TotalUSD()
 	rankRes := RankResult{Ranks: ranks, CurrentRank: tipSum}
 	return &rankRes, nil
