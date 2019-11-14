@@ -21,14 +21,17 @@ require (
 	github.com/gomodule/redigo v2.0.0+incompatible // indirect
 	github.com/gorilla/handlers v1.4.0
 	github.com/gorilla/websocket v1.4.0
+	github.com/jinzhu/now v1.1.1
 	github.com/lib/pq v1.1.1
 	github.com/lithammer/shortuuid v3.0.0+incompatible
 	github.com/lucasb-eyer/go-colorful v1.0.2
 	github.com/objcoding/wxpay v1.0.6
 	github.com/onsi/ginkgo v1.9.0 // indirect
 	github.com/onsi/gomega v1.6.0 // indirect
+	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/robfig/cron v1.2.0
 	github.com/rs/xid v1.2.1 // indirect
+	github.com/shopspring/decimal v0.0.0-20180709203117-cd690d0c9e24
 	github.com/silenceper/wechat v1.0.0
 	github.com/sirupsen/logrus v1.4.2
 	github.com/stretchr/testify v1.3.0

@@ -468,6 +468,19 @@ func FindUser(ctx context.Context, userId string) (*User, error) {
 	return user, nil
 }
 
+func FindUsers(ctx context.Context, ids []string) ([]*User, error) {
+	var users []*User
+	err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
+		var err error
+		users, err = findUsersByIds(ctx, tx, ids)
+		return err
+	})
+	if err != nil {
+		return nil, session.TransactionError(ctx, err)
+	}
+	return users, nil
+}
+
 func PingUserActiveAt(ctx context.Context, userId string) error {
 	query := "UPDATE users SET active_at=$1 WHERE user_id=$2"
 	_, err := session.Database(ctx).ExecContext(ctx, query, time.Now(), userId)
