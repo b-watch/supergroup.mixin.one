@@ -91,6 +91,17 @@
           >
         </van-col>
       </van-row>
+      <van-row style="padding: 20px">
+        <van-col span="24">
+          <van-button
+            style="width: 100%"
+            type="info"
+            plain
+            @click="rank"
+            >{{ $t("rewards.rank") }}</van-button
+          >
+        </van-col>
+      </van-row>
     </div>
     <van-dialog
       v-model="showAddDialog"
@@ -237,6 +248,9 @@ export default {
           window.close();
         })
         .catch(() => {});
+    },
+    rank () {
+      this.$router.push('/rewards/rank')
     },
     onChangeAsset(ix) {
       this.selectedAsset = this.assets[ix];

@@ -241,7 +241,7 @@ func createSystemRewardsMessage(ctx context.Context, tx *sql.Tx, fromUser *User,
 	if config.AppConfig.System.RouterMode == config.RouterModeHash {
 		host = host + config.RouterModeHashSymbol
 	}
-	actionURL := fmt.Sprintf(host + "/rewards")
+	actionURL := fmt.Sprintf(host + "/rewards/rank")
 	if utf8.RuneCountInString(label) > 36 {
 		label = string([]rune(label)[:36])
 	}

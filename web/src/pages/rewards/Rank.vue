@@ -2,7 +2,7 @@
   <loading :loading="loading" :fullscreen="true">
     <div class="reward-rank-page">
       <nav-bar
-        :title="$t('rewards.title')"
+        :title="$t('reward_rank.title')"
         :hasTopRight="false"
         :hasBack="true"
       ></nav-bar>
@@ -14,21 +14,31 @@
           :src="currentRank.avatar_url"
         />
         <div class="info">
-          你共计打赏 {{currentRank.tip_count}} 次，约 ${{currentRank.tip_usd}} 等值数字货币
+          {{ $t('reward_rank.current_info', {count: currentRank.tip_count, usd: currentRank.tip_usd}) }}
         </div>
       </div>
+      <van-row style="padding: 20px">
+        <van-col span="24">
+          <van-button
+            style="width: 100%"
+            type="info"
+            @click="send"
+            >{{ $t("reward_rank.send") }}</van-button
+          >
+        </van-col>
+      </van-row>
       <van-tabs v-model="active">
-        <van-tab title="周排名">
+        <van-tab :title="$t('reward_rank.week')">
           <rank-member-item
             :member="mem" :rank="ix" v-for="mem, ix in ranks.week"
           ></rank-member-item>
         </van-tab>
-        <van-tab title="月排名">
+        <van-tab :title="$t('reward_rank.month')">
           <rank-member-item
             :member="mem" :rank="ix" v-for="mem, ix in ranks.month"
           ></rank-member-item>
         </van-tab>
-        <van-tab title="总排名">
+        <van-tab :title="$t('reward_rank.all')">
           <rank-member-item
             :member="mem" :rank="ix" v-for="mem, ix in ranks.all"
           ></rank-member-item>
@@ -77,6 +87,9 @@ export default {
   computed: {
   },
   methods: {
+    send () {
+      this.$router.push('/rewards/send')
+    },
   }
 };
 </script>
@@ -88,8 +101,8 @@ export default {
 }
 .my-rank {
   display: flex;
-  margin: 10px 0 20px 0;
-  padding: 0 15px;
+  margin: 10px 0 10px 0;
+  padding: 0 20px;
   align-items: center;
   .info {
     margin-left: 10px;

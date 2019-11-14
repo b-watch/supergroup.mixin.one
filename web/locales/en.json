@@ -170,6 +170,15 @@
     "dialog_confrim_ok": "I've Paid",
     "dialog_confrim_cancel": "Cancel"
   },
+  "reward_rank": {
+    "title": "Reward Rank",
+    "current_info": "You send {count} rewards, about ${usd}.",
+    "send": "Go to reward",
+    "week": "Week",
+    "month": "Month",
+    "all": "All",
+    "item_count_text": "{count} rewards"
+  },
   "announcement": {
     "title": "Announcment",
     "label": "Content",

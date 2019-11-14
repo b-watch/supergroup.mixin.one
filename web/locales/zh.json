@@ -170,6 +170,15 @@
     "dialog_confrim_ok": "已经打赏了！",
     "dialog_confrim_cancel": "取消"
   },
+  "reward_rank": {
+    "title": "打赏排名",
+    "current_info": "你共计打赏 {count} 次，约 ${usd} 等值数字货币。",
+    "send": "去打赏",
+    "week": "周排名",
+    "month": "月排名",
+    "all": "总排名",
+    "item_count_text": "打赏 {count} 次"
+  },
   "announcement": {
     "title": "公告",
     "label": "内容",
