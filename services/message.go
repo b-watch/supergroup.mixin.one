@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -399,14 +400,15 @@ func handleRewardsPayment(ctx context.Context, mc *MessageContext, transfer Tran
 		log.Println("can't find user to reward", userId, err)
 		return nil
 	}
-	log.Println("Rewards to ", userId)
+	memo := "Rewards from " + strconv.FormatInt(user.IdentityNumber, 10)
+	log.Println("Rewards from " + user.FullName + " to " + targetUser.UserId)
 	traceID := bot.UuidNewV4().String()
 	in := &bot.TransferInput{
 		AssetId:     transfer.AssetId,
 		RecipientId: targetUser.UserId,
 		Amount:      number.FromString(transfer.Amount),
 		TraceId:     traceID,
-		Memo:        "Rewards from " + user.FullName,
+		Memo:        memo,
 	}
 
 	if user.UserId != targetUser.UserId {
