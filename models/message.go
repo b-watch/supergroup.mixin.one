@@ -93,7 +93,7 @@ func CreateMessage(ctx context.Context, user *User, messageId, category, quoteMe
 		mode, err := ReadGroupModeProperty(ctx)
 		if err != nil {
 			return nil, err
-		} else if mode == "lecture" {
+		} else if mode == PropGroupModeLecture {
 			return nil, nil
 		}
 	}
@@ -195,7 +195,7 @@ func createSystemMessage(ctx context.Context, tx *sql.Tx, category, data string)
 
 func createSystemJoinMessage(ctx context.Context, tx *sql.Tx, user *User) error {
 	mode, err := readGroupModeProperty(ctx, tx)
-	prohibited := err != nil || mode == "lecture"
+	prohibited := err != nil || mode == PropGroupModeLecture
 	if prohibited {
 		// send MessageTipsJoinUserProhibited to joined user
 		CreateSystemDistributedMessage(ctx, user, "PLAIN_TEXT", base64.StdEncoding.EncodeToString([]byte(config.AppConfig.MessageTemplate.MessageTipsJoinUserProhibited)))
@@ -231,7 +231,7 @@ func generateRandomColor() string {
 
 func createSystemRewardsMessage(ctx context.Context, tx *sql.Tx, fromUser *User, toUser *User, amount, symbol string) error {
 	mode, err := readGroupModeProperty(ctx, tx)
-	if err != nil || mode == "lecture" {
+	if err != nil || mode == PropGroupModeLecture {
 		return nil
 	}
 	fromUserName := fromUser.FullName

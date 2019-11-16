@@ -19,6 +19,9 @@ const (
 	PropGroupMode           = "group-mode-property"
 	PropAnnouncementMessage = "announcement-message-property"
 	PropBroadcast           = "broadcast-property"
+	PropGroupModeFree       = "free"
+	PropGroupModeLecture    = "lecture"
+	PropGroupModeMute       = "mute"
 )
 
 const properties_DDL = `
@@ -69,9 +72,9 @@ func CreateProperty(ctx context.Context, name string, value string) (*Property, 
 			return createSystemMessage(ctx, tx, "PLAIN_TEXT", base64.StdEncoding.EncodeToString([]byte(text)))
 		} else if name == PropGroupMode {
 			text := data.MessageTemplate.MessageGroupModeFree
-			if value == "lecture" {
+			if value == PropGroupModeLecture {
 				text = data.MessageTemplate.MessageGroupModeLecture
-			} else if value == "mute" {
+			} else if value == PropGroupModeMute {
 				text = data.MessageTemplate.MessageGroupModeMute
 			}
 			return createSystemMessage(ctx, tx, "PLAIN_TEXT", base64.StdEncoding.EncodeToString([]byte(text)))
@@ -129,20 +132,20 @@ func ReadPropertyAsString(ctx context.Context, name string) (string, error) {
 		return err
 	})
 	if err != nil {
-		return "free", session.TransactionError(ctx, err)
+		return PropGroupModeFree, session.TransactionError(ctx, err)
 	}
 	return property.Value, nil
 }
 
 func ReadGroupModeProperty(ctx context.Context) (string, error) {
-	mode := "free"
+	mode := PropGroupModeFree
 	err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
 		var err error
 		mode, err = readPropertyAsString(ctx, tx, PropGroupMode)
 		return err
 	})
 	if err != nil {
-		return "free", session.TransactionError(ctx, err)
+		return PropGroupModeFree, session.TransactionError(ctx, err)
 	}
 	return mode, nil
 }
