@@ -236,11 +236,11 @@ func createSystemRewardsMessage(ctx context.Context, tx *sql.Tx, fromUser *User,
 	}
 	fromUserName := fromUser.FullName
 	toUserName := toUser.FullName
-	if utf8.RuneCountInString(fromUserName) > 8 {
-		fromUserName = string([]rune(fromUserName)[:8])
+	if utf8.RuneCountInString(fromUserName) > 7 {
+		fromUserName = string([]rune(fromUserName)[:7]) + "…"
 	}
-	if utf8.RuneCountInString(toUserName) > 8 {
-		toUserName = string([]rune(toUserName)[:8])
+	if utf8.RuneCountInString(toUserName) > 7 {
+		toUserName = string([]rune(toUserName)[:7]) + "…"
 	}
 
 	label := fmt.Sprintf(config.AppConfig.MessageTemplate.MessageTipsRewards, fromUserName, toUserName, amount, symbol)
