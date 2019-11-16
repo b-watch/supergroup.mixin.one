@@ -21,7 +21,7 @@ func PluginInit(plugCtx *plugin.PluginContext) {
 	})
 
 	pluginContext.On(plugin.EventTypeGroupModeChanged, func(s interface{}) {
-		fmt.Println("group mode status changed to", s)
+		fmt.Println("group mode status changed to", s.(string))
 	})
 
 	r := gin.Default()

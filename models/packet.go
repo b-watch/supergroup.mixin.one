@@ -352,7 +352,7 @@ func (current *User) ClaimPacket(ctx context.Context, packetId string) (*Packet,
 					return err
 				}
 				mode, err := readGroupModeProperty(ctx, tx)
-				if err == nil && mode != "lecture" {
+				if err == nil && mode != PropGroupModeLecture {
 					dm, err := CreateDistributeMessage(ctx, bot.UuidNewV4().String(), bot.UuidNewV4().String(), "", config.AppConfig.Mixin.ClientId, packet.UserId, "PLAIN_TEXT", base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf(config.AppConfig.MessageTemplate.GroupOpenedRedPacket, current.FullName))))
 					if err != nil {
 						return err

@@ -4,7 +4,7 @@ type EventType string
 
 const (
 	EventTypeMessageCreated         EventType = "MessageCreated"         // payload is github.com/MixinNetwork/supergroup.mixin.one/models.Message
-	EventTypeGroupModeChanged       EventType = "GroupModeChanged"       // payload is bool
+	EventTypeGroupModeChanged       EventType = "GroupModeChanged"       // payload is github.com/MixinNetwork/supergroup.mixin.one/models.PropGroupMode (free | lecture | mute)
 	EventTypeOrderPaid              EventType = "OrderPaid"              // payload is github.com/MixinNetwork/supergroup.mixin.one/models.Order
 	EventTypeUserCreated            EventType = "UserCreated"            // payload is github.com/MixinNetwork/supergroup.mixin.one/models.User
 	EventTypeInvitationCodesCreated EventType = "InvitationCodesCreated" // payload is github.com/MixinNetwork/supergroup.mixin.one/models.InvitationCodesBundle
