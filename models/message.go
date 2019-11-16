@@ -234,8 +234,16 @@ func createSystemRewardsMessage(ctx context.Context, tx *sql.Tx, fromUser *User,
 	if err != nil || mode == "lecture" {
 		return nil
 	}
+	fromUserName := fromUser.FullName
+	toUserName := toUser.FullName
+	if utf8.RuneCountInString(fromUserName) > 8 {
+		fromUserName = string([]rune(fromUserName)[:8])
+	}
+	if utf8.RuneCountInString(toUserName) > 8 {
+		toUserName = string([]rune(toUserName)[:8])
+	}
 
-	label := fmt.Sprintf(config.AppConfig.MessageTemplate.MessageTipsRewards, fromUser.FullName, toUser.FullName, amount, symbol)
+	label := fmt.Sprintf(config.AppConfig.MessageTemplate.MessageTipsRewards, fromUserName, toUserName, amount, symbol)
 	t := time.Now()
 	host := config.AppConfig.Service.HTTPResourceHost
 	if config.AppConfig.System.RouterMode == config.RouterModeHash {
