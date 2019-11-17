@@ -110,7 +110,7 @@ func (current *User) ShowTiprank(ctx context.Context) (*RankResult, error) {
 	return &rankRes, nil
 }
 
-func CreateTip(ctx context.Context, senderID, recipientID, assetID, amount, traceID string) error {
+func CreateTip(ctx context.Context, senderID, recipientID, assetID, amount, traceID string, tipTime time.Time) error {
 	tipAmount, err := decimal.NewFromString(amount)
 	if err != nil {
 		return err
@@ -123,7 +123,7 @@ func CreateTip(ctx context.Context, senderID, recipientID, assetID, amount, trac
 		return err
 	}
 	err = session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
-		_, err := tx.ExecContext(ctx, "INSERT INTO tips (sender_id, recipient_id, detail, trace_id, time) VALUES ($1, $2, $3, $4, $5)", senderID, recipientID, string(tipDetailJson), traceID, string(pq.FormatTimestamp(time.Now())))
+		_, err := tx.ExecContext(ctx, "INSERT INTO tips (sender_id, recipient_id, detail, trace_id, time) VALUES ($1, $2, $3, $4, $5)", senderID, recipientID, string(tipDetailJson), traceID, string(pq.FormatTimestamp(tipTime)))
 		if err != nil {
 			return err
 		}
