@@ -3,8 +3,10 @@ package services
 import (
 	"compress/gzip"
 	"context"
+	"crypto/md5"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -20,6 +22,7 @@ import (
 	"github.com/MixinNetwork/supergroup.mixin.one/models"
 	"github.com/MixinNetwork/supergroup.mixin.one/plugin"
 	"github.com/MixinNetwork/supergroup.mixin.one/session"
+	"github.com/gofrs/uuid"
 	"github.com/gorilla/websocket"
 )
 
@@ -402,7 +405,11 @@ func handleRewardsPayment(ctx context.Context, mc *MessageContext, transfer Tran
 	}
 	memo := "Rewards from " + strconv.FormatInt(user.IdentityNumber, 10)
 	log.Println("Rewards from " + user.FullName + " to " + targetUser.UserId)
-	traceID := bot.UuidNewV4().String()
+	var traceID string
+	traceID, err = generateRewardTraceID(transfer.TraceId)
+	if err != nil {
+		return errors.New("generate trace id failed")
+	}
 	in := &bot.TransferInput{
 		AssetId:     transfer.AssetId,
 		RecipientId: targetUser.UserId,
@@ -411,8 +418,13 @@ func handleRewardsPayment(ctx context.Context, mc *MessageContext, transfer Tran
 		Memo:        memo,
 	}
 
+	if err := bot.CreateTransfer(ctx, in, config.AppConfig.Mixin.ClientId, config.AppConfig.Mixin.SessionId, config.AppConfig.Mixin.SessionKey, config.AppConfig.Mixin.SessionAssetPIN, config.AppConfig.Mixin.PinToken); err != nil {
+		log.Println("can't transfer to recipient", err)
+		return err
+	}
+
 	if user.UserId != targetUser.UserId {
-		if err := models.CreateTip(ctx, user.UserId, targetUser.UserId, transfer.AssetId, transfer.Amount, traceID); err != nil {
+		if err := models.CreateTip(ctx, user.UserId, targetUser.UserId, transfer.AssetId, transfer.Amount, traceID, transfer.CreatedAt); err != nil {
 			log.Println("can't record tip", err)
 			return err
 		}
@@ -423,10 +435,6 @@ func handleRewardsPayment(ctx context.Context, mc *MessageContext, transfer Tran
 		}
 	}
 
-	if err := bot.CreateTransfer(ctx, in, config.AppConfig.Mixin.ClientId, config.AppConfig.Mixin.SessionId, config.AppConfig.Mixin.SessionKey, config.AppConfig.Mixin.SessionAssetPIN, config.AppConfig.Mixin.PinToken); err != nil {
-		log.Println("can't transfer to recipient", err)
-		return err
-	}
 	return nil
 }
 
@@ -688,4 +696,15 @@ func attachmentFromMixinJSON(jsonString string) (att WsBroadcastMessageAttachmen
 		}
 	}
 	return
+}
+
+func generateRewardTraceID(originTraceID string) (string, error) {
+	h := md5.New()
+	io.WriteString(h, originTraceID)
+	io.WriteString(h, "REWARD")
+	sum := h.Sum(nil)
+	sum[6] = (sum[6] & 0x0f) | 0x30
+	sum[8] = (sum[8] & 0x3f) | 0x80
+	id, err := uuid.FromBytes(sum)
+	return id.String(), err
 }
