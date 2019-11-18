@@ -487,11 +487,11 @@ func handleExpiredPackets(ctx context.Context) {
 		for _, id := range packetIds {
 			packet, err := models.SendPacketRefundTransfer(ctx, id)
 			if err != nil {
-				session.Logger(ctx).Error(id, err)
+				session.Logger(ctx).Infof("REFUND ERROR %v, %v\n", id, err)
 				break
 			}
 			if packet != nil {
-				session.Logger(ctx).Infof("REFUND %v", packet)
+				session.Logger(ctx).Infof("REFUND %v\n", id)
 			}
 		}
 
