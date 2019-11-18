@@ -34,6 +34,7 @@ system:
   redpacket_asset_list:
   # - "c94ac88f-4671-3976-b60a-09064f1811e8" # XIN
   redpacket_normal_distribution_sigma_mean_ratio: 0.5
+  redpacket_max_count: 1000 # usd
   limit_message_frequency: false
   detect_image: false
   detect_link: false

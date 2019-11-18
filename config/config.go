@@ -68,6 +68,7 @@ type Config struct {
 		RedPacketMinAmountBase          string   `yaml:"redpacket_min_amount_base"`
 		RedPacketAssetList              []string `yaml:"redpacket_asset_list"`
 		RedPacketNormDistSigmaMeanRatio string   `yaml:"redpacket_normal_distribution_sigma_mean_ratio"`
+		RedPacketMaxCount               int64    `yaml:"redpacket_max_count"`
 
 		LimitMessageFrequency  bool     `yaml:"limit_message_frequency"`
 		OperatorList           []string `yaml:"operator_list"`
@@ -154,6 +155,7 @@ type ExportedConfig struct {
 	RewardsEnable          bool            `json:"rewards_enable"`
 	RewardsMinAmountBase   string          `json:"rewards_min_amount_base"`
 	RedPacketMinAmountBase string          `json:"redpacket_min_amount_base"`
+	RedPacketMaxCount      int64           `json:"redpacket_max_count"`
 	HomeWelcomeMessage     string          `json:"home_welcome_message"`
 	HomeShortcutGroups     []ShortcutGroup `json:"home_shortcut_groups"`
 	ServiceName            string          `json:"service_name"`
@@ -196,6 +198,7 @@ func GetExported() ExportedConfig {
 	exc.RewardsEnable = AppConfig.System.RewardsEnable
 	exc.RewardsMinAmountBase = AppConfig.System.RewardsMinAmountBase
 	exc.RedPacketMinAmountBase = AppConfig.System.RedPacketMinAmountBase
+	exc.RedPacketMaxCount = AppConfig.System.RedPacketMaxCount
 	exc.HomeWelcomeMessage = AppConfig.Appearance.HomeWelcomeMessage
 	exc.HomeShortcutGroups = AppConfig.Appearance.HomeShortcutGroups
 	exc.ServiceName = AppConfig.Service.Name

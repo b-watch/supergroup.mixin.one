@@ -40,7 +40,7 @@
             :label="$t('prepare_packet.shares')"
             :placeholder="
               $t('prepare_packet.placeholder_shares', {
-                count: participantsCount
+                count: Math.min(participantsCount, packetMaxCount)
               })
             "
           ></van-field>
@@ -96,6 +96,7 @@ export default {
       assets: [],
       selectedAsset: null,
       packetMinAmountBase: "0.0001",
+      packetMaxCount: 1000,
       form: {
         amount: "",
         shares: "",
@@ -113,6 +114,7 @@ export default {
     let confInfo = await this.GLOBAL.api.website.config();
     if (confInfo && confInfo.data) {
       this.packetMinAmountBase = confInfo.data.redpacket_min_amount_base;
+      this.packetMaxCount = confInfo.data.redpacket_max_count;
     }
 
     let prepareInfo = await this.GLOBAL.api.account.assets("redpacket");
@@ -141,7 +143,9 @@ export default {
         this.form.amount &&
         this.form.shares &&
         this.selectedAsset &&
-        parseFloat(this.form.amount) >= parseFloat(this.minAmount)
+        parseFloat(this.form.amount) >= parseFloat(this.minAmount) &&
+        this.form.shares <=
+          Math.min(this.packetMaxCount, this.participantsCount)
       ) {
         return true;
       }

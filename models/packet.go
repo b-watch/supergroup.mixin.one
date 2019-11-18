@@ -116,6 +116,9 @@ func (current *User) createPacket(ctx context.Context, asset *Asset, amount numb
 	if utf8.RuneCountInString(greeting) > 512 {
 		return nil, session.BadDataError(ctx)
 	}
+	if totalCount > config.AppConfig.System.RedPacketMaxCount {
+		return nil, session.BadDataError(ctx)
+	}
 	amount = amount.RoundFloor(8)
 	if number.FromString(asset.Balance).Cmp(amount) < 0 {
 		return nil, session.InsufficientAccountBalanceError(ctx)
