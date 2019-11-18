@@ -57,7 +57,13 @@
               round
               class="icon-btn"
               @click="toggleProhibit"
-              :icon="groupMode === 'free' ? 'comment-circle-o' : ( groupMode === 'lecture' ? 'service-o': 'close')"
+              :icon="
+                groupMode === 'free'
+                  ? 'comment-circle-o'
+                  : groupMode === 'lecture'
+                  ? 'service-o'
+                  : 'close'
+              "
             ></van-button>
             <van-button
               v-if="isAdmin"
@@ -109,10 +115,9 @@ export default {
       welcomeMessage: "",
       websiteInfo: null,
       websiteConf: null,
-      groupMode: 'free',
+      groupMode: "free",
       isSubscribed: false,
-      builtinItems: [
-      ],
+      builtinItems: [],
       luckyCoinItem: {
         icon: require("../assets/images/luckymoney-circle.png"),
         label: this.$t("home.op_luckycoin"),
@@ -182,13 +187,13 @@ export default {
         this.$router.push("/pay");
         return;
       }
-      if (this.websiteInfo.data.mode === 'lecture') {
+      if (this.websiteInfo.data.mode === "lecture") {
         this.rewardsItem.click = () => {
-          this.$toast(this.$t('errors.no_luckycoin_in_lecture_mode'))
-        }
+          this.$toast(this.$t("errors.no_rewards_in_lecture_mode"));
+        };
         this.luckyCoinItem.click = () => {
-          this.$toast(this.$t('errors.no_rewards_in_lecture_mode'))
-        }
+          this.$toast(this.$t("errors.no_luckycoin_in_lecture_mode"));
+        };
       }
       this.builtinItems.push(this.luckyCoinItem);
 
@@ -289,7 +294,7 @@ export default {
       }
     },
     async toggleProhibit() {
-      this.$router.push('/settings/mode')
+      this.$router.push("/settings/mode");
       return;
     }
   }
@@ -324,4 +329,3 @@ export default {
   }
 }
 </style>
-
