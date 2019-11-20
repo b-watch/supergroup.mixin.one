@@ -98,8 +98,8 @@ CREATE TABLE IF NOT EXISTS properties (
   created_at         TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
-INSERT INTO properties (name, value) VALUES ('group-mode-property', 'free') ON CONFLICT (name) DO NOTHING;
 INSERT INTO properties (name, value) VALUES ('announcement-message-property', 'Tap here to edit announcement') ON CONFLICT (name) DO NOTHING;
+INSERT INTO properties (name, value) VALUES ('group-mode-property', 'free') ON CONFLICT (name) DO NOTHING;
 INSERT INTO properties (name, value) VALUES ('broadcast-property', 'off') ON CONFLICT (name) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS orders (

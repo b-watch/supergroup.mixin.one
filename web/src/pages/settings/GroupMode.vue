@@ -36,7 +36,8 @@
           <van-switch v-model="isBroadcast" />
         </van-cell>
         <van-cell :title="broadcastUrl">
-          <van-button type="info" plain size="small">{{$t('group_mode.btn_copy_broadcast_url')}}</van-button>
+          <van-button type="info" plain size="small"
+            >{{$t('group_mode.btn_copy_broadcast_url')}}</van-button>
         </van-cell>
       </van-cell-group>
 
@@ -46,6 +47,7 @@
             style="width: 100%"
             type="info"
             @click="applyMode()"
+            :disabled="!isChanged"
             >{{ $t("group_mode.switch_btn_label") }}</van-button>
         </van-col>
       </van-row>
@@ -75,6 +77,8 @@ export default {
       loading: false,
       isAdmin: false,
       isBroadcast: false,
+      isChanged: false,
+      currentModeName: 'free',
       modes: [
         {
           name: 'free',
@@ -112,6 +116,7 @@ export default {
     })
     let amountInfo = await this.GLOBAL.api.website.amount();
     if (amountInfo && amountInfo.data) {
+      this.currentModeName = amountInfo.data.mode
       for (let ix = 0; ix < this.modes.length; ix++) {
         this.modes[ix];
         this.modes[ix].selected = amountInfo.data.mode === this.modes[ix].name
@@ -152,6 +157,7 @@ export default {
           x.selected = x.name === mode.name;
           return x;
         });
+        this.isChanged = mode.name !== this.currentModeName
       }
     }
   }
