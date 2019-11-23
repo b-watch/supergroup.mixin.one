@@ -365,7 +365,7 @@ func handleTransfer(ctx context.Context, mc *MessageContext, transfer TransferVi
 			log.Println("Unknown instruction", inst)
 		}
 	} else {
-		log.Println("Incorrect inst or err", transfer.TraceId, transfer.Memo, err)
+		log.Println("Incorrect inst, fallback: ", transfer.TraceId, transfer.Memo, err)
 		if user.TraceId == transfer.TraceId {
 			log.Println("New legacy payment", userId, transfer.TraceId)
 			if transfer.Amount == config.AppConfig.System.PaymentAmount && transfer.AssetId == config.AppConfig.System.PaymentAssetId {
