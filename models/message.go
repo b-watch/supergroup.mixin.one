@@ -80,7 +80,26 @@ func CreateMessage(ctx context.Context, user *User, messageId, category, quoteMe
 	if len(data) > 5*1024 {
 		return nil, nil
 	}
-	if user.UserId != config.AppConfig.Mixin.ClientId && !user.isAdmin() {
+
+	if !user.isAdmin() && user.UserId != config.AppConfig.Mixin.ClientId {
+		mode, err := ReadGroupModeProperty(ctx)
+		if err != nil {
+			return nil, err
+		} else if mode == PropGroupModeLecture || mode == PropGroupModeMute {
+			return nil, nil
+		}
+		if category == MessageCategoryPlainImage && !config.AppConfig.System.ImageMessageEnable {
+			return nil, nil
+		}
+		if category == MessageCategoryPlainVideo && !config.AppConfig.System.VideoMessageEnable {
+			return nil, nil
+		}
+		if category == MessageCategoryPlainContact && !config.AppConfig.System.ContactMessageEnable {
+			return nil, nil
+		}
+		if category == MessageCategoryPlainAudio && !config.AppConfig.System.AudioMessageEnable {
+			return nil, nil
+		}
 		if category != MessageCategoryMessageRecall && !durable.Allow(user.UserId) {
 			text := base64.StdEncoding.EncodeToString([]byte(config.AppConfig.MessageTemplate.MessageTipsTooMany))
 			if err := CreateSystemDistributedMessage(ctx, user, MessageCategoryPlainText, text); err != nil {
@@ -89,37 +108,38 @@ func CreateMessage(ctx context.Context, user *User, messageId, category, quoteMe
 			return nil, nil
 		}
 	}
-	if !user.isAdmin() && user.UserId != config.AppConfig.Mixin.ClientId {
-		mode, err := ReadGroupModeProperty(ctx)
-		if err != nil {
-			return nil, err
-		} else if mode == PropGroupModeLecture || mode == PropGroupModeMute {
-			return nil, nil
+
+	if user.isAdmin() && category == MessageCategoryPlainText && quoteMessageId != "" {
+		if id, _ := bot.UuidFromString(quoteMessageId); id.String() == quoteMessageId {
+			bytes, err := base64.StdEncoding.DecodeString(data)
+			if err != nil {
+				return nil, err
+			}
+			str := strings.ToUpper(strings.TrimSpace(string(bytes)))
+			if str == "BAN" || str == "DELETE" || str == "KICK" {
+				dm, err := FindDistributedMessage(ctx, quoteMessageId)
+				if err != nil || dm == nil {
+					return nil, err
+				}
+				if str == "BAN" {
+					_, err = user.CreateBlacklist(ctx, dm.UserId)
+					if err != nil {
+						return nil, err
+					}
+				}
+				if str == "KICK" {
+					err = user.DeleteUser(ctx, dm.UserId)
+					if err != nil {
+						return nil, err
+					}
+				}
+				quoteMessageId = ""
+				category = MessageCategoryMessageRecall
+				data = base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf(`{"message_id":"%s"}`, dm.ParentId)))
+			}
 		}
 	}
-	if category == MessageCategoryPlainAudio {
-		if !user.isAdmin() {
-			return nil, nil
-		}
-		if !config.AppConfig.System.AudioMessageEnable {
-			return nil, nil
-		}
-	}
-	if category == MessageCategoryPlainImage {
-		if !user.isAdmin() && !config.AppConfig.System.ImageMessageEnable {
-			return nil, nil
-		}
-	}
-	if category == MessageCategoryPlainVideo {
-		if !user.isAdmin() && !config.AppConfig.System.VideoMessageEnable {
-			return nil, nil
-		}
-	}
-	if category == MessageCategoryPlainContact {
-		if !user.isAdmin() && !config.AppConfig.System.ContactMessageEnable {
-			return nil, nil
-		}
-	}
+
 	message := &Message{
 		MessageId:        messageId,
 		UserId:           user.UserId,
