@@ -75,6 +75,7 @@ type Config struct {
 		Operators              map[string]bool
 		DetectQRCodeEnabled    bool           `yaml:"detect_image"`
 		DetectLinkEnabled      bool           `yaml:"detect_link"`
+		DetectLinkWhitelist    []string       `yaml:"detect_link_whitelist"`
 		SensitiveWords         string         `yaml:"sensitive_words"`
 		PaymentAssetId         string         `yaml:"payment_asset_id"`
 		PaymentAmount          string         `yaml:"payment_amount"`

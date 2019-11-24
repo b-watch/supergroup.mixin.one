@@ -224,7 +224,7 @@ func (message *Message) Leapfrog(ctx context.Context, reason string) error {
 		i += 1
 		values.WriteString(distributedMessageValuesString(dm.MessageId, dm.ConversationId, dm.RecipientId, dm.UserId, dm.ParentId, dm.QuoteMessageId, dm.Shard, dm.Category, dm.Data, dm.Status))
 
-		why := fmt.Sprintf("MessageId: %s, Reason: %s", message.MessageId, reason)
+		why := fmt.Sprintf("%s\nID: %s", reason, message.MessageId)
 		data := base64.StdEncoding.EncodeToString([]byte(why))
 		values.WriteString(",")
 		values.WriteString(distributedMessageValuesString(bot.UuidNewV4().String(), dm.ConversationId, dm.RecipientId, dm.UserId, dm.ParentId, dm.QuoteMessageId, dm.Shard, "PLAIN_TEXT", data, dm.Status))

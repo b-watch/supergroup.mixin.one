@@ -18,7 +18,6 @@ import (
 	"github.com/MixinNetwork/supergroup.mixin.one/models"
 	"github.com/MixinNetwork/supergroup.mixin.one/session"
 	"github.com/gofrs/uuid"
-	"mvdan.cc/xurls/v2"
 )
 
 type Attachment struct {
@@ -27,7 +26,7 @@ type Attachment struct {
 
 func loopPendingMessage(ctx context.Context) {
 	limit := 5
-	re := xurls.Relaxed()
+	// re := xurls.Relaxed()
 	for {
 		messages, err := models.PendingMessages(ctx, int64(limit))
 		if err != nil {
@@ -44,17 +43,16 @@ func loopPendingMessage(ctx context.Context) {
 					}
 
 					if interceptors.TextInterceptor.Enabled() && interceptors.TextInterceptor.IsSensitive(string(data)) {
-						if err := message.Leapfrog(ctx, "Message contains sensitive words"); err != nil {
+						if err := message.Leapfrog(ctx, "🙊Sensitive Words!🙊"); err != nil {
 							time.Sleep(500 * time.Millisecond)
 							session.Logger(ctx).Errorf("PendingMessages ERROR: %+v", err)
 						}
-
 						continue
 					}
 
 					if config.AppConfig.System.DetectLinkEnabled {
-						if re.Match(data) {
-							if err := message.Leapfrog(ctx, "Message contains link"); err != nil {
+						if interceptors.LinkInterceptor.Enabled() && interceptors.LinkInterceptor.HasExternalLinks(string(data)) {
+							if err := message.Leapfrog(ctx, "🔗External Links!🔗"); err != nil {
 								time.Sleep(500 * time.Millisecond)
 								session.Logger(ctx).Errorf("PendingMessages ERROR: %+v", err)
 							}

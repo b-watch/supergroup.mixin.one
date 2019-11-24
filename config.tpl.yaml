@@ -38,6 +38,9 @@ system:
   limit_message_frequency: false
   detect_image: false
   detect_link: false
+  detect_link_whitelist:
+    - mixin.one
+  sensitive_words: FUCK|FFFFUCK
   prohibited_message: true
   # new payment settings
   auto_estimate: false
