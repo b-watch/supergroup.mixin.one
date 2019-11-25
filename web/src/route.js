@@ -15,6 +15,7 @@ import Messages from "./pages/Messages";
 import WxPay from "./pages/WxPay";
 import WxPayDone from "./pages/WxPayDone";
 import GrantToken from "./pages/GrantToken";
+import RefreshToken from "./pages/RefreshToken";
 import { ROUTER_MODE } from "@/constants.js";
 import InvitationDetails from "./pages/InvitationDetails";
 import InvitationEntry from "./pages/InvitationEntry";
@@ -35,6 +36,7 @@ const routes = [
   { path: "/auth", component: TestAuth },
   { path: "/invitations/", component: Invitations },
   { path: "/grant-token/", component: GrantToken },
+  { path: "/refresh-token/", component: RefreshToken },
   // special route for wechat, no auth required.
   { path: "/wxpay", component: WxPay },
   { path: "/wxpay/done", component: WxPayDone },
