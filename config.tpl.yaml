@@ -48,9 +48,6 @@ system:
   auto_estimate_base: "9.9"
   accept_wechat_payment: false
   wechat_payment_amount: "0.01"
-  operator_list:
-    - "e9a5b807-fa8b-455a-8dfa-b189d28310ff"
-    - "fcc87491-4fa0-4c2f-b387-262b63cbc112"
   pay_to_join: true
   invite_to_join: true
   accept_asset_list:
