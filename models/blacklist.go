@@ -5,7 +5,6 @@ import (
 	"database/sql"
 
 	bot "github.com/MixinNetwork/bot-api-go-client"
-	"github.com/MixinNetwork/supergroup.mixin.one/config"
 	"github.com/MixinNetwork/supergroup.mixin.one/session"
 )
 
@@ -24,10 +23,9 @@ func (user *User) CreateBlacklist(ctx context.Context, userId string) (*Blacklis
 	if err != nil {
 		return nil, session.ForbiddenError(ctx)
 	}
-	if !config.AppConfig.System.Operators[user.UserId] {
-		return nil, nil
-	}
-	if config.AppConfig.System.Operators[userId] {
+
+	roleSet, _ := ReadRolesProperty(ctx)
+	if !roleSet.HasAdmin(user.UserId) || roleSet.HasAdmin(userId) {
 		return nil, nil
 	}
 

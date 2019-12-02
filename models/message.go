@@ -81,7 +81,7 @@ func CreateMessage(ctx context.Context, user *User, messageId, category, quoteMe
 		return nil, nil
 	}
 
-	if !user.isAdmin() && user.UserId != config.AppConfig.Mixin.ClientId {
+	if !user.isAdmin(ctx) {
 		mode, err := ReadGroupModeProperty(ctx)
 		if err != nil {
 			return nil, err
@@ -109,7 +109,7 @@ func CreateMessage(ctx context.Context, user *User, messageId, category, quoteMe
 		}
 	}
 
-	if user.isAdmin() && category == MessageCategoryPlainText && quoteMessageId != "" {
+	if user.isAdmin(ctx) && category == MessageCategoryPlainText && quoteMessageId != "" {
 		if id, _ := bot.UuidFromString(quoteMessageId); id.String() == quoteMessageId {
 			bytes, err := base64.StdEncoding.DecodeString(data)
 			if err != nil {
@@ -177,10 +177,10 @@ func CreateMessage(ctx context.Context, user *User, messageId, category, quoteMe
 		if err != nil || m == nil {
 			return nil, err
 		}
-		if m.UserId != user.UserId && !user.isAdmin() {
+		if m.UserId != user.UserId && !user.isAdmin(ctx) {
 			return nil, session.ForbiddenError(ctx)
 		}
-		if user.isAdmin() {
+		if user.isAdmin(ctx) {
 			message.UserId = m.UserId
 		}
 	}

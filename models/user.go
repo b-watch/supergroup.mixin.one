@@ -402,7 +402,7 @@ func PaidMemberCount(ctx context.Context) (int64, error) {
 }
 
 func (user *User) DeleteUser(ctx context.Context, id string) error {
-	if !config.AppConfig.System.Operators[user.UserId] {
+	if !user.isAdmin(ctx) {
 		return nil
 	}
 	_, err := session.Database(ctx).ExecContext(ctx, fmt.Sprintf("DELETE FROM users WHERE user_id=$1"), id)
@@ -412,19 +412,13 @@ func (user *User) DeleteUser(ctx context.Context, id string) error {
 	return nil
 }
 
-func (user *User) GetRole() string {
-	if user != nil && config.AppConfig.System.Operators[user.UserId] {
-		return "admin"
-	}
-	return "user"
+func (user *User) GetRole(ctx context.Context) string {
+	roleSet, _ := ReadRolesProperty(ctx)
+	return roleSet.GetRole(user)
 }
 
-func (user *User) isAdmin() bool {
-	if user != nil && config.AppConfig.Mixin.ClientId == user.UserId ||
-		config.AppConfig.System.Operators[user.UserId] {
-		return true
-	}
-	return false
+func (user *User) isAdmin(ctx context.Context) bool {
+	return user.GetRole(ctx) == PropGroupRolesAdmin
 }
 
 func subscribedUsers(ctx context.Context, subscribedAt time.Time, limit int) ([]*User, error) {
