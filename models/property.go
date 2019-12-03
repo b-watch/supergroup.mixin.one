@@ -18,8 +18,6 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-type propGroupMode string
-
 const (
 	PropAnnouncementMessage = "announcement-message-property"
 	PropBroadcast           = "broadcast-property"
@@ -66,28 +64,16 @@ func propertyFromRow(row durable.Row) (*Property, error) {
 
 type Property struct {
 	Name         string      `json:"name"`
-	Value        string      `json:"value"`
-	ComplexValue interface{} `json:"complex_value"`
+	Value        string      `json:"value,omitempty"`
+	ComplexValue interface{} `json:"complex_value,omitempty"`
 	CreatedAt    time.Time   `json:"time"`
 }
 
-func CreateProperty(ctx context.Context, name string, value string) (*Property, error) {
-	property := &Property{
-		Name:      name,
-		Value:     fmt.Sprint(value),
-		CreatedAt: time.Now(),
-	}
-	if err := property.Validate(); err != nil {
-		return nil, session.BadDataError(ctx)
-	}
-
-	return overrideProperty(ctx, property)
-}
-
-func CreateComplexProperty(ctx context.Context, name string, value interface{}) (*Property, error) {
+func CreateProperty(ctx context.Context, name string, value string, complexValue interface{}) (*Property, error) {
 	property := &Property{
 		Name:         name,
-		ComplexValue: value,
+		Value:        value,
+		ComplexValue: complexValue,
 		CreatedAt:    time.Now(),
 	}
 	if err := property.Validate(); err != nil {

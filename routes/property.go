@@ -17,6 +17,16 @@ func registerProperties(router *httptreemux.TreeMux) {
 	impl := propertyImpl{}
 
 	router.POST("/properties", impl.create)
+	router.GET("/properties/:name", impl.show)
+}
+
+func (impl *propertyImpl) show(w http.ResponseWriter, r *http.Request, params map[string]string) {
+	p, err := models.ReadProperty(r.Context(), params["name"])
+	if err != nil {
+		views.RenderErrorResponse(w, r, err)
+	} else {
+		views.RenderDataResponse(w, r, p)
+	}
 }
 
 func (impl *propertyImpl) create(w http.ResponseWriter, r *http.Request, _ map[string]string) {
@@ -34,13 +44,7 @@ func (impl *propertyImpl) create(w http.ResponseWriter, r *http.Request, _ map[s
 		views.RenderErrorResponse(w, r, session.ForbiddenError(r.Context()))
 		return
 	}
-	var p *models.Property
-	var err error
-	if body.ComplexValue != nil {
-		p, err = models.CreateComplexProperty(r.Context(), body.Key, body.ComplexValue)
-	} else {
-		p, err = models.CreateProperty(r.Context(), body.Key, body.Value)
-	}
+	p, err := models.CreateProperty(r.Context(), body.Key, body.Value, body.ComplexValue)
 	if err != nil {
 		views.RenderErrorResponse(w, r, err)
 	} else {
