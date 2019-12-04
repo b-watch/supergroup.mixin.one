@@ -96,7 +96,7 @@ func RenderPacket(w http.ResponseWriter, r *http.Request, packet *models.Packet)
 		Type:            "packet",
 		PacketId:        packet.PacketId,
 		Asset:           buildAssetView(packet.Asset),
-		User:            buildUserView(packet.User),
+		User:            buildUserView(r, packet.User),
 		Amount:          packet.Amount,
 		Greeting:        packet.Greeting,
 		TotalCount:      packet.TotalCount,

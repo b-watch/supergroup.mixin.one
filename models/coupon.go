@@ -73,7 +73,7 @@ func ReadCoupons(ctx context.Context) ([]*Coupon, error) {
 }
 
 func CreateCoupons(ctx context.Context, user *User, quantity int) ([]*Coupon, error) {
-	if !user.isAdmin() {
+	if !user.isAdmin(ctx) {
 		return nil, session.ForbiddenError(ctx)
 	}
 	if quantity > 100 || quantity < 1 {

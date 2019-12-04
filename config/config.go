@@ -70,9 +70,7 @@ type Config struct {
 		RedPacketNormDistSigmaMeanRatio string   `yaml:"redpacket_normal_distribution_sigma_mean_ratio"`
 		RedPacketMaxCount               int64    `yaml:"redpacket_max_count"`
 
-		LimitMessageFrequency  bool     `yaml:"limit_message_frequency"`
-		OperatorList           []string `yaml:"operator_list"`
-		Operators              map[string]bool
+		LimitMessageFrequency  bool           `yaml:"limit_message_frequency"`
 		DetectQRCodeEnabled    bool           `yaml:"detect_image"`
 		DetectLinkEnabled      bool           `yaml:"detect_link"`
 		DetectLinkWhitelist    []string       `yaml:"detect_link_whitelist"`
@@ -173,10 +171,6 @@ func LoadConfig(dir string) {
 	err = yaml.Unmarshal(data, AppConfig)
 	if err != nil {
 		log.Fatalf("error: %v", err)
-	}
-	AppConfig.System.Operators = make(map[string]bool)
-	for _, op := range AppConfig.System.OperatorList {
-		AppConfig.System.Operators[op] = true
 	}
 }
 

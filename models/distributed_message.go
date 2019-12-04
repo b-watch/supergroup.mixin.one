@@ -192,10 +192,8 @@ func (message *Message) Distribute(ctx context.Context) error {
 }
 
 func (message *Message) Leapfrog(ctx context.Context, reason string) error {
-	ids := make([]string, 0)
-	for key, _ := range config.AppConfig.System.Operators {
-		ids = append(ids, key)
-	}
+	roleSet, _ := ReadRolesProperty(ctx)
+	ids := roleSet.AdminIDs()
 	messageIds := make([]string, len(ids))
 	for i, id := range ids {
 		messageIds[i] = UniqueConversationId(id, message.MessageId)

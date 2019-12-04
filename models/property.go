@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"encoding/base64"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -13,84 +15,115 @@ import (
 	"github.com/MixinNetwork/supergroup.mixin.one/durable"
 	"github.com/MixinNetwork/supergroup.mixin.one/plugin"
 	"github.com/MixinNetwork/supergroup.mixin.one/session"
+	"github.com/mitchellh/mapstructure"
 )
 
 const (
-	PropGroupMode           = "group-mode-property"
 	PropAnnouncementMessage = "announcement-message-property"
 	PropBroadcast           = "broadcast-property"
-	PropGroupModeFree       = "free"
-	PropGroupModeLecture    = "lecture"
-	PropGroupModeMute       = "mute"
+
+	PropGroupRoles         = "roles-property"
+	PropGroupRolesAdmin    = "admin"
+	PropGroupRolesLecturer = "lecturer"
+	PropGroupRolesDefault  = "user"
+
+	PropGroupMode        = "group-mode-property"
+	PropGroupModeFree    = "free"
+	PropGroupModeLecture = "lecture"
+	PropGroupModeMute    = "mute"
 )
 
 const properties_DDL = `
 CREATE TABLE IF NOT EXISTS properties (
 	name               VARCHAR(512) PRIMARY KEY,
 	value              VARCHAR(2048) NOT NULL,
+	complex_value      JSONB,
 	created_at         TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 `
 
-var propertiesColumns = []string{"name", "value", "created_at"}
+type RoleSet struct {
+	Admins    []string `mapstructure:"admins" json:"admins"`
+	Lecturers []string `mapstructure:"lecturers" json:"lecturers"`
+}
+
+var propertiesColumns = []string{"name", "value", "complex_value", "created_at"}
 
 func (p *Property) values() []interface{} {
-	return []interface{}{p.Name, p.Value, p.CreatedAt}
+	complexValue, _ := json.Marshal(p.ComplexValue)
+	return []interface{}{p.Name, p.Value, string(complexValue), p.CreatedAt}
 }
 
 func propertyFromRow(row durable.Row) (*Property, error) {
 	var p Property
-	err := row.Scan(&p.Name, &p.Value, &p.CreatedAt)
+	var complexValue []byte
+	err := row.Scan(&p.Name, &p.Value, &complexValue, &p.CreatedAt)
+	json.Unmarshal(complexValue, &p.ComplexValue)
 	return &p, err
 }
 
 type Property struct {
-	Name      string
-	Value     string
-	CreatedAt time.Time
+	Name         string      `json:"name"`
+	Value        string      `json:"value,omitempty"`
+	ComplexValue interface{} `json:"complex_value,omitempty"`
+	CreatedAt    time.Time   `json:"time"`
 }
 
-func CreateProperty(ctx context.Context, name string, value string) (*Property, error) {
-	if utf8.RuneCountInString(value) > 512 {
+func CreateProperty(ctx context.Context, name string, value string, complexValue interface{}) (*Property, error) {
+	property := &Property{
+		Name:         name,
+		Value:        value,
+		ComplexValue: complexValue,
+		CreatedAt:    time.Now(),
+	}
+	if err := property.Validate(); err != nil {
 		return nil, session.BadDataError(ctx)
 	}
-	property := &Property{
-		Name:      name,
-		Value:     fmt.Sprint(value),
-		CreatedAt: time.Now(),
-	}
-	params, positions := compileTableQuery(propertiesColumns)
-	query := fmt.Sprintf("INSERT INTO properties (%s) VALUES (%s) ON CONFLICT (name) DO UPDATE SET value=EXCLUDED.value", params, positions)
-	session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
+
+	return overrideProperty(ctx, property)
+}
+
+func overrideProperty(ctx context.Context, property *Property) (*Property, error) {
+	err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
+		params, positions := compileTableQuery(propertiesColumns)
+		query := fmt.Sprintf("INSERT INTO properties (%s) VALUES (%s) ON CONFLICT (name) DO UPDATE SET value=EXCLUDED.value, complex_value=EXCLUDED.complex_value", params, positions)
 		_, err := tx.ExecContext(ctx, query, property.values()...)
 		if err != nil {
 			return err
 		}
-		data := config.AppConfig
-		if name == PropAnnouncementMessage {
-			text := fmt.Sprintf(data.MessageTemplate.MessageAnnouncement, value)
-			return createSystemMessage(ctx, tx, "PLAIN_TEXT", base64.StdEncoding.EncodeToString([]byte(text)))
-		} else if name == PropGroupMode {
-			text := data.MessageTemplate.MessageGroupModeFree
-			if value == PropGroupModeLecture {
-				text = data.MessageTemplate.MessageGroupModeLecture
-			} else if value == PropGroupModeMute {
-				text = data.MessageTemplate.MessageGroupModeMute
-			}
-			return createSystemMessage(ctx, tx, "PLAIN_TEXT", base64.StdEncoding.EncodeToString([]byte(text)))
-		}
-		return nil
+
+		return property.aroundOverride(ctx, tx)
 	})
-	_, err := session.Database(ctx).ExecContext(ctx, query, property.values()...)
+
 	if err != nil {
 		return nil, session.TransactionError(ctx, err)
 	}
 
-	if name == PropGroupMode {
-		plugin.Trigger(plugin.EventTypeGroupModeChanged, value)
-	}
-
+	property.afterOverride()
 	return property, nil
+}
+
+func (p Property) aroundOverride(ctx context.Context, tx *sql.Tx) error {
+	switch p.Name {
+	case PropAnnouncementMessage:
+		msg := fmt.Sprintf(config.AppConfig.MessageTemplate.MessageAnnouncement, p.Value)
+		return createSystemMessage(ctx, tx, "PLAIN_TEXT", base64.StdEncoding.EncodeToString([]byte(msg)))
+	case PropGroupMode:
+		msg := config.AppConfig.MessageTemplate.MessageGroupModeFree
+		if p.Value == PropGroupModeLecture {
+			msg = config.AppConfig.MessageTemplate.MessageGroupModeLecture
+		} else if p.Value == PropGroupModeMute {
+			msg = config.AppConfig.MessageTemplate.MessageGroupModeMute
+		}
+		return createSystemMessage(ctx, tx, "PLAIN_TEXT", base64.StdEncoding.EncodeToString([]byte(msg)))
+	}
+	return nil
+}
+
+func (p Property) afterOverride() {
+	if p.Name == PropGroupMode {
+		plugin.Trigger(plugin.EventTypeGroupModeChanged, p.Value)
+	}
 }
 
 func ReadProperty(ctx context.Context, name string) (*Property, error) {
@@ -101,6 +134,18 @@ func ReadProperty(ctx context.Context, name string) (*Property, error) {
 		return nil, nil
 	} else if err != nil {
 		return nil, session.TransactionError(ctx, err)
+	}
+	return property, nil
+}
+
+func readProperty(ctx context.Context, tx *sql.Tx, name string) (*Property, error) {
+	query := fmt.Sprintf("SELECT %s FROM properties WHERE name=$1", strings.Join(propertiesColumns, ","))
+	row := tx.QueryRowContext(ctx, query, name)
+	property, err := propertyFromRow(row)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	} else if err != nil {
+		return nil, err
 	}
 	return property, nil
 }
@@ -179,4 +224,85 @@ func readGroupModeProperty(ctx context.Context, tx *sql.Tx) (string, error) {
 
 func readBroadcastProperty(ctx context.Context, tx *sql.Tx) (string, error) {
 	return readPropertyAsString(ctx, tx, PropBroadcast)
+}
+
+func ReadRolesProperty(ctx context.Context) (RoleSet, error) {
+	var r RoleSet
+	var p *Property
+	err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
+		var err error
+		p, err = readProperty(ctx, tx, PropGroupRoles)
+		return err
+	})
+
+	if err != nil {
+		return r, err
+	}
+
+	if err := mapstructure.Decode(p.ComplexValue, &r); err != nil {
+		return r, errors.New("roleset not in correct form")
+	}
+
+	return r, nil
+}
+
+func (p *Property) Validate() error {
+	if utf8.RuneCountInString(p.Value) > 512 {
+		return errors.New("value is too long")
+	}
+
+	switch p.Name {
+	case PropGroupRoles:
+		var roleSet RoleSet
+		if err := mapstructure.Decode(p.ComplexValue, &roleSet); err != nil {
+			return errors.New("roleset not in correct form")
+		}
+		p.ComplexValue = roleSet
+	}
+	return nil
+}
+
+func (rs RoleSet) GetRole(user *User) string {
+	if user != nil {
+		if rs.HasAdmin(user.UserId) {
+			return PropGroupRolesAdmin
+		} else if rs.HasLecturer(user.UserId) {
+			return PropGroupRolesLecturer
+		}
+	}
+	return PropGroupRolesDefault
+}
+
+func (rs RoleSet) HasAdmin(userID string) bool {
+	if userID == config.AppConfig.Mixin.ClientId {
+		return true
+	}
+
+	for _, id := range rs.Admins {
+		if id == userID {
+			return true
+		}
+	}
+	return false
+}
+
+func (rs RoleSet) HasLecturer(userID string) bool {
+	for _, id := range rs.Lecturers {
+		if id == userID {
+			return true
+		}
+	}
+	return false
+}
+
+func (rs RoleSet) AdminIDs() []string {
+	return rs.Admins
+}
+
+func IsAdmin(ctx context.Context, id string) bool {
+	roleSet, _ := ReadRolesProperty(ctx)
+	if roleSet.HasAdmin(id) {
+		return true
+	}
+	return false
 }

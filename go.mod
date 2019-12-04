@@ -25,6 +25,7 @@ require (
 	github.com/lib/pq v1.1.1
 	github.com/lithammer/shortuuid v3.0.0+incompatible
 	github.com/lucasb-eyer/go-colorful v1.0.2
+	github.com/mitchellh/mapstructure v1.1.2
 	github.com/objcoding/wxpay v1.0.6
 	github.com/onsi/ginkgo v1.9.0 // indirect
 	github.com/onsi/gomega v1.6.0 // indirect
