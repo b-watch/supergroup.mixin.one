@@ -21,6 +21,11 @@ func registerProperties(router *httptreemux.TreeMux) {
 }
 
 func (impl *propertyImpl) show(w http.ResponseWriter, r *http.Request, params map[string]string) {
+	if middlewares.CurrentUser(r).GetRole(r.Context()) != "admin" {
+		views.RenderErrorResponse(w, r, session.ForbiddenError(r.Context()))
+		return
+	}
+
 	p, err := models.ReadProperty(r.Context(), params["name"])
 	if err != nil {
 		views.RenderErrorResponse(w, r, err)
@@ -30,6 +35,11 @@ func (impl *propertyImpl) show(w http.ResponseWriter, r *http.Request, params ma
 }
 
 func (impl *propertyImpl) create(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	if middlewares.CurrentUser(r).GetRole(r.Context()) != "admin" {
+		views.RenderErrorResponse(w, r, session.ForbiddenError(r.Context()))
+		return
+	}
+
 	var body struct {
 		Key          string      `json:"key"`
 		Value        string      `json:"value"`
@@ -38,10 +48,6 @@ func (impl *propertyImpl) create(w http.ResponseWriter, r *http.Request, _ map[s
 
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		views.RenderErrorResponse(w, r, session.BadRequestError(r.Context()))
-		return
-	}
-	if middlewares.CurrentUser(r).GetRole(r.Context()) != "admin" {
-		views.RenderErrorResponse(w, r, session.ForbiddenError(r.Context()))
 		return
 	}
 	p, err := models.CreateProperty(r.Context(), body.Key, body.Value, body.ComplexValue)
