@@ -23,26 +23,28 @@ system:
   image_message_enable: true
   video_message_enable: false
   contact_message_enable: true
+  limit_message_frequency: false
+  # Rewards and luckycoin settings
   rewards_enable: true
   rewards_min_amount_base: "0.01" # usd
-  # leave empty to support all assets
   rewards_asset_list:
+    # leave empty to support all assets
     - "c94ac88f-4671-3976-b60a-09064f1811e8" # XIN
     - "f5ef6b5d-cc5a-3d90-b2c0-a2fd386e7a3c" # BOX
   redpacket_min_amount_base: "0.1" # usd
-  # leave empty to support all assets
   redpacket_asset_list:
-  # - "c94ac88f-4671-3976-b60a-09064f1811e8" # XIN
+    # leave empty to support all assets
+    - "c94ac88f-4671-3976-b60a-09064f1811e8" # XIN
+    - "f5ef6b5d-cc5a-3d90-b2c0-a2fd386e7a3c" # BOX
   redpacket_normal_distribution_sigma_mean_ratio: 0.5
   redpacket_max_count: 1000
-  limit_message_frequency: false
+  # Interceptor settings
   detect_image: false
   detect_link: false
   detect_link_whitelist:
     - mixin.one
   sensitive_words: FUCK|FFFFUCK
-  prohibited_message: true
-  # new payment settings
+  # Payment settings
   auto_estimate: false
   auto_estimate_currency: "usd" # cny or usd. only useful when auto_estimate == true
   auto_estimate_base: "9.9"
