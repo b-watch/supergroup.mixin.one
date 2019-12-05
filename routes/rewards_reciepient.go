@@ -27,7 +27,7 @@ func registerRewardsRecipients(router *httptreemux.TreeMux) {
 }
 
 func (impl *rewardsImpl) create(w http.ResponseWriter, r *http.Request, params map[string]string) {
-	if middlewares.CurrentUser(r).GetRole() != "admin" {
+	if middlewares.CurrentUser(r).GetRole(r.Context()) != "admin" {
 		views.RenderErrorResponse(w, r, session.ForbiddenError(r.Context()))
 		return
 	}
@@ -55,7 +55,7 @@ func (impl *rewardsImpl) create(w http.ResponseWriter, r *http.Request, params m
 }
 
 func (impl *rewardsImpl) delete(w http.ResponseWriter, r *http.Request, params map[string]string) {
-	if middlewares.CurrentUser(r).GetRole() != "admin" {
+	if middlewares.CurrentUser(r).GetRole(r.Context()) != "admin" {
 		views.RenderErrorResponse(w, r, session.ForbiddenError(r.Context()))
 		return
 	}

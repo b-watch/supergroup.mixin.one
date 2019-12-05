@@ -81,12 +81,15 @@ func CreateMessage(ctx context.Context, user *User, messageId, category, quoteMe
 		return nil, nil
 	}
 
-	if !user.isAdmin() && user.UserId != config.AppConfig.Mixin.ClientId {
+	if !user.isAdmin(ctx) {
 		mode, err := ReadGroupModeProperty(ctx)
 		if err != nil {
 			return nil, err
 		} else if mode == PropGroupModeLecture || mode == PropGroupModeMute {
-			return nil, nil
+			if user.GetRole(ctx) != PropGroupRolesLecturer {
+				// role lecturer can speak in lecture/mute mode
+				return nil, nil
+			}
 		}
 		if category == MessageCategoryPlainImage && !config.AppConfig.System.ImageMessageEnable {
 			return nil, nil
@@ -109,7 +112,7 @@ func CreateMessage(ctx context.Context, user *User, messageId, category, quoteMe
 		}
 	}
 
-	if user.isAdmin() && category == MessageCategoryPlainText && quoteMessageId != "" {
+	if user.isAdmin(ctx) && category == MessageCategoryPlainText && quoteMessageId != "" {
 		if id, _ := bot.UuidFromString(quoteMessageId); id.String() == quoteMessageId {
 			bytes, err := base64.StdEncoding.DecodeString(data)
 			if err != nil {
@@ -177,10 +180,10 @@ func CreateMessage(ctx context.Context, user *User, messageId, category, quoteMe
 		if err != nil || m == nil {
 			return nil, err
 		}
-		if m.UserId != user.UserId && !user.isAdmin() {
+		if m.UserId != user.UserId && !user.isAdmin(ctx) {
 			return nil, session.ForbiddenError(ctx)
 		}
-		if user.isAdmin() {
+		if user.isAdmin(ctx) {
 			message.UserId = m.UserId
 		}
 	}
@@ -322,6 +325,28 @@ func FindMessage(ctx context.Context, id string) (*Message, error) {
 		return nil, session.TransactionError(ctx, err)
 	}
 	return message, nil
+}
+
+func FindMessages(ctx context.Context, ids []string) ([]*Message, error) {
+	for i, id := range ids {
+		ids[i] = fmt.Sprintf("'%s'", id)
+	}
+	query := fmt.Sprintf("SELECT %s FROM messages WHERE message_id in (%s)", strings.Join(messagesCols, ","), strings.Join(ids, ","))
+	rows, err := session.Database(ctx).QueryContext(ctx, query)
+	if err != nil {
+		return nil, session.TransactionError(ctx, err)
+	}
+	defer rows.Close()
+
+	var msgs []*Message
+	for rows.Next() {
+		m, err := messageFromRow(rows)
+		if err != nil {
+			return nil, session.TransactionError(ctx, err)
+		}
+		msgs = append(msgs, m)
+	}
+	return msgs, nil
 }
 
 func LastestMessageWithUser(ctx context.Context, limit int64) ([]*Message, error) {
