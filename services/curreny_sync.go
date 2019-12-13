@@ -43,11 +43,11 @@ type CurrencyResponse struct {
 
 func getCurrency(ctx context.Context) error {
 	resp, err := http.Get(currencyUrl)
-	defer resp.Body.Close()
 	if err != nil {
 		log.Println("getCurrency Error: get currencyUrl", err)
 		return err
 	}
+	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
