@@ -38,7 +38,6 @@ func buildUserView(r *http.Request, user *models.User) UserView {
 }
 
 func RenderUsersView(w http.ResponseWriter, r *http.Request, users []*models.User, admins []*models.User, lecturers []*models.User) {
-
 	var payload struct {
 		Admins    []UserView `json:"admins"`
 		Lecturers []UserView `json:"lecturers"`
@@ -50,10 +49,10 @@ func RenderUsersView(w http.ResponseWriter, r *http.Request, users []*models.Use
 	for i, user := range users {
 		userViews[i] = buildUserView(r, user)
 	}
-	for i, admin := range users {
+	for i, admin := range admins {
 		adminViews[i] = buildUserView(r, admin)
 	}
-	for i, lecturer := range users {
+	for i, lecturer := range lecturers {
 		lectureViews[i] = buildUserView(r, lecturer)
 	}
 	payload.Users = userViews
