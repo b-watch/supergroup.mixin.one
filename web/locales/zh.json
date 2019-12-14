@@ -87,7 +87,10 @@
     "title": "成员管理",
     "kick": "踢出",
     "block": "屏蔽",
-    "unsubscribed": "未订阅"
+    "unsubscribed": "未订阅",
+    "list_label_admins": "管理员",
+    "list_label_lecturers": "讲师",
+    "list_label_subscribers": "群友"
   },
   "pay_wxqr": {
     "title": "微信支付",

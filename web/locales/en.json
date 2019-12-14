@@ -87,7 +87,10 @@
     "title": "Members",
     "kick": "Kick",
     "block": "Block",
-    "unsubscribed": "Unsubscribed"
+    "unsubscribed": "Unsubscribed",
+    "list_label_admins": "Admins",
+    "list_label_lecturers": "Lecturers",
+    "list_label_subscribers": "Subscribers"
   },
   "pay_wxqr": {
     "title": "WeChat Payment",

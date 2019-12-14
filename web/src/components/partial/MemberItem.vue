@@ -8,7 +8,7 @@
       <div class="member-id">{{ member.identity_number }}</div>
     </div>
     <div class="cell member-list-role">
-      <div class="member-role" :class="member.role"></div>
+      <div class="member-role" :class="role || member.role"></div>
       <div class="member-time">{{ member.subscribed ? member.time : $t('members.unsubscribed')}}</div>
     </div>
   </div>
@@ -16,7 +16,7 @@
 
 <script>
 export default {
-  props: ["member"],
+  props: ["member", "role"],
   methods: {
     handleMemberClick(member) {
       this.$emit("member-click", member);
@@ -69,7 +69,7 @@ export default {
     background-size: 22px 21px;
   }
 
-  .member-role.admin {
+  .member-role.lecturer {
     width: 22px;
     background: url("../../assets/images/icon-lecturer.png") 0 0 no-repeat;
     background-size: 22px 21px;

@@ -11,8 +11,11 @@
         ></van-field>
       </van-cell>
       <van-list v-model="loading" :finished="finished" finished-text="~ END ~" @load="onLoad">
-        <member-item :member="item" v-for="item in admins" @member-click="memberClick"></member-item>
-        <member-item :member="item" v-for="item in lecturers" @member-click="memberClick"></member-item>
+        <div class="list-label">{{$t('members.list_label_admins')}}</div>
+        <member-item :member="item" v-for="item in admins" role="admin" @member-click="memberClick"></member-item>
+        <div class="list-label">{{$t('members.list_label_lecturers')}}</div>
+        <member-item :member="item" v-for="item in lecturers" role="lecturer" @member-click="memberClick"></member-item>
+        <div class="list-label">{{$t('members.list_label_subscribers')}}</div>
         <member-item :member="item" v-for="item in users" @member-click="memberClick"></member-item>
       </van-list>
       <van-action-sheet
@@ -83,20 +86,26 @@ export default {
       if (resp.data.users.length < 2) {
         this.finished = true;
       }
-      const users = resp.data.users.map(x => {
-        x.time = dayjs(x.subscribed_at).format("YYYY.MM.DD");
-        x.subscribed = !dayjs(x.subscribed_at).isBefore(dayjs("1900-01-01"));
-        return x;
-      });
+      const adminSet = {}
       const admins = resp.data.admins.map(x => {
-        x.time = dayjs(x.subscribed_at).format("YYYY.MM.DD");
+        x.time = dayjs(x.subscribed_at).format("YYYY/MM/DD");
         x.subscribed = !dayjs(x.subscribed_at).isBefore(dayjs("1900-01-01"));
+        adminSet[x.user_id] = 1;
         return x;
       });
+      const lecutreSet = {}
       const lecturers = resp.data.lecturers.map(x => {
-        x.time = dayjs(x.subscribed_at).format("YYYY.MM.DD");
+        x.time = dayjs(x.subscribed_at).format("YYYY/MM/DD");
+        x.subscribed = !dayjs(x.subscribed_at).isBefore(dayjs("1900-01-01"));
+        lecutreSet[x.user_id] = 1;
+        return x;
+      });
+      const users = resp.data.users.map(x => {
+        x.time = dayjs(x.subscribed_at).format("YYYY/MM/DD");
         x.subscribed = !dayjs(x.subscribed_at).isBefore(dayjs("1900-01-01"));
         return x;
+      }).filter((x) => {
+        return !adminSet.hasOwnProperty(x.user_id) && !lecutreSet.hasOwnProperty(x.user_id)
       });
 
       this.admins = admins
@@ -154,5 +163,10 @@ export default {
 <style scoped>
 .members-page {
   padding-top: 60px;
+}
+.list-label {
+  padding: 2px 15px;
+  font-size: 12px;
+  opacity: 0.6;
 }
 </style>
