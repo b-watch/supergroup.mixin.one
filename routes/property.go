@@ -35,7 +35,7 @@ func (impl *propertyImpl) show(w http.ResponseWriter, r *http.Request, params ma
 }
 
 func (impl *propertyImpl) create(w http.ResponseWriter, r *http.Request, _ map[string]string) {
-	if middlewares.CurrentUser(r).GetRole(r.Context()) != "admin" {
+	if middlewares.CurrentUser(r).GetRole(r.Context()) != models.PropGroupRolesAdmin || middlewares.CurrentUser(r).GetRole(r.Context()) != models.PropGroupRolesLecturer {
 		views.RenderErrorResponse(w, r, session.ForbiddenError(r.Context()))
 		return
 	}
@@ -50,6 +50,11 @@ func (impl *propertyImpl) create(w http.ResponseWriter, r *http.Request, _ map[s
 		views.RenderErrorResponse(w, r, session.BadRequestError(r.Context()))
 		return
 	}
+	// @TODO need to implement access control for lecturers
+	// lecturers allow changing following props:
+	// - group mode
+	// - broadcast
+	// - announcement-message-property
 	p, err := models.CreateProperty(r.Context(), body.Key, body.Value, body.ComplexValue)
 	if err != nil {
 		views.RenderErrorResponse(w, r, err)

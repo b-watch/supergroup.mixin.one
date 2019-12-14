@@ -520,6 +520,9 @@ func findUsersByKeywords(ctx context.Context, keywords string) ([]*User, error) 
 }
 
 func findUsersByIds(ctx context.Context, tx *sql.Tx, ids []string) ([]*User, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
 	for i, id := range ids {
 		ids[i] = fmt.Sprintf("'%s'", id)
 	}
