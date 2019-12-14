@@ -35,7 +35,7 @@ func (impl *propertyImpl) show(w http.ResponseWriter, r *http.Request, params ma
 }
 
 func (impl *propertyImpl) create(w http.ResponseWriter, r *http.Request, _ map[string]string) {
-	if middlewares.CurrentUser(r).GetRole(r.Context()) != models.PropGroupRolesAdmin || middlewares.CurrentUser(r).GetRole(r.Context()) != models.PropGroupRolesLecturer {
+	if middlewares.CurrentUser(r).GetRole(r.Context()) != models.PropGroupRolesAdmin && middlewares.CurrentUser(r).GetRole(r.Context()) != models.PropGroupRolesLecturer {
 		views.RenderErrorResponse(w, r, session.ForbiddenError(r.Context()))
 		return
 	}
