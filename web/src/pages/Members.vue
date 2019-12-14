@@ -11,7 +11,9 @@
         ></van-field>
       </van-cell>
       <van-list v-model="loading" :finished="finished" finished-text="~ END ~" @load="onLoad">
-        <member-item :member="item" v-for="item in items" @member-click="memberClick"></member-item>
+        <member-item :member="item" v-for="item in admins" @member-click="memberClick"></member-item>
+        <member-item :member="item" v-for="item in lecturers" @member-click="memberClick"></member-item>
+        <member-item :member="item" v-for="item in users" @member-click="memberClick"></member-item>
       </van-list>
       <van-action-sheet
         :title="currentMember ? currentMember.full_name : ''"
@@ -44,7 +46,9 @@ export default {
       currentMember: null,
       loading: false,
       finished: false,
-      items: [],
+      users: [],
+      admins: [],
+      lecturers: [],
       actions: [
         { name: this.$t("members.kick") },
         { name: this.$t("members.block") }
@@ -60,8 +64,8 @@ export default {
   async mounted() {},
   computed: {
     lastOffset() {
-      if (this.items.length) {
-        let d = new Date(this.items[this.items.length - 1].subscribed_at);
+      if (this.users.length) {
+        let d = new Date(this.users[this.users.length - 1].subscribed_at);
         d.setSeconds(d.getSeconds() + 1);
         return d.toISOString();
       }
@@ -76,18 +80,31 @@ export default {
       this.maskLoading = true;
       this.loading = true;
       let resp = await this.GLOBAL.api.account.subscribers(offset, query);
-      if (resp.data.length < 2) {
+      if (resp.data.users.length < 2) {
         this.finished = true;
       }
-      resp.data = resp.data.map(x => {
+      const users = resp.data.users.map(x => {
         x.time = dayjs(x.subscribed_at).format("YYYY.MM.DD");
         x.subscribed = !dayjs(x.subscribed_at).isBefore(dayjs("1900-01-01"));
         return x;
       });
+      const admins = resp.data.admins.map(x => {
+        x.time = dayjs(x.subscribed_at).format("YYYY.MM.DD");
+        x.subscribed = !dayjs(x.subscribed_at).isBefore(dayjs("1900-01-01"));
+        return x;
+      });
+      const lecturers = resp.data.lecturers.map(x => {
+        x.time = dayjs(x.subscribed_at).format("YYYY.MM.DD");
+        x.subscribed = !dayjs(x.subscribed_at).isBefore(dayjs("1900-01-01"));
+        return x;
+      });
+
+      this.admins = admins
+      this.lecturers = lecturers
       if (append) {
-        this.items = this.items.concat(resp.data);
+        this.users = this.users.concat(users);
       } else {
-        this.items = resp.data;
+        this.users = users;
         this.finished = true;
       }
       this.loading = false;
