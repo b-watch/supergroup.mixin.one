@@ -81,7 +81,6 @@ export default {
       this.currentRank = rankInfo.data.current_rank
       this.ranks = rankInfo.data.ranks
     }
-    this.isAdmin = window.localStorage.getItem("role") === "admin";
     this.loading = false;
   },
   computed: {

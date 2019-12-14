@@ -86,14 +86,50 @@ func (impl *usersImpl) subscribers(w http.ResponseWriter, r *http.Request, _ map
 	var num int64
 	var keywords string
 	var err error
+	var adminUsers []*models.User
+	var lecturerUsers []*models.User
+	var users []*models.User
+	var roleSet models.RoleSet
+
+	var payload struct {
+		Admins    []*models.User `json:"admins"`
+		Lecturers []*models.User `json:"lecturers"`
+		Users     []*models.User `json:"users"`
+	}
+
 	num, err = strconv.ParseInt(r.URL.Query().Get("q"), 10, 64)
 	if err != nil {
 		keywords = r.URL.Query().Get("q")
 	}
-	if users, err := models.Subscribers(r.Context(), offset, num, keywords); err != nil {
+
+	if roleSet, err = models.ReadRolesProperty(r.Context()); err != nil {
 		views.RenderErrorResponse(w, r, err)
+		return
+	}
+
+	adminIDs := roleSet.AdminIDs()
+	lecturerIDs := roleSet.LecturerIDs()
+
+	if adminUsers, err = models.FindUsers(r.Context(), adminIDs); err != nil {
+		views.RenderErrorResponse(w, r, err)
+		return
 	} else {
-		views.RenderUsersView(w, r, users)
+		payload.Lecturers = adminUsers
+	}
+
+	if lecturerUsers, err = models.FindUsers(r.Context(), lecturerIDs); err != nil {
+		views.RenderErrorResponse(w, r, err)
+		return
+	} else {
+		payload.Lecturers = lecturerUsers
+	}
+
+	if users, err = models.Subscribers(r.Context(), offset, num, keywords); err != nil {
+		views.RenderErrorResponse(w, r, err)
+		return
+	} else {
+		payload.Users = users
+		views.RenderDataResponse(w, r, payload)
 	}
 }
 

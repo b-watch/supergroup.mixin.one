@@ -299,6 +299,10 @@ func (rs RoleSet) AdminIDs() []string {
 	return rs.Admins
 }
 
+func (rs RoleSet) LecturerIDs() []string {
+	return rs.Lecturers
+}
+
 func IsAdmin(ctx context.Context, id string) bool {
 	roleSet, _ := ReadRolesProperty(ctx)
 	if roleSet.HasAdmin(id) {

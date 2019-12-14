@@ -14,7 +14,7 @@
           <div class="announcement">
             <p v-html="announcementText"></p>
             <van-button
-              v-if="isAdmin"
+              v-if="isAdminOrLecturer"
               type="default"
               size="mini"
               round
@@ -49,7 +49,7 @@
               }}</van-button
             >
             <van-button
-              v-if="isAdmin"
+              v-if="isAdminOrLecturer"
               :type="groupMode === 'mute' ? 'danger' : 'primary'"
               plain
               hairline
@@ -66,7 +66,7 @@
               "
             ></van-button>
             <van-button
-              v-if="isAdmin"
+              v-if="isAdminOrLecturer"
               type="default"
               size="small"
               round
@@ -142,9 +142,9 @@ export default {
     };
   },
   computed: {
-    isAdmin() {
+    isAdminOrLecturer() {
       if (this.meInfo) {
-        return this.meInfo.data.role === "admin";
+        return this.meInfo.data.role === "admin" || this.meInfo.data.role === "lecturer";
       }
       return false;
     },
@@ -252,7 +252,7 @@ export default {
         })
         .filter(z => {
           if (isPlugin && z.admin_only === true) {
-            return this.isAdmin;
+            return this.isAdminOrLecturer;
           }
           return true;
         });

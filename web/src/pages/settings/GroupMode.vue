@@ -8,11 +8,11 @@
       ></nav-bar>
 
       <van-cell-group
-        :title="isAdmin ? $t('group_mode.mode_title') : $t('group_mode.mode_title_alt') "
+        :title="isAdminOrLecturer ? $t('group_mode.mode_title') : $t('group_mode.mode_title_alt') "
       >
         <van-cell v-bind:key="mode.name" v-for="mode in modes"
           :title="mode.label" :label="mode.desc" :icon="mode.icon"
-          :class="!isAdmin && !mode.selected ? 'faded': ''"
+          :class="!isAdminOrLecturer && !mode.selected ? 'faded': ''"
           @click="selectMode(mode)">
           <van-image
             round
@@ -31,7 +31,7 @@
         </van-cell>
       </van-cell-group>
 
-      <van-cell-group v-if="isAdmin" :title="$t('group_mode.broadcast_title')">
+      <van-cell-group v-if="isAdminOrLecturer" :title="$t('group_mode.broadcast_title')">
         <van-cell :title="$t('group_mode.broadcast_label')">
           <van-switch v-model="isBroadcast" />
         </van-cell>
@@ -41,7 +41,7 @@
         </van-cell>
       </van-cell-group>
 
-      <van-row v-if="isAdmin" style="padding: 20px">
+      <van-row v-if="isAdminOrLecturer" style="padding: 20px">
         <van-col span="24">
           <van-button
             style="width: 100%"
@@ -75,7 +75,6 @@ export default {
   data() {
     return {
       loading: false,
-      isAdmin: false,
       isBroadcast: false,
       isChanged: false,
       currentModeName: 'free',
@@ -124,7 +123,6 @@ export default {
       this.isBroadcast = amountInfo.data.broadcast === 'on'
     }
 
-    this.isAdmin = window.localStorage.getItem("role") === "admin";
     this.loading = false;
   },
   computed: {
@@ -135,6 +133,12 @@ export default {
         }
       }
       return this.modes[0];
+    },
+    isAdminOrLecturer() {
+      if (window.localStorage.getItem("role")) {
+        return window.localStorage.getItem("role") === "admin" || window.localStorage.getItem("role") === "lecturer";
+      }
+      return false;
     }
   },
   methods: {
@@ -152,7 +156,7 @@ export default {
       this.$router.back()
     },
     selectMode(mode) {
-      if (this.isAdmin) {
+      if (this.isAdminOrLecturer) {
         this.modes = this.modes.map(x => {
           x.selected = x.name === mode.name;
           return x;
