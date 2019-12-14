@@ -210,7 +210,9 @@ func (rm *rankManager) tick(ctx context.Context, dsn string) {
 					}
 				}
 			case n := <-listener.Notify:
-				rm.Push(ctx, n.Extra)
+				if n != nil {
+					rm.Push(ctx, n.Extra)
+				}
 			}
 		}
 	}()
