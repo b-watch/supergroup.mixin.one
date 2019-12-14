@@ -50,11 +50,11 @@ func RenderUsersView(w http.ResponseWriter, r *http.Request, users []*models.Use
 	for i, user := range users {
 		userViews[i] = buildUserView(r, user)
 	}
-	for i, user := range users {
-		adminViews[i] = buildUserView(r, admins)
+	for i, admin := range users {
+		adminViews[i] = buildUserView(r, admin)
 	}
-	for i, user := range users {
-		lectureViews[i] = buildUserView(r, lecturers)
+	for i, lecturer := range users {
+		lectureViews[i] = buildUserView(r, lecturer)
 	}
 	payload.Users = userViews
 	payload.Users = adminViews
