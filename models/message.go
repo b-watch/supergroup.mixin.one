@@ -81,13 +81,13 @@ func CreateMessage(ctx context.Context, user *User, messageId, category, quoteMe
 		return nil, nil
 	}
 
-	if !user.isAdmin(ctx) {
+	if !user.isAdmin(ctx) && !user.isLecturer(ctx) {
 		mode, err := ReadGroupModeProperty(ctx)
 		if err != nil {
 			return nil, err
 		} else if mode == PropGroupModeLecture || mode == PropGroupModeMute {
-			if user.GetRole(ctx) != PropGroupRolesLecturer {
-				// role lecturer can speak in lecture/mute mode
+			if user.isAdmin(ctx) || user.isLecturer(ctx) {
+				// role lecturer and admin can speak in lecture/mute mode
 				return nil, nil
 			}
 		}
@@ -112,6 +112,7 @@ func CreateMessage(ctx context.Context, user *User, messageId, category, quoteMe
 		}
 	}
 
+	// only admin allow operate members and messages by quick inst
 	if user.isAdmin(ctx) && category == MessageCategoryPlainText && quoteMessageId != "" {
 		if id, _ := bot.UuidFromString(quoteMessageId); id.String() == quoteMessageId {
 			bytes, err := base64.StdEncoding.DecodeString(data)

@@ -421,6 +421,10 @@ func (user *User) isAdmin(ctx context.Context) bool {
 	return user.GetRole(ctx) == PropGroupRolesAdmin
 }
 
+func (user *User) isLecturer(ctx context.Context) bool {
+	return user.GetRole(ctx) == PropGroupRolesLecturer
+}
+
 func subscribedUsers(ctx context.Context, subscribedAt time.Time, limit int) ([]*User, error) {
 	var users []*User
 	query := fmt.Sprintf("SELECT %s FROM users WHERE subscribed_at>$1 ORDER BY subscribed_at LIMIT %d", strings.Join(usersCols, ","), limit)
