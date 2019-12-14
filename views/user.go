@@ -56,7 +56,7 @@ func RenderUsersView(w http.ResponseWriter, r *http.Request, users []*models.Use
 		lectureViews[i] = buildUserView(r, lecturer)
 	}
 	payload.Users = userViews
-	payload.Users = adminViews
+	payload.Admins = adminViews
 	payload.Lecturers = lectureViews
 	RenderDataResponse(w, r, payload)
 }
