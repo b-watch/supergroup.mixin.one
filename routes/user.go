@@ -28,6 +28,7 @@ func registerUsers(router *httptreemux.TreeMux) {
 	router.POST("/unsubscribe", impl.unsubscribe)
 	router.POST("/users/:id/remove", impl.remove)
 	router.POST("/users/:id/block", impl.block)
+	router.POST("/users/:id/assign", impl.assignRole)
 	router.GET("/me", impl.me)
 	router.GET("/me/assets", impl.assets)
 	router.GET("/subscribers", impl.subscribers)
@@ -153,6 +154,23 @@ func (impl *usersImpl) block(w http.ResponseWriter, r *http.Request, params map[
 		views.RenderErrorResponse(w, r, err)
 	} else {
 		views.RenderBlankResponse(w, r)
+	}
+}
+
+func (impl *usersImpl) assignRole(w http.ResponseWriter, r *http.Request, params map[string]string) {
+	role := r.URL.Query().Get("role")
+	userID := params["id"]
+	var rs models.RoleSet
+	var err error
+	if role == models.PropGroupRolesAdmin || role == models.PropGroupRolesLecturer {
+		rs, err = models.AddRolesProperty(r.Context(), userID, role)
+	} else if role == models.PropGroupRolesDefault {
+		rs, err = models.RemoveRolesProperty(r.Context(), userID, role)
+	}
+	if err != nil {
+		views.RenderErrorResponse(w, r, err)
+	} else {
+		views.RenderDataResponse(w, r, rs)
 	}
 }
 

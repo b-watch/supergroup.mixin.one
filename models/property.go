@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -244,6 +245,47 @@ func ReadRolesProperty(ctx context.Context) (RoleSet, error) {
 	}
 
 	return r, nil
+}
+
+func AddRolesProperty(ctx context.Context, userId string, role string) (RoleSet, error) {
+	rs, err := ReadRolesProperty(ctx)
+	if err != nil {
+		return rs, err
+	}
+	if role == PropGroupRolesAdmin && !rs.HasAdmin(userId) {
+		rs.Admins = append(rs.Admins, userId)
+		CreateProperty(ctx, PropGroupRoles, "", rs)
+		return rs, nil
+	} else if role == PropGroupRolesLecturer && !rs.HasLecturer(userId) {
+		rs.Lecturers = append(rs.Lecturers, userId)
+		CreateProperty(ctx, PropGroupRoles, "", rs)
+		return rs, nil
+	}
+	return rs, err
+}
+
+func RemoveRolesProperty(ctx context.Context, userId string, role string) (RoleSet, error) {
+	var pos int
+	rs, err := ReadRolesProperty(ctx)
+	if err != nil {
+		return rs, err
+	}
+	if role == PropGroupRolesAdmin && rs.HasAdmin(userId) {
+		pos = sort.Search(len(rs.Admins), func(i int) bool {
+			return string(rs.Admins[i]) >= userId
+		})
+		rs.Admins = append(rs.Admins[:pos], rs.Admins[pos+1:]...)
+		CreateProperty(ctx, PropGroupRoles, "", rs)
+		return rs, nil
+	} else if role == PropGroupRolesLecturer && rs.HasLecturer(userId) {
+		pos = sort.Search(len(rs.Lecturers), func(i int) bool {
+			return string(rs.Lecturers[i]) >= userId
+		})
+		rs.Lecturers = append(rs.Lecturers, userId)
+		CreateProperty(ctx, PropGroupRoles, "", rs)
+		return rs, nil
+	}
+	return rs, err
 }
 
 func (p *Property) Validate() error {
