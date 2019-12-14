@@ -114,7 +114,7 @@ func (impl *usersImpl) subscribers(w http.ResponseWriter, r *http.Request, _ map
 		views.RenderErrorResponse(w, r, err)
 		return
 	} else {
-		payload.Lecturers = adminUsers
+		payload.Admins = adminUsers
 	}
 
 	if lecturerUsers, err = models.FindUsers(r.Context(), lecturerIDs); err != nil {
