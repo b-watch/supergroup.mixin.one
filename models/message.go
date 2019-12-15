@@ -86,10 +86,8 @@ func CreateMessage(ctx context.Context, user *User, messageId, category, quoteMe
 		if err != nil {
 			return nil, err
 		} else if mode == PropGroupModeLecture || mode == PropGroupModeMute {
-			if user.isAdmin(ctx) || user.isLecturer(ctx) {
-				// role lecturer and admin can speak in lecture/mute mode
-				return nil, nil
-			}
+			// lecturer and admin can speak in lecture/mute mode
+			return nil, nil
 		}
 		if category == MessageCategoryPlainImage && !config.AppConfig.System.ImageMessageEnable {
 			return nil, nil
