@@ -11,9 +11,9 @@
         ></van-field>
       </van-cell>
       <van-list v-model="loading" :finished="finished" finished-text="~ END ~" @load="onLoad">
-        <div v-if="admins" class="list-label">{{$t('members.list_label_admins')}}</div>
+        <div v-if="admins && admins.length !== 0" class="list-label">{{$t('members.list_label_admins')}}</div>
         <member-item :member="item" v-for="item in admins" role="admin" @member-click="memberClick"></member-item>
-        <div v-if="lecturers" class="list-label">{{$t('members.list_label_lecturers')}}</div>
+        <div v-if="lecturers && lecturers.length !== 0" class="list-label">{{$t('members.list_label_lecturers')}}</div>
         <member-item :member="item" v-for="item in lecturers" role="lecturer" @member-click="memberClick"></member-item>
         <div class="list-label">{{$t('members.list_label_subscribers')}}</div>
         <member-item :member="item" v-for="item in users" @member-click="memberClick"></member-item>
