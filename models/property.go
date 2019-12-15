@@ -352,3 +352,11 @@ func IsAdmin(ctx context.Context, id string) bool {
 	}
 	return false
 }
+
+func IsLecturer(ctx context.Context, id string) bool {
+	roleSet, _ := ReadRolesProperty(ctx)
+	if roleSet.HasLecturer(id) {
+		return true
+	}
+	return false
+}

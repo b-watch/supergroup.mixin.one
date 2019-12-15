@@ -35,7 +35,7 @@ func loopPendingMessage(ctx context.Context) {
 			continue
 		}
 		for _, message := range messages {
-			if !models.IsAdmin(ctx, message.UserId) {
+			if !models.IsAdmin(ctx, message.UserId) && !models.IsLecturer(ctx, message.UserId) {
 				if message.Category == "PLAIN_TEXT" {
 					data, err := base64.StdEncoding.DecodeString(message.Data)
 					if err != nil {
