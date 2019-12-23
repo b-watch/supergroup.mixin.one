@@ -23,7 +23,7 @@ func (t *linkInterceptor) HasExternalLinks(message string) (ret bool) {
 			isWhitelisted := false
 			for _, wlHost := range t.whitelistedHosts {
 				// @TODO need a better implement
-				if strings.Contains(link, wlHost) {
+				if strings.Contains(strings.ToUpper(link), strings.ToUpper(wlHost)) {
 					isWhitelisted = true
 					break
 				}
