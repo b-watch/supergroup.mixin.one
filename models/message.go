@@ -217,16 +217,20 @@ func createSystemMessage(ctx context.Context, tx *sql.Tx, category, data string)
 
 func createSystemJoinMessage(ctx context.Context, tx *sql.Tx, user *User) error {
 	mode, err := readGroupModeProperty(ctx, tx)
-	prohibited := err != nil || mode == PropGroupModeLecture
+	prohibited := err != nil || mode == PropGroupModeLecture || mode == PropGroupModeMute
 	if prohibited {
 		// send MessageTipsJoinUserProhibited to joined user
 		CreateSystemDistributedMessage(ctx, user, "PLAIN_TEXT", base64.StdEncoding.EncodeToString([]byte(config.AppConfig.MessageTemplate.MessageTipsJoinUserProhibited)))
 	} else {
 		// send MessageTipsJoinUser to joined user while send MessageTipsJoin to all users
-		CreateSystemDistributedMessage(ctx, user, "PLAIN_TEXT", base64.StdEncoding.EncodeToString([]byte(config.AppConfig.MessageTemplate.MessageTipsJoinUser)))
-		err = createSystemMessage(ctx, tx, "PLAIN_TEXT", base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf(config.AppConfig.MessageTemplate.MessageTipsJoin, user.FullName))))
-		if err != nil {
-			return err
+		if len(config.AppConfig.MessageTemplate.MessageTipsJoinUser) != 0 {
+			CreateSystemDistributedMessage(ctx, user, "PLAIN_TEXT", base64.StdEncoding.EncodeToString([]byte(config.AppConfig.MessageTemplate.MessageTipsJoinUser)))
+		}
+		if len(config.AppConfig.MessageTemplate.MessageTipsJoin) != 0 {
+			err = createSystemMessage(ctx, tx, "PLAIN_TEXT", base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf(config.AppConfig.MessageTemplate.MessageTipsJoin, user.FullName))))
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
