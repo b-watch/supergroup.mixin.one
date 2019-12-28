@@ -365,8 +365,7 @@ func handleMessage(ctx context.Context, mc *MessageContext, message *mixin.Messa
 	// broadcast
 	if isBroadcastOn, err := models.ReadBroadcastProperty(ctx); err == nil && isBroadcastOn == "on" {
 		go func() {
-			bmsg, err := decodeMessage(ctx, user, message)
-			if err == nil {
+			if bmsg, err := decodeMessage(ctx, user, message); err == nil {
 				broadcastChan <- bmsg
 			}
 		}()
