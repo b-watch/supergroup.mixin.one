@@ -14,3 +14,5 @@ env.prod.sh
 new-web/public/legacy
 new-web/public/shortcuts
 web/public/shortcuts
+
+.idea

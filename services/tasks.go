@@ -17,6 +17,7 @@ import (
 	"github.com/MixinNetwork/supergroup.mixin.one/interceptors"
 	"github.com/MixinNetwork/supergroup.mixin.one/models"
 	"github.com/MixinNetwork/supergroup.mixin.one/session"
+	"github.com/fox-one/mixin-sdk"
 	"github.com/gofrs/uuid"
 )
 
@@ -83,17 +84,12 @@ func loopPendingMessage(ctx context.Context) {
 }
 
 func sendTextMessage(ctx context.Context, mc *MessageContext, conversationId, label string) error {
-	params := map[string]interface{}{
-		"conversation_id": conversationId,
-		"message_id":      bot.UuidNewV4().String(),
-		"category":        "PLAIN_TEXT",
-		"data":            base64.StdEncoding.EncodeToString([]byte(label)),
-	}
-	err := writeMessageAndWait(ctx, mc, "CREATE_MESSAGE", params)
-	if err != nil {
-		return session.BlazeServerError(ctx, err)
-	}
-	return nil
+	return mc.user.SendMessage(ctx, &mixin.MessageRequest{
+		ConversationID: conversationId,
+		MessageID:      bot.UuidNewV4().String(),
+		Category:       "PLAIN_TEXT",
+		Data:           base64.StdEncoding.EncodeToString([]byte(label)),
+	})
 }
 
 func sendAppButton(ctx context.Context, mc *MessageContext, label, conversationId, action string) error {
@@ -105,17 +101,13 @@ func sendAppButton(ctx context.Context, mc *MessageContext, label, conversationI
 	if err != nil {
 		return session.BlazeServerError(ctx, err)
 	}
-	params := map[string]interface{}{
-		"conversation_id": conversationId,
-		"message_id":      bot.UuidNewV4().String(),
-		"category":        "APP_BUTTON_GROUP",
-		"data":            base64.StdEncoding.EncodeToString(btns),
-	}
-	err = writeMessageAndWait(ctx, mc, "CREATE_MESSAGE", params)
-	if err != nil {
-		return session.BlazeServerError(ctx, err)
-	}
-	return nil
+
+	return mc.user.SendMessage(ctx, &mixin.MessageRequest{
+		ConversationID: conversationId,
+		MessageID:      bot.UuidNewV4().String(),
+		Category:       "APP_BUTTON_GROUP",
+		Data:           base64.StdEncoding.EncodeToString(btns),
+	})
 }
 
 func validateMessage(ctx context.Context, message *models.Message) (bool, string) {

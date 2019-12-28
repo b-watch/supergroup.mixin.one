@@ -1,7 +1,6 @@
 package services
 
 import (
-	"compress/gzip"
 	"context"
 	"crypto/md5"
 	"encoding/base64"
@@ -12,7 +11,6 @@ import (
 	"log"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 	"unicode/utf8"
 
@@ -22,37 +20,9 @@ import (
 	"github.com/MixinNetwork/supergroup.mixin.one/models"
 	"github.com/MixinNetwork/supergroup.mixin.one/plugin"
 	"github.com/MixinNetwork/supergroup.mixin.one/session"
+	"github.com/fox-one/mixin-sdk"
 	"github.com/gofrs/uuid"
-	"github.com/gorilla/websocket"
 )
-
-const (
-	keepAlivePeriod = 20 * time.Second
-	writeWait       = 15 * time.Second
-	pongWait        = 10 * time.Second
-	pingPeriod      = (pongWait * 9) / 10
-)
-
-type BlazeMessage struct {
-	Id     string                 `json:"id"`
-	Action string                 `json:"action"`
-	Params map[string]interface{} `json:"params,omitempty"`
-	Data   interface{}            `json:"data,omitempty"`
-	Error  *session.Error         `json:"error,omitempty"`
-}
-
-type MessageView struct {
-	ConversationId string    `json:"conversation_id"`
-	UserId         string    `json:"user_id"`
-	MessageId      string    `json:"message_id"`
-	QuoteMessageId string    `json:"quote_message_id"`
-	Category       string    `json:"category"`
-	Data           string    `json:"data"`
-	Status         string    `json:"status"`
-	Source         string    `json:"source"`
-	CreatedAt      time.Time `json:"created_at"`
-	UpdatedAt      time.Time `json:"updated_at"`
-}
 
 type TransferView struct {
 	Type          string    `json:"type"`
@@ -68,14 +38,70 @@ type TransferView struct {
 type MessageService struct{}
 
 type MessageContext struct {
-	Transactions   *tmap
-	ReadDone       chan bool
-	WriteDone      chan bool
-	DistributeDone chan bool
-	ReadBuffer     chan MessageView
-	WriteBuffer    chan []byte
-	RecipientId    map[string]time.Time
+	user        *mixin.User
+	bc          chan WsBroadcastMessage
+	recipientID map[string]time.Time
 }
+
+func (mc *MessageContext) OnMessage(ctx context.Context, msg *mixin.MessageView, userID string) error {
+	if msg.Category == "SYSTEM_ACCOUNT_SNAPSHOT" && msg.UserID != config.AppConfig.Mixin.ClientId {
+		data, err := base64.StdEncoding.DecodeString(msg.Data)
+		if err != nil {
+			return session.BlazeServerError(ctx, err)
+		}
+		var transfer TransferView
+		err = json.Unmarshal(data, &transfer)
+		if err != nil {
+			return session.BlazeServerError(ctx, err)
+		}
+		err = handleTransfer(ctx, mc, transfer, msg.UserID)
+		if err != nil {
+			return session.BlazeServerError(ctx, err)
+		}
+	} else if msg.ConversationID == models.UniqueConversationId(config.AppConfig.Mixin.ClientId, msg.UserID) {
+		if err := handleMessage(ctx, mc, msg, mc.bc); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (mc *MessageContext) OnBlazeMessage(ctx context.Context, message *mixin.BlazeMessage, userID string) error {
+	if message.Action == "ACKNOWLEDGE_MESSAGE_RECEIPT" {
+		var msg mixin.MessageView
+		if err := json.Unmarshal(message.Data, &msg); err != nil {
+			session.Logger(ctx).Error("ACKNOWLEDGE_MESSAGE_RECEIPT json.Unmarshal", err)
+			return nil
+		}
+
+		if msg.Status != "READ" {
+			return nil
+		}
+
+		id, err := models.FindDistributedMessageRecipientId(ctx, msg.MessageID)
+		if err != nil {
+			session.Logger(ctx).Error("ACKNOWLEDGE_MESSAGE_RECEIPT FindDistributedMessageRecipientId", err)
+			return nil
+		}
+
+		if id == "" {
+			return nil
+		}
+
+		if time.Since(mc.recipientID[id]) > models.UserActivePeriod {
+			err = models.PingUserActiveAt(ctx, id)
+			if err != nil {
+				session.Logger(ctx).Error("ACKNOWLEDGE_MESSAGE_RECEIPT PingUserActiveAt", err)
+			}
+			mc.recipientID[id] = time.Now()
+		}
+		return nil
+	}
+
+	return nil
+}
+
 type TransferMemoInst struct {
 	Action string `json:"a"`
 	Param1 string `json:"p1"`
@@ -89,263 +115,29 @@ func (service *MessageService) Run(ctx context.Context, broadcastChan chan WsBro
 	go handleExpiredPackets(ctx)
 	go schedulePluginCronJob(ctx)
 
+	user, err := mixin.NewUser(
+		config.AppConfig.Mixin.ClientId,
+		config.AppConfig.Mixin.SessionId,
+		config.AppConfig.Mixin.SessionKey,
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	mc := &MessageContext{
+		user:        user,
+		bc:          broadcastChan,
+		recipientID: map[string]time.Time{},
+	}
+
 	for {
-		err := service.loop(ctx, broadcastChan)
-		if err != nil {
+		b := mixin.NewBlazeClient(user)
+		if err := b.Loop(ctx, mc); err != nil {
 			session.Logger(ctx).Error(err)
 		}
 		session.Logger(ctx).Info("connection loop end")
 		time.Sleep(300 * time.Millisecond)
 	}
-	return nil
-}
-
-func (service *MessageService) loop(ctx context.Context, broadcastChan chan WsBroadcastMessage) error {
-	conn, err := ConnectMixinBlaze(config.AppConfig.Mixin.ClientId, config.AppConfig.Mixin.SessionId, config.AppConfig.Mixin.SessionKey)
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
-
-	mc := &MessageContext{
-		Transactions:   newTmap(),
-		ReadDone:       make(chan bool, 1),
-		WriteDone:      make(chan bool, 1),
-		DistributeDone: make(chan bool, 1),
-		ReadBuffer:     make(chan MessageView, 102400),
-		WriteBuffer:    make(chan []byte, 102400),
-		RecipientId:    make(map[string]time.Time, 0),
-	}
-
-	go writePump(ctx, conn, mc)
-	go readPump(ctx, conn, mc)
-
-	err = writeMessageAndWait(ctx, mc, "LIST_PENDING_MESSAGES", nil)
-	if err != nil {
-		return session.BlazeServerError(ctx, err)
-	}
-
-	for {
-		select {
-		case <-mc.ReadDone:
-			return nil
-		case msg := <-mc.ReadBuffer:
-			if msg.Category == "SYSTEM_ACCOUNT_SNAPSHOT" && msg.UserId != config.AppConfig.Mixin.ClientId {
-				data, err := base64.StdEncoding.DecodeString(msg.Data)
-				if err != nil {
-					return session.BlazeServerError(ctx, err)
-				}
-				var transfer TransferView
-				err = json.Unmarshal(data, &transfer)
-				if err != nil {
-					return session.BlazeServerError(ctx, err)
-				}
-				err = handleTransfer(ctx, mc, transfer, msg.UserId)
-				if err != nil {
-					return session.BlazeServerError(ctx, err)
-				}
-			} else if msg.ConversationId == models.UniqueConversationId(config.AppConfig.Mixin.ClientId, msg.UserId) {
-				if err := handleMessage(ctx, mc, &msg, broadcastChan); err != nil {
-					return err
-				}
-			}
-
-			params := map[string]interface{}{"message_id": msg.MessageId, "status": "READ"}
-			err = writeMessageAndWait(ctx, mc, "ACKNOWLEDGE_MESSAGE_RECEIPT", params)
-			if err != nil {
-				return session.BlazeServerError(ctx, err)
-			}
-		}
-	}
-}
-
-func readPump(ctx context.Context, conn *websocket.Conn, mc *MessageContext) error {
-	defer func() {
-		conn.Close()
-		mc.WriteDone <- true
-		mc.ReadDone <- true
-		mc.DistributeDone <- true
-	}()
-	conn.SetReadLimit(1024000 * 128)
-	conn.SetReadDeadline(time.Now().Add(pongWait))
-	conn.SetPongHandler(func(string) error {
-		err := conn.SetReadDeadline(time.Now().Add(pongWait))
-		if err != nil {
-			return session.BlazeServerError(ctx, err)
-		}
-		return nil
-	})
-	for {
-		err := conn.SetReadDeadline(time.Now().Add(pongWait))
-		if err != nil {
-			return session.BlazeServerError(ctx, err)
-		}
-		messageType, wsReader, err := conn.NextReader()
-		if err != nil {
-			return session.BlazeServerError(ctx, err)
-		}
-		if messageType != websocket.BinaryMessage {
-			return session.BlazeServerError(ctx, fmt.Errorf("invalid message type %d", messageType))
-		}
-		err = parseMessage(ctx, mc, wsReader)
-		if err != nil {
-			return session.BlazeServerError(ctx, err)
-		}
-	}
-}
-
-func writePump(ctx context.Context, conn *websocket.Conn, mc *MessageContext) error {
-	pingTicker := time.NewTicker(pingPeriod)
-	defer func() {
-		pingTicker.Stop()
-		conn.Close()
-	}()
-	for {
-		select {
-		case data := <-mc.WriteBuffer:
-			err := writeGzipToConn(ctx, conn, data)
-			if err != nil {
-				return session.BlazeServerError(ctx, err)
-			}
-		case <-mc.WriteDone:
-			return nil
-		case <-pingTicker.C:
-			conn.SetWriteDeadline(time.Now().Add(writeWait))
-			err := conn.WriteMessage(websocket.PingMessage, nil)
-			if err != nil {
-				return session.BlazeServerError(ctx, err)
-			}
-		}
-	}
-}
-
-func writeMessageAndWait(ctx context.Context, mc *MessageContext, action string, params map[string]interface{}) error {
-	var resp = make(chan BlazeMessage, 1)
-	var id = bot.UuidNewV4().String()
-	mc.Transactions.set(id, func(t BlazeMessage) error {
-		select {
-		case resp <- t:
-		case <-time.After(2 * time.Second):
-			return fmt.Errorf("timeout to hook %s %s", action, id)
-		}
-		return nil
-	})
-
-	blazeMessage, err := json.Marshal(BlazeMessage{Id: id, Action: action, Params: params})
-	if err != nil {
-		return err
-	}
-	select {
-	case <-time.After(keepAlivePeriod):
-		return fmt.Errorf("timeout to write %s %v", action, params)
-	case mc.WriteBuffer <- blazeMessage:
-	}
-
-	select {
-	case <-time.After(keepAlivePeriod):
-		mc.Transactions.retrive(id)
-		return fmt.Errorf("timeout to wait %s %v", action, params)
-	case t := <-resp:
-		if t.Error != nil && t.Error.Code != 403 {
-			mc.Transactions.retrive(id)
-			return writeMessageAndWait(ctx, mc, action, params)
-		}
-	}
-	return nil
-}
-
-func writeGzipToConn(ctx context.Context, conn *websocket.Conn, msg []byte) error {
-	conn.SetWriteDeadline(time.Now().Add(writeWait))
-	wsWriter, err := conn.NextWriter(websocket.BinaryMessage)
-	if err != nil {
-		return session.BlazeServerError(ctx, err)
-	}
-	gzWriter, err := gzip.NewWriterLevel(wsWriter, 3)
-	if err != nil {
-		return session.BlazeServerError(ctx, err)
-	}
-	if _, err := gzWriter.Write(msg); err != nil {
-		return session.BlazeServerError(ctx, err)
-	}
-
-	if err := gzWriter.Close(); err != nil {
-		return session.BlazeServerError(ctx, err)
-	}
-	if err := wsWriter.Close(); err != nil {
-		return session.BlazeServerError(ctx, err)
-	}
-	return nil
-}
-
-func parseMessage(ctx context.Context, mc *MessageContext, wsReader io.Reader) error {
-	var message BlazeMessage
-	gzReader, err := gzip.NewReader(wsReader)
-	if err != nil {
-		return session.BlazeServerError(ctx, err)
-	}
-	defer gzReader.Close()
-	if err = json.NewDecoder(gzReader).Decode(&message); err != nil {
-		return session.BlazeServerError(ctx, err)
-	}
-
-	transaction := mc.Transactions.retrive(message.Id)
-	if transaction != nil {
-		return transaction(message)
-	}
-
-	if message.Action == "ACKNOWLEDGE_MESSAGE_RECEIPT" {
-		data, err := json.Marshal(message.Data)
-		if err != nil {
-			session.Logger(ctx).Error("ACKNOWLEDGE_MESSAGE_RECEIPT", err)
-			return nil
-		}
-		var msg MessageView
-		err = json.Unmarshal(data, &msg)
-		if err != nil {
-			session.Logger(ctx).Error("ACKNOWLEDGE_MESSAGE_RECEIPT json.Unmarshal", err)
-			return nil
-		}
-		if msg.Status != "READ" {
-			return nil
-		}
-		id, err := models.FindDistributedMessageRecipientId(ctx, msg.MessageId)
-		if err != nil {
-			session.Logger(ctx).Error("ACKNOWLEDGE_MESSAGE_RECEIPT FindDistributedMessageRecipientId", err)
-			return nil
-		}
-		if id == "" {
-			return nil
-		}
-		if mc.RecipientId[id].Before(time.Now().Add(-1 * models.UserActivePeriod)) {
-			err = models.PingUserActiveAt(ctx, id)
-			if err != nil {
-				session.Logger(ctx).Error("ACKNOWLEDGE_MESSAGE_RECEIPT PingUserActiveAt", err)
-			}
-			mc.RecipientId[id] = time.Now()
-		}
-		return nil
-	}
-
-	if message.Action != "CREATE_MESSAGE" {
-		return nil
-	}
-
-	data, err := json.Marshal(message.Data)
-	if err != nil {
-		return session.BlazeServerError(ctx, err)
-	}
-	var msg MessageView
-	err = json.Unmarshal(data, &msg)
-	if err != nil {
-		return session.BlazeServerError(ctx, err)
-	}
-
-	select {
-	case <-time.After(keepAlivePeriod):
-		return fmt.Errorf("timeout to handle %s %s", msg.Category, msg.MessageId)
-	case mc.ReadBuffer <- msg:
-	}
-	return nil
 }
 
 func handleTransfer(ctx context.Context, mc *MessageContext, transfer TransferView, userId string) error {
@@ -539,8 +331,8 @@ func handlePendingParticipants(ctx context.Context) {
 	}
 }
 
-func handleMessage(ctx context.Context, mc *MessageContext, message *MessageView, broadcastChan chan WsBroadcastMessage) error {
-	user, err := models.FindUser(ctx, message.UserId)
+func handleMessage(ctx context.Context, mc *MessageContext, message *mixin.MessageView, broadcastChan chan WsBroadcastMessage) error {
+	user, err := models.FindUser(ctx, message.UserID)
 	if err != nil {
 		return err
 	}
@@ -554,7 +346,7 @@ func handleMessage(ctx context.Context, mc *MessageContext, message *MessageView
 		}
 	}
 	if user.SubscribedAt.IsZero() {
-		return sendTextMessage(ctx, mc, message.ConversationId, config.AppConfig.MessageTemplate.MessageTipsUnsubscribe)
+		return sendTextMessage(ctx, mc, message.ConversationID, config.AppConfig.MessageTemplate.MessageTipsUnsubscribe)
 	}
 	dataBytes, err := base64.StdEncoding.DecodeString(message.Data)
 	if err != nil {
@@ -564,7 +356,7 @@ func handleMessage(ctx context.Context, mc *MessageContext, message *MessageView
 			if count, err := models.SubscribersCount(ctx); err != nil {
 				return err
 			} else {
-				return sendTextMessage(ctx, mc, message.ConversationId, fmt.Sprintf(config.AppConfig.MessageTemplate.MessageCommandsInfoResp, count))
+				return sendTextMessage(ctx, mc, message.ConversationID, fmt.Sprintf(config.AppConfig.MessageTemplate.MessageCommandsInfoResp, count))
 			}
 		}
 	}
@@ -577,52 +369,26 @@ func handleMessage(ctx context.Context, mc *MessageContext, message *MessageView
 			}
 		}()
 	}
-	if _, err := models.CreateMessage(ctx, user, message.MessageId, message.Category, message.QuoteMessageId, message.Data, message.CreatedAt, message.UpdatedAt); err != nil {
+	if _, err := models.CreateMessage(ctx, user, message.MessageID, message.Category, message.QuoteMessageID, message.Data, message.CreatedAt, message.UpdatedAt); err != nil {
 		return err
 	}
 	return nil
 }
 
-func sendHelpMessge(ctx context.Context, user *models.User, mc *MessageContext, message *MessageView) error {
-	if err := sendTextMessage(ctx, mc, message.ConversationId, config.AppConfig.MessageTemplate.MessageTipsHelp); err != nil {
+func sendHelpMessge(ctx context.Context, user *models.User, mc *MessageContext, message *mixin.MessageView) error {
+	if err := sendTextMessage(ctx, mc, message.ConversationID, config.AppConfig.MessageTemplate.MessageTipsHelp); err != nil {
 		return err
 	}
-	if err := sendAppButton(ctx, mc, config.AppConfig.MessageTemplate.MessageTipsHelpBtn, message.ConversationId, config.AppConfig.Service.HTTPResourceHost); err != nil {
+	if err := sendAppButton(ctx, mc, config.AppConfig.MessageTemplate.MessageTipsHelpBtn, message.ConversationID, config.AppConfig.Service.HTTPResourceHost); err != nil {
 		return err
 	}
 	return nil
 }
 
-type tmap struct {
-	mutex sync.Mutex
-	m     map[string]mixinTransaction
-}
-
-type mixinTransaction func(BlazeMessage) error
-
-func newTmap() *tmap {
-	return &tmap{
-		m: make(map[string]mixinTransaction),
-	}
-}
-
-func (m *tmap) retrive(key string) mixinTransaction {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-	defer delete(m.m, key)
-	return m.m[key]
-}
-
-func (m *tmap) set(key string, t mixinTransaction) {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-	m.m[key] = t
-}
-
-func decodeMessage(ctx context.Context, user *models.User, message *MessageView) (WsBroadcastMessage, error) {
+func decodeMessage(ctx context.Context, user *models.User, message *mixin.MessageView) (WsBroadcastMessage, error) {
 	var bmsg WsBroadcastMessage
 	bmsg.Category = message.Category
-	bmsg.MessageId = message.MessageId
+	bmsg.MessageId = message.MessageID
 	bmsg.CreatedAt = message.UpdatedAt
 	bmsg.Data = message.Data
 	bmsg.SpeakerId = user.UserId
