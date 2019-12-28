@@ -336,10 +336,12 @@ func handleMessage(ctx context.Context, mc *MessageContext, message *mixin.Messa
 	if err != nil {
 		return err
 	}
+
 	if user == nil || user.State != models.PaymentStatePaid {
-		return sendHelpMessge(ctx, user, mc, message)
+		return sendHelpMessage(ctx, user, mc, message)
 	}
-	if user.ActiveAt.Before(time.Now().Add(-1 * models.UserActivePeriod)) {
+
+	if time.Since(user.ActiveAt) > models.UserActivePeriod {
 		err = models.PingUserActiveAt(ctx, user.UserId)
 		if err != nil {
 			session.Logger(ctx).Error("handleMessage PingUserActiveAt", err)
@@ -375,7 +377,7 @@ func handleMessage(ctx context.Context, mc *MessageContext, message *mixin.Messa
 	return nil
 }
 
-func sendHelpMessge(ctx context.Context, user *models.User, mc *MessageContext, message *mixin.MessageView) error {
+func sendHelpMessage(ctx context.Context, user *models.User, mc *MessageContext, message *mixin.MessageView) error {
 	if err := sendTextMessage(ctx, mc, message.ConversationID, config.AppConfig.MessageTemplate.MessageTipsHelp); err != nil {
 		return err
 	}
