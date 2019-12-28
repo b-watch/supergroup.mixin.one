@@ -16,7 +16,7 @@ require (
 	github.com/facebookgo/grace v0.0.0-20180706040059-75cf19382434
 	github.com/facebookgo/httpdown v0.0.0-20180706035922-5979d39b15c2 // indirect
 	github.com/facebookgo/stats v0.0.0-20151006221625-1b76add642e4 // indirect
-	github.com/fox-one/mixin-sdk v1.0.5
+	github.com/fox-one/mixin-sdk v1.0.6
 	github.com/fox-one/pkg v1.2.3 // indirect
 	github.com/gin-gonic/gin v1.4.0
 	github.com/gofrs/uuid v3.2.0+incompatible

@@ -67,36 +67,26 @@ func (mc *MessageContext) OnMessage(ctx context.Context, msg *mixin.MessageView,
 	return nil
 }
 
-func (mc *MessageContext) OnBlazeMessage(ctx context.Context, message *mixin.BlazeMessage, userID string) error {
-	if message.Action == "ACKNOWLEDGE_MESSAGE_RECEIPT" {
-		var msg mixin.MessageView
-		if err := json.Unmarshal(message.Data, &msg); err != nil {
-			session.Logger(ctx).Error("ACKNOWLEDGE_MESSAGE_RECEIPT json.Unmarshal", err)
-			return nil
-		}
-
-		if msg.Status != "READ" {
-			return nil
-		}
-
-		id, err := models.FindDistributedMessageRecipientId(ctx, msg.MessageID)
-		if err != nil {
-			session.Logger(ctx).Error("ACKNOWLEDGE_MESSAGE_RECEIPT FindDistributedMessageRecipientId", err)
-			return nil
-		}
-
-		if id == "" {
-			return nil
-		}
-
-		if time.Since(mc.recipientID[id]) > models.UserActivePeriod {
-			err = models.PingUserActiveAt(ctx, id)
-			if err != nil {
-				session.Logger(ctx).Error("ACKNOWLEDGE_MESSAGE_RECEIPT PingUserActiveAt", err)
-			}
-			mc.recipientID[id] = time.Now()
-		}
+func (mc *MessageContext) OnAckReceipt(ctx context.Context, msg *mixin.MessageView, userID string) error {
+	if msg.Status != "READ" {
 		return nil
+	}
+
+	id, err := models.FindDistributedMessageRecipientId(ctx, msg.MessageID)
+	if err != nil {
+		session.Logger(ctx).Error("ACKNOWLEDGE_MESSAGE_RECEIPT FindDistributedMessageRecipientId", err)
+		return nil
+	}
+
+	if id == "" {
+		return nil
+	}
+
+	if time.Since(mc.recipientID[id]) > models.UserActivePeriod {
+		if err := models.PingUserActiveAt(ctx, id); err != nil {
+			session.Logger(ctx).Error("ACKNOWLEDGE_MESSAGE_RECEIPT PingUserActiveAt", err)
+		}
+		mc.recipientID[id] = time.Now()
 	}
 
 	return nil
@@ -336,10 +326,12 @@ func handleMessage(ctx context.Context, mc *MessageContext, message *mixin.Messa
 	if err != nil {
 		return err
 	}
+
 	if user == nil || user.State != models.PaymentStatePaid {
-		return sendHelpMessge(ctx, user, mc, message)
+		return sendHelpMessage(ctx, user, mc, message)
 	}
-	if user.ActiveAt.Before(time.Now().Add(-1 * models.UserActivePeriod)) {
+
+	if time.Since(user.ActiveAt) > models.UserActivePeriod {
 		err = models.PingUserActiveAt(ctx, user.UserId)
 		if err != nil {
 			session.Logger(ctx).Error("handleMessage PingUserActiveAt", err)
@@ -363,8 +355,7 @@ func handleMessage(ctx context.Context, mc *MessageContext, message *mixin.Messa
 	// broadcast
 	if isBroadcastOn, err := models.ReadBroadcastProperty(ctx); err == nil && isBroadcastOn == "on" {
 		go func() {
-			bmsg, err := decodeMessage(ctx, user, message)
-			if err == nil {
+			if bmsg, err := decodeMessage(ctx, user, message); err == nil {
 				broadcastChan <- bmsg
 			}
 		}()
@@ -375,7 +366,7 @@ func handleMessage(ctx context.Context, mc *MessageContext, message *mixin.Messa
 	return nil
 }
 
-func sendHelpMessge(ctx context.Context, user *models.User, mc *MessageContext, message *mixin.MessageView) error {
+func sendHelpMessage(ctx context.Context, user *models.User, mc *MessageContext, message *mixin.MessageView) error {
 	if err := sendTextMessage(ctx, mc, message.ConversationID, config.AppConfig.MessageTemplate.MessageTipsHelp); err != nil {
 		return err
 	}
