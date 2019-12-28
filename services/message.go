@@ -68,35 +68,35 @@ func (mc *MessageContext) OnMessage(ctx context.Context, msg *mixin.MessageView,
 }
 
 func (mc *MessageContext) OnBlazeMessage(ctx context.Context, message *mixin.BlazeMessage, userID string) error {
-	if message.Action == "ACKNOWLEDGE_MESSAGE_RECEIPT" {
-		var msg mixin.MessageView
-		if err := json.Unmarshal(message.Data, &msg); err != nil {
-			session.Logger(ctx).Error("ACKNOWLEDGE_MESSAGE_RECEIPT json.Unmarshal", err)
-			return nil
-		}
-
-		if msg.Status != "READ" {
-			return nil
-		}
-
-		id, err := models.FindDistributedMessageRecipientId(ctx, msg.MessageID)
-		if err != nil {
-			session.Logger(ctx).Error("ACKNOWLEDGE_MESSAGE_RECEIPT FindDistributedMessageRecipientId", err)
-			return nil
-		}
-
-		if id == "" {
-			return nil
-		}
-
-		if time.Since(mc.recipientID[id]) > models.UserActivePeriod {
-			err = models.PingUserActiveAt(ctx, id)
-			if err != nil {
-				session.Logger(ctx).Error("ACKNOWLEDGE_MESSAGE_RECEIPT PingUserActiveAt", err)
-			}
-			mc.recipientID[id] = time.Now()
-		}
+	if message.Action != "ACKNOWLEDGE_MESSAGE_RECEIPT" {
 		return nil
+	}
+
+	var msg mixin.MessageView
+	if err := json.Unmarshal(message.Data, &msg); err != nil {
+		session.Logger(ctx).Error("ACKNOWLEDGE_MESSAGE_RECEIPT json.Unmarshal", err)
+		return nil
+	}
+
+	if msg.Status != "READ" {
+		return nil
+	}
+
+	id, err := models.FindDistributedMessageRecipientId(ctx, msg.MessageID)
+	if err != nil {
+		session.Logger(ctx).Error("ACKNOWLEDGE_MESSAGE_RECEIPT FindDistributedMessageRecipientId", err)
+		return nil
+	}
+
+	if id == "" {
+		return nil
+	}
+
+	if time.Since(mc.recipientID[id]) > models.UserActivePeriod {
+		if err := models.PingUserActiveAt(ctx, id); err != nil {
+			session.Logger(ctx).Error("ACKNOWLEDGE_MESSAGE_RECEIPT PingUserActiveAt", err)
+		}
+		mc.recipientID[id] = time.Now()
 	}
 
 	return nil
