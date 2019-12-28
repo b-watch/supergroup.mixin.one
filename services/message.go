@@ -67,17 +67,7 @@ func (mc *MessageContext) OnMessage(ctx context.Context, msg *mixin.MessageView,
 	return nil
 }
 
-func (mc *MessageContext) OnBlazeMessage(ctx context.Context, message *mixin.BlazeMessage, userID string) error {
-	if message.Action != "ACKNOWLEDGE_MESSAGE_RECEIPT" {
-		return nil
-	}
-
-	var msg mixin.MessageView
-	if err := json.Unmarshal(message.Data, &msg); err != nil {
-		session.Logger(ctx).Error("ACKNOWLEDGE_MESSAGE_RECEIPT json.Unmarshal", err)
-		return nil
-	}
-
+func (mc *MessageContext) OnAckReceipt(ctx context.Context, msg *mixin.MessageView, userID string) error {
 	if msg.Status != "READ" {
 		return nil
 	}
