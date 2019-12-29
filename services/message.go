@@ -188,7 +188,7 @@ func handleRewardsPayment(ctx context.Context, mc *MessageContext, transfer Tran
 	memo := "Rewards from " + strconv.FormatInt(user.IdentityNumber, 10)
 	log.Println("Rewards from " + user.FullName + " to " + targetUser.UserId)
 	var traceID string
-	traceID, err = generateRewardTraceID(transfer.TraceId)
+	traceID, err = generateRewardTraceID(transfer.SnapshotId)
 	if err != nil {
 		return errors.New("generate trace id failed")
 	}
