@@ -96,6 +96,10 @@ func AuthenticateUserByOAuth(ctx context.Context, authorizationCode string) (*Us
 		return nil, session.ForbiddenError(ctx)
 	}
 
+	if config.AppConfig.System.ReadAssetsEnable && !strings.Contains(scope, "MESSAGES:REPRESENT") {
+		return nil, session.ForbiddenError(ctx)
+	}
+
 	me, err := bot.UserMe(ctx, accessToken)
 	if err != nil {
 		return nil, session.ServerError(ctx, err)
