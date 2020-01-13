@@ -111,7 +111,7 @@ func CreateMessage(ctx context.Context, user *User, messageId, category, quoteMe
 	}
 
 	// only admin allow operate members and messages by quick inst
-	if user.isAdmin(ctx) && category == MessageCategoryPlainText && quoteMessageId != "" {
+	if (user.isAdmin(ctx) || user.isLecturer(ctx)) && category == MessageCategoryPlainText && quoteMessageId != "" {
 		if id, _ := bot.UuidFromString(quoteMessageId); id.String() == quoteMessageId {
 			bytes, err := base64.StdEncoding.DecodeString(data)
 			if err != nil {
