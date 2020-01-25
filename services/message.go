@@ -208,12 +208,12 @@ func handleRewardsPayment(ctx context.Context, mc *MessageContext, transfer Tran
 	if user.UserId != targetUser.UserId {
 		if err := models.CreateTip(ctx, user.UserId, targetUser.UserId, transfer.AssetId, transfer.Amount, traceID, transfer.CreatedAt); err != nil {
 			log.Println("can't record tip", err)
-			return err
+			// return err
 		}
 
 		if err := models.CreateRewardsMessage(ctx, user, targetUser, transfer.Amount, inst.Param2); err != nil {
 			log.Println("can't create rewards message", err)
-			return err
+			// return err
 		}
 	}
 
