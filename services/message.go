@@ -186,7 +186,7 @@ func handleRewardsPayment(ctx context.Context, mc *MessageContext, transfer Tran
 		return nil
 	}
 	memo := "Rewards from " + strconv.FormatInt(user.IdentityNumber, 10)
-	log.Println("Rewards from " + user.FullName + " to " + targetUser.UserId)
+	log.Println("Rewards from " + user.FullName + " to " + targetUser.UserId + " with traceID " + transfer.SnapshotId)
 	var traceID string
 	traceID = transfer.SnapshotId
 	if err != nil {
