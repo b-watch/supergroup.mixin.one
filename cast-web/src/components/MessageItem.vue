@@ -1,7 +1,6 @@
 <template>
   <v-container class="px-0">
-    <v-layout
-    >
+    <v-layout>
       <v-avatar>
         <img
           :src="message.speaker_avatar"
@@ -9,9 +8,11 @@
         >
       </v-avatar>
       <v-flex class="bubble ml-4 py-2 px-2">
-        <div class="caret"></div>
+        <div class="caret" />
         <template v-if="message.category === 'PLAIN_TEXT' ">
-          <div class="px-1">{{message.text}}</div>
+          <div class="px-1">
+            {{ message.text }}
+          </div>
         </template>
         <template v-else-if="message.category === 'PLAIN_IMAGE' ">
           <v-img
@@ -20,16 +21,28 @@
             aspect-ratio="1"
             max-width="500"
             max-height="200"
-          ></v-img>
+          />
         </template>
         <template v-else-if="message.category === 'PLAIN_VIDEO' ">
-          <video class="video" controls>
-            <source :src="message.attachment.view_url" :type="message.attachment.mime_type" />
+          <video
+            class="video"
+            controls
+          >
+            <source
+              :src="message.attachment.view_url"
+              :type="message.attachment.mime_type"
+            >
           </video>
         </template>
         <template v-else-if="message.category === 'PLAIN_AUDIO' ">
-          <audio class="audio" controls>
-            <source :src="message.attachment.view_url" :type="message.attachment.mime_type" />
+          <audio
+            class="audio"
+            controls
+          >
+            <source
+              :src="message.attachment.view_url"
+              :type="message.attachment.mime_type"
+            >
           </audio>
         </template>
       </v-flex>
