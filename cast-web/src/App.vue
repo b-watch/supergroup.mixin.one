@@ -4,12 +4,14 @@
     <v-content>
       <chat-area />
     </v-content>
+    <system-bar />
   </v-app>
 </template>
 
 <script>
 import ChatArea from './components/ChatArea';
 import Navbar from './components/Navbar'
+import SystemBar from './components/SystemBar'
 import { mapActions } from 'vuex'
 
 export default {
@@ -17,6 +19,7 @@ export default {
 
   components: {
     ChatArea,
+    SystemBar,
     Navbar
   },
 
