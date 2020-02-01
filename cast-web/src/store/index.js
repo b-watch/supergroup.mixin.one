@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
+import createPersistedState from "vuex-persistedstate"
 import message from './modules/message'
 import group from './modules/group'
 import Socket from '@/utils/socket'
@@ -15,5 +16,10 @@ export default new Vuex.Store({
     message,
     group
   },
-  plugins: [createSocketPulgin(socket)]
+  plugins: [
+    createSocketPulgin(socket), 
+    createPersistedState({
+      paths: ['group', 'message.messages']
+    })
+  ]
 })

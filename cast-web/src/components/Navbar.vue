@@ -65,7 +65,6 @@ export default {
       isPanelExpand: false
     };
   },
-
   computed: {
     ...mapState('group', {
       config: state => state.config,
@@ -81,7 +80,14 @@ export default {
       return this.information.announcement
     }
   },
-
+  watch: {
+    groupName() {
+      document.title = this.groupName
+    }
+  },
+  mounted() {
+    document.title = this.groupName
+  },
   methods: {
     togglePanel () {
       this.isPanelExpand = !this.isPanelExpand

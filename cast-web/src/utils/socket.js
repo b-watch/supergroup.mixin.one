@@ -1,5 +1,5 @@
 function execute (cb, ...args) {
-  cb && cb(args)
+  cb && cb(...args)
 }
 
 export default class Socket { 
@@ -32,11 +32,11 @@ export default class Socket {
   }
 
   _onopen () {
-    execute(this.callbacks.onconnected)
+    execute(this.callbacks.onconnected);
   }
 
   _onmessage (evt) {
-    const msg = JSON.parse(evt.data);
+    const msg = JSON.parse(evt.data)
     execute(this.callbacks.onmessage, msg)
   }
 

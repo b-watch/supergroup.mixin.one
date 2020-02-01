@@ -2,7 +2,7 @@
   <v-app class="app">
     <navbar />
     <v-content>
-      <ChatArea :messages="messages" />
+      <chat-area />
     </v-content>
   </v-app>
 </template>

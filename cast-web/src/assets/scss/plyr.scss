@@ -1,0 +1,32 @@
+.plyr__control {
+  display: flex;
+  align-items: center;
+}
+
+.plyr--audio .plyr__controls {
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.plyr--audio .plyr__control.plyr__tab-focus, 
+.plyr--audio .plyr__control:hover, 
+.plyr--audio .plyr__control[aria-expanded=true] {
+  background: transparent !important;
+  color: #00b3ff !important;
+  box-shadow: none !important;
+}
+
+.plyr__control .plyr-mdi-icon {
+  font-size: 22px;
+  line-height: 20px;
+}
+
+.plyr--video .plyr__video-wrapper,
+.plyr--audio {
+  background: transparent;
+}
+
+.plyr {
+  border-radius: 3px;
+  overflow: hidden;
+}

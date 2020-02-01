@@ -6,7 +6,7 @@ export default function (socket) {
   return function (store) {
     const onmessage = function (msg) {
       if (SUP_MESSAGE_CAT.includes(msg.category)) {
-        store.commit('message/ADD_MESSAGE')
+        store.commit('message/ADD_MESSAGE', msg)
       }
     }
     const onconnect = function () {
