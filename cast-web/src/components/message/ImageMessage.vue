@@ -1,15 +1,18 @@
 <template>
   <v-img
+    :id="'message' + message.id"
     :lazy-src="'data:image/jpeg;base64,' + message.attachment.thumbnail"
     :src="message.attachment.view_url"
-    aspect-ratio="1"
-    max-width="500"
-    max-height="200"
+    contain
     min-width="200"
+    max-height="100%"
     class="image"
+    @click="handleViewImage"
   />
 </template>
 <script>
+import Viewer from "viewerjs";
+
 export default {
   name: "ImageMessage",
   props: {
@@ -21,6 +24,10 @@ export default {
   data () {
     return {
     };
+  },
+  methods: {
+    handleViewImage() {
+    }
   }
 }
 </script>

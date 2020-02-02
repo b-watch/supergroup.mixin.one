@@ -1,11 +1,12 @@
 <template>
   <v-container>
     <template v-if="messages.length !== 0">
-      <MessageItem
+      <message-bubble
         v-for="(msg, index) in messages"
         :key="msg.id"
         :message="msg"
         :prev="getPrev(index, messages)"
+        @click.native="handleClickMessage(msg)"
       />
     </template>
     <template v-else>
@@ -16,17 +17,20 @@
         No messages
       </p>
     </template>
+    <message-viewer ref="viewer" />
   </v-container>
 </template>
 
 <script>
-import MessageItem from './message/MessageItem';
 import { mapState } from 'vuex'
+import MessageViewer from './message/MessageViewer'
+import MessageBubble from './message/MessageBubble'
 
 export default {
   name: 'ChatArea',
   components: {
-    MessageItem,
+    MessageBubble,
+    MessageViewer
   },
   computed: {
     ...mapState('message', {
@@ -36,6 +40,12 @@ export default {
   methods: {
     getPrev(index, messages) {
       return index === 0 ? null : messages[index-1]
+    },
+    handleClickMessage(message) {
+      const viewer = this.$refs.viewer
+      if (message.category === 'PLAIN_IMAGE') {
+        viewer.show(message)
+      }
     }
   }
 };

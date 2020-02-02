@@ -2,6 +2,7 @@
   <vue-plyr
     ref="plyr"
     :options="options"
+    class="video"
   >
     <video>
       <source
@@ -45,4 +46,7 @@ export default {
 }
 </script>
 <style lang="scss" scoped>
+.video {
+  max-width: 220px;
+}
 </style>

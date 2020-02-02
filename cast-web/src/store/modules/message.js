@@ -27,9 +27,6 @@ const mutations = {
   },
   CONNECTED(state) {
     state.state = SOCKET_STATE.CONNECTED
-    setTimeout(() => {
-      state.state = SOCKET_STATE.DISCONNECT
-    }, 10000)
   },
   CONNECTING(state) {
     state.state = SOCKET_STATE.CONNECTING

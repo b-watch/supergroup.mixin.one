@@ -6,6 +6,5 @@ Vue.use(VuePlyr, {
     fullscreen: { enabled: false },
     loadSprite: false,
     resetOnEnd: true
-  },
-  emit: ['ended']
+  }
 })

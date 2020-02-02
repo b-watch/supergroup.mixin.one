@@ -35,6 +35,7 @@
           <v-btn
             outlined
             block
+            @click="handleJoin"
           >
             Join Group
           </v-btn>
@@ -89,9 +90,12 @@ export default {
     document.title = this.groupName
   },
   methods: {
-    togglePanel () {
+    togglePanel() {
       this.isPanelExpand = !this.isPanelExpand
     },
+    handleJoin() {
+      // window.location.href = 'https://mixin.one/codes/'
+    }
   }
 }
 </script>
