@@ -8,30 +8,44 @@
       :color="stateColor"
       class="bottom-bar"
     >
-      <v-icon
-        v-if="stateIcon"
-        @click="show = false"
-      >
-        {{ stateIcon }}
-      </v-icon>
-      <v-progress-circular
-        v-show="connecting"
-        indeterminate
-        size="16"
-        width="1"
-        class="mr-2"
-        color="rgba(255, 255, 255, 0.7)"
-      />
-      <span>{{ stateText }}</span>
-      <v-spacer />
-      <v-btn
-        v-if="disconnected"
-        text
-        small
-        @click="handleReconnect"
-      >
-        重新连接
-      </v-btn>
+      <template v-if="hasNewMessage">
+        <v-icon>mdi-message</v-icon>
+        <span>有新信息</span>
+        <v-spacer />
+        <v-btn
+          text
+          small
+          @click="handleCheckMsg"
+        >
+          查看
+        </v-btn>
+      </template>
+      <template v-else>
+        <v-icon
+          v-if="stateIcon"
+          @click="show = false"
+        >
+          {{ stateIcon }}
+        </v-icon>
+        <v-progress-circular
+          v-show="connecting"
+          indeterminate
+          size="16"
+          width="1"
+          class="mr-2"
+          color="rgba(255, 255, 255, 0.7)"
+        />
+        <span>{{ stateText }}</span>
+        <v-spacer />
+        <v-btn
+          v-if="disconnected"
+          text
+          small
+          @click="handleReconnect"
+        >
+          重新连接
+        </v-btn>
+      </template>
     </v-system-bar>
   </v-scroll-y-transition>
 </template>
@@ -65,7 +79,8 @@ export default {
   },
   computed: {
     ...mapState('message', {
-      state: state => state.state
+      state: state => state.state,
+      hasNewMessage: state => state.hasNewMessage
     }),
     connecting() {
       return this.state === SOCKET_STATE.CONNECTING
@@ -81,6 +96,18 @@ export default {
     },
     stateIcon() {
       return STATE_META[this.state].icon
+    },
+    newMsgText() {
+      return this.hasNewMessage ? '有新信息' : ''
+    },
+    newMsgIcon() {
+      return this.hasNewMessage ? 'mdi-message' : ''
+    },
+    text() {
+      return newMsgText || this.stateText
+    },
+    icon() {
+      return newMsgIcon || this.stateIcon
     }
   },
   watch: {
@@ -92,11 +119,17 @@ export default {
       } else if (val === SOCKET_STATE.DISCONNECT) {
         this.show = true
       }
+    },
+    hasNewMessage(val) {
+      this.show = val
     }
   },
   methods: {
     handleReconnect() {
       this.$socket.reconnect()
+    },
+    handleCheckMsg() {
+      this.$root.$emit('CHECK_NEW_MESSAGE')
     }
   }
 }

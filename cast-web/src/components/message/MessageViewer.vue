@@ -10,7 +10,7 @@
       class="viewer-card pa-5"
     >
       <message-item
-        v-touch="{ swipe: handleTab }"
+        v-touch="{ swipe: handleSwipe }"
         :message="message"
       />
     </v-card>
@@ -35,7 +35,7 @@ export default {
       this.message = message
       this.dialog = true
     },
-    handleTab() {
+    handleSwipe() {
       this.exit()
     },
     exit() {

@@ -5,7 +5,8 @@ import getNameColor from '@/utils/getNameColor'
 const state = {
   messages: [],
   state: SOCKET_STATE.DISCONNECT,
-  nameColorMap: {}
+  nameColorMap: {},
+  hasNewMessage: false
 }
 
 const getters = {
@@ -19,6 +20,9 @@ const getters = {
 }
 
 const mutations = {
+  SET_HAS_NEW_MESSAGE(state, value) {
+    state.hasNewMessage = value
+  },
   ADD_MESSAGE(state, message) {
     state.messages = [...state.messages, message]
   },
