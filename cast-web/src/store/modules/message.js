@@ -2,6 +2,8 @@ import Vue from 'vue'
 import { SOCKET_STATE } from '@/constants'
 import getNameColor from '@/utils/getNameColor'
 
+const MAX_MESSAGE_AMOUNT = 200
+
 const state = {
   messages: [],
   state: SOCKET_STATE.DISCONNECT,
@@ -25,6 +27,9 @@ const mutations = {
   },
   ADD_MESSAGE(state, message) {
     state.messages = [...state.messages, message]
+    if (state.messages.length > MAX_MESSAGE_AMOUNT) {
+      state.messages.shift()
+    }
   },
   CONNECT_FAILED(state) {
     state.state = SOCKET_STATE.DISCONNECT

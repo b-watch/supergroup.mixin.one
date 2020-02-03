@@ -1,6 +1,9 @@
 <template>
   <div class="audio">
-    <div class="processing" />
+    <div
+      class="audio-processing"
+      :style="[{ width: `${precent}%` }]"
+    />
     <vue-plyr
       ref="plyr"
       :options="options"
@@ -16,6 +19,7 @@
 </template>
 <script>
 import Plyr from "plyr";
+import plyrMixin from '@/mixins/plyr'
 
 const controls = `
 <div class="plyr__controls">
@@ -31,6 +35,7 @@ const controls = `
 
 export default {
   name: "AudioMessage",
+  mixins: [plyrMixin],
   props: {
     message: {
       type: Object,
@@ -39,27 +44,41 @@ export default {
   },
   data() {
     return {
+      currentTime: 0,
+      duration: 0,
       options: {
         controls
       }
     }
   },
   computed: {
-    player() {
-      return this.$refs.plyr.player
-    }
+    precent() {
+      if (!this.duration) return 0;
+      return ((this.currentTime / this.duration) * 100).toFixed(2);
+    },
   },
   mounted() {
-    this.player.on("play", this.onPlay);
-    this.player.on("ended", this.onEnd);
     this.player.on("timeupdate", this.onTimeUpdate);
   },
   methods: {
-    onPlay() {},
-    onEnd() {},
-    onTimeUpdate() {}
+    onTimeUpdate() {
+      this.currentTime = Number(this.player.currentTime).toFixed();
+      this.duration = Number(this.player.duration).toFixed();
+    }
   }
 }
 </script>
 <style lang="scss" scoped>
+.audio {
+  // position: relative;
+}
+
+.audio-processing {
+  position: absolute;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background: #9bcec836;
+  transition: width 0.5s ease;
+}
 </style>

@@ -3,7 +3,8 @@
     <template v-if="messages.length !== 0">
       <message-bubble
         v-for="(msg, index) in messages"
-        :key="index"
+        :key="msg.id"
+        :idx="index"
         :message="msg"
         :prev="getPrev(index, messages)"
         @click.native="handleClickMessage(msg)"

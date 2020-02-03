@@ -2,6 +2,7 @@
   <component
     :is="messageComponent"
     :message="message"
+    v-bind="$attrs"
   />
 </template>
 

@@ -22,7 +22,10 @@
       >
         {{ message.speaker_name }}
       </div>
-      <message-item :message="message" />
+      <message-item
+        :message="message"
+        v-bind="$attrs"
+      />
       <message-time :message="message" />
       <div
         v-show="!isSameSpeaker"
@@ -87,6 +90,7 @@ export default {
     box-shadow: 0 0 10px rgba(0,0,0,0.04);
     border-radius: 7px;
     font-size: 14px;
+    overflow: hidden;
 
     .speaker {
       margin: 4px;

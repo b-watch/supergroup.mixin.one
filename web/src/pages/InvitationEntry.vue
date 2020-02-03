@@ -144,7 +144,7 @@ export default {
     padding: 1rem;
     margin-bottom: 1.5rem;
 
-    /deep/ .emphasis {
+    ::v-deep .emphasis {
       color: #b32424;
       font-weight: bold;
     }

@@ -13,8 +13,11 @@
   </vue-plyr>
 </template>
 <script>
+import plyrMixin from '@/mixins/plyr'
+
 export default {
   name: "VideoMessage",
+  mixins: [plyrMixin],
   props: {
     message: {
       type: Object,
@@ -27,21 +30,6 @@ export default {
         controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'fullscreen']
       }
     };
-  },
-  computed: {
-    player() {
-      return this.$refs.plyr.player
-    }
-  },
-  mounted() {
-    this.player.on("play", this.onPlay);
-    this.player.on("ended", this.onEnd);
-    this.player.on("timeupdate", this.onTimeUpdate);
-  },
-  methods: {
-    onPlay() {},
-    onEnd() {},
-    onTimeUpdate() {}
   }
 }
 </script>
