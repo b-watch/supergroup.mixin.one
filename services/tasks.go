@@ -17,8 +17,8 @@ import (
 	"github.com/MixinNetwork/supergroup.mixin.one/interceptors"
 	"github.com/MixinNetwork/supergroup.mixin.one/models"
 	"github.com/MixinNetwork/supergroup.mixin.one/session"
+	"github.com/fox-one/mixin-sdk"
 	"github.com/gofrs/uuid"
-	"mvdan.cc/xurls"
 )
 
 type Attachment struct {
@@ -27,7 +27,7 @@ type Attachment struct {
 
 func loopPendingMessage(ctx context.Context) {
 	limit := 5
-	re := xurls.Relaxed()
+	// re := xurls.Relaxed()
 	for {
 		messages, err := models.PendingMessages(ctx, int64(limit))
 		if err != nil {
@@ -36,18 +36,29 @@ func loopPendingMessage(ctx context.Context) {
 			continue
 		}
 		for _, message := range messages {
-			if !config.AppConfig.System.Operators[message.UserId] {
-				if config.AppConfig.System.DetectLinkEnabled && message.Category == "PLAIN_TEXT" {
+			if !models.IsAdmin(ctx, message.UserId) && !models.IsLecturer(ctx, message.UserId) {
+				if message.Category == "PLAIN_TEXT" {
 					data, err := base64.StdEncoding.DecodeString(message.Data)
 					if err != nil {
-						session.Logger(ctx).Errorf("DetectLink ERROR: %+v", err)
+						session.Logger(ctx).Errorf("Decode message ERROR: %+v", err)
 					}
-					if re.Match(data) {
-						if err := message.Leapfrog(ctx, "Message contains link"); err != nil {
+
+					if interceptors.TextInterceptor.Enabled() && interceptors.TextInterceptor.IsSensitive(string(data)) {
+						if err := message.Leapfrog(ctx, "🙊Sensitive Words!🙊"); err != nil {
 							time.Sleep(500 * time.Millisecond)
 							session.Logger(ctx).Errorf("PendingMessages ERROR: %+v", err)
 						}
 						continue
+					}
+
+					if config.AppConfig.System.DetectLinkEnabled {
+						if interceptors.LinkInterceptor.Enabled() && interceptors.LinkInterceptor.HasExternalLinks(string(data)) {
+							if err := message.Leapfrog(ctx, "🔗External Links!🔗"); err != nil {
+								time.Sleep(500 * time.Millisecond)
+								session.Logger(ctx).Errorf("PendingMessages ERROR: %+v", err)
+							}
+							continue
+						}
 					}
 				}
 				if config.AppConfig.System.DetectQRCodeEnabled && message.Category == "PLAIN_IMAGE" {
@@ -73,17 +84,12 @@ func loopPendingMessage(ctx context.Context) {
 }
 
 func sendTextMessage(ctx context.Context, mc *MessageContext, conversationId, label string) error {
-	params := map[string]interface{}{
-		"conversation_id": conversationId,
-		"message_id":      bot.UuidNewV4().String(),
-		"category":        "PLAIN_TEXT",
-		"data":            base64.StdEncoding.EncodeToString([]byte(label)),
-	}
-	err := writeMessageAndWait(ctx, mc, "CREATE_MESSAGE", params)
-	if err != nil {
-		return session.BlazeServerError(ctx, err)
-	}
-	return nil
+	return mc.user.SendMessage(ctx, &mixin.MessageRequest{
+		ConversationID: conversationId,
+		MessageID:      bot.UuidNewV4().String(),
+		Category:       "PLAIN_TEXT",
+		Data:           base64.StdEncoding.EncodeToString([]byte(label)),
+	})
 }
 
 func sendAppButton(ctx context.Context, mc *MessageContext, label, conversationId, action string) error {
@@ -95,17 +101,13 @@ func sendAppButton(ctx context.Context, mc *MessageContext, label, conversationI
 	if err != nil {
 		return session.BlazeServerError(ctx, err)
 	}
-	params := map[string]interface{}{
-		"conversation_id": conversationId,
-		"message_id":      bot.UuidNewV4().String(),
-		"category":        "APP_BUTTON_GROUP",
-		"data":            base64.StdEncoding.EncodeToString(btns),
-	}
-	err = writeMessageAndWait(ctx, mc, "CREATE_MESSAGE", params)
-	if err != nil {
-		return session.BlazeServerError(ctx, err)
-	}
-	return nil
+
+	return mc.user.SendMessage(ctx, &mixin.MessageRequest{
+		ConversationID: conversationId,
+		MessageID:      bot.UuidNewV4().String(),
+		Category:       "APP_BUTTON_GROUP",
+		Data:           base64.StdEncoding.EncodeToString(btns),
+	})
 }
 
 func validateMessage(ctx context.Context, message *models.Message) (bool, string) {

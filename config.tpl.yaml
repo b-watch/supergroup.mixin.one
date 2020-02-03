@@ -2,7 +2,11 @@ service:
   name: "Mixin 中文群"
   enviroment: "production or development"
   port: 7001
+  websocket_port: 7023
   host: "https://you-domain-name"
+  broadcast_host: "https://you-domain-name"
+  api_host: "https://you-domain-name"
+  websocket_host: "ws://you-domain-name"
 database:
   username: "postgres"
   password: ""
@@ -10,27 +14,44 @@ database:
   port: 5432
   database_name: "postgres"
 system:
+  router_mode: "hash" # hash or history
   message_shard_modifier: SHARD
   message_shard_size: 4
   price_asset_enable: true
+  read_assets_enable: false
   audio_message_enable: false
   image_message_enable: true
   video_message_enable: false
   contact_message_enable: true
   limit_message_frequency: false
+  # Rewards and luckycoin settings
+  rewards_enable: true
+  rewards_min_amount_base: "0.01" # usd
+  rewards_asset_list:
+    # leave empty to support all assets
+    - "c94ac88f-4671-3976-b60a-09064f1811e8" # XIN
+    - "f5ef6b5d-cc5a-3d90-b2c0-a2fd386e7a3c" # BOX
+  redpacket_min_amount_base: "0.1" # usd
+  redpacket_asset_list:
+    # leave empty to support all assets
+    - "c94ac88f-4671-3976-b60a-09064f1811e8" # XIN
+    - "f5ef6b5d-cc5a-3d90-b2c0-a2fd386e7a3c" # BOX
+  redpacket_normal_distribution_sigma_mean_ratio: 0.5
+  redpacket_max_count: 1000
+  # Interceptor settings
   detect_image: false
   detect_link: false
-  prohibited_message: true
-  # new payment settings
+  detect_link_whitelist:
+    - mixin.one
+  sensitive_words: FUCK|FFFFUCK
+  # Payment settings
   auto_estimate: false
   auto_estimate_currency: "usd" # cny or usd. only useful when auto_estimate == true
   auto_estimate_base: "9.9"
   accept_wechat_payment: false
   wechat_payment_amount: "0.01"
-  operator_list:
-    - "e9a5b807-fa8b-455a-8dfa-b189d28310ff"
-    - "fcc87491-4fa0-4c2f-b387-262b63cbc112"
   pay_to_join: true
+  invite_to_join: true
   accept_asset_list:
     - symbol: "XIN"
       asset_id: "c94ac88f-4671-3976-b60a-09064f1811e8" # XIN
@@ -48,20 +69,25 @@ appearance:
           label_zh: "服务名称"
           url: https://..
 message_template:
-  welcome_message        : "欢迎加入 Mixin 中文群"
-  group_redpacket        : "中文群红包"
+  welcome_message: "欢迎加入 Mixin 中文群"
+  group_redpacket: "中文群红包"
   group_redpacket_short_desc: "来自无名氏的红包"
-  group_redpacket_desc    : "来自 %s 的红包"
-  group_opened_redpacket  : "%s 打开了你的红包"
-  message_prohibit        : "群主开启了禁言，暂时不能发言了。"
-  message_allow           : "群主关闭了禁言，你可以发言了。"
-  message_tips_guest     : "您需要先点击机器图标授权。"
-  message_tips_join      : "%s 加入了群组"
-  message_tips_help      : "您需要先支付 0.001 XIN, 加入群组才能发消息。"
-  message_tips_help_btn   : "点击加入群组"
+  group_redpacket_desc: "来自 %s 的红包"
+  group_opened_redpacket: "%s 打开了你的红包"
+  message_group_mode_free: "管理员切换了自由发言模式，你可以说话了。"
+  message_group_mode_mute: "管理员切换了禁言模式，暂时不能说话了。但你可以发红包或者打赏。"
+  message_group_mode_lecture: "管理员切换了上课模式，暂时不能说话了。"
+  message_announcement: "公告更新：%s"
+  message_tips_guest: "您需要先点击机器图标授权。"
+  message_tips_join: "%s 加入了群组"
+  message_tips_join_user: "你已经加入了群组"
+  message_tips_join_user_prohibited: "你已经加入了群组，但是当前群组处于禁言状态，所以你不能发言。"
+  message_tips_help: "您需要先支付 0.001 XIN, 加入群组才能发消息。"
+  message_tips_help_btn: "点击加入群组"
   message_tips_unsubscribe: "您已经取消了本群的消息订阅, 无法发送或者接收消息。"
-  message_tips_too_many   : "发送太频繁"
-  message_commands_info   : "/INFO"
+  message_tips_too_many: "发送太频繁"
+  message_tips_rewards: "%s给%s打赏了%s %s"
+  message_commands_info: "/INFO"
   message_commands_info_resp: "当前订阅人数: %d"
 wechat:
   # 微信配置
@@ -74,11 +100,11 @@ wechat:
   mch_key: ""
   notify_url:
 mixin:
-  client_id        : "5fcd897e-e7b2-40d5-93cd-487e2d955556"
-  client_secret    : "cbb236e11e12331a6c8912cab6f7161661e41b8e1b8358ba08c0e6521a68302b"
-  session_asset_pin : "133123"
-  pin_token        : "fKfozH23iFLAhAeSsFeRkkhwGJo4RiJhg4mSX3rEPxpqCf01lNsESGGQ75oQZG+diTSyqd3dyI7vMrIdhhyyecbz61cxDoYAiLXpYW4AH+r94CfT73159l1z/15KCiXEfFTXD4akO0QK0J+QWlZVrz0YmVUSewZj9imv/+NdurQ="
-  session_id       : "8f42db23-d8df-4063-aeda-c322279da2c2"
+  client_id: "5fcd897e-e7b2-40d5-93cd-487e2d955556"
+  client_secret: "cbb236e11e12331a6c8912cab6f7161661e41b8e1b8358ba08c0e6521a68302b"
+  session_asset_pin: "133123"
+  pin_token: "fKfozH23iFLAhAeSsFeRkkhwGJo4RiJhg4mSX3rEPxpqCf01lNsESGGQ75oQZG+diTSyqd3dyI7vMrIdhhyyecbz61cxDoYAiLXpYW4AH+r94CfT73159l1z/15KCiXEfFTXD4akO0QK0J+QWlZVrz0YmVUSewZj9imv/+NdurQ="
+  session_id: "8f42db23-d8df-4063-aeda-c322279da2c2"
   session_key: |
     -----BEGIN RSA PRIVATE KEY-----
     MIICXQIBAAKBgQCS2vbuIWPSEygHzkCDORmq9n4kN1lv5Qur9UD8ske3Yx0ZK+Bu
@@ -95,3 +121,8 @@ mixin:
     MdepjmjG/PyRnoq/qgECQQCmoIh+xR6vJZ8VRWgjSzmJUPrZFz8uWk6BoePFGrGV
     FIHlQELVfFxLB2Xo9zDXvDVRK5N5O1bCNMfXUuQsmstm
     -----END RSA PRIVATE KEY-----
+
+plugins:
+  - shared_library: plugins/hello.so
+    config:
+      hello: world

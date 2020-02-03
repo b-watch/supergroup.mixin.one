@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS users (
   state             VARCHAR(128) NOT NULL,
   active_at         TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   subscribed_at     TIMESTAMP WITH TIME ZONE NOT NULL,
-  pay_method        VARCHAR(512) NOT NULL DEFAULT ''
+  pay_method        VARCHAR(512) NOT NULL DEFAULT '',
+  created_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS users_identityx ON users(identity_number);
@@ -53,11 +54,12 @@ CREATE TABLE IF NOT EXISTS packets (
   user_id           VARCHAR(36) NOT NULL CHECK (user_id ~* '^[0-9a-f-]{36,36}$'),
   asset_id          VARCHAR(36) NOT NULL CHECK (asset_id ~* '^[0-9a-f-]{36,36}$'),
   amount            VARCHAR(128) NOT NULL,
-  greeting          VARCHAR(36) NOT NULL,
+  greeting          VARCHAR(512) NOT NULL,
   total_count       BIGINT NOT NULL,
   remaining_count   BIGINT NOT NULL,
   remaining_amount  VARCHAR(128) NOT NULL,
   state             VARCHAR(36) NOT NULL,
+  pre_distribution text,
   created_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
@@ -92,10 +94,15 @@ CREATE TABLE IF NOT EXISTS blacklists (
 
 CREATE TABLE IF NOT EXISTS properties (
   name               VARCHAR(512) PRIMARY KEY,
-  value              VARCHAR(1024) NOT NULL,
+  value              VARCHAR(2048) NOT NULL,
+  complex_value      JSONB,
   created_at         TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
+INSERT INTO properties (name, value) VALUES ('announcement-message-property', 'Tap here to edit announcement') ON CONFLICT (name) DO NOTHING;
+INSERT INTO properties (name, value) VALUES ('group-mode-property', 'free') ON CONFLICT (name) DO NOTHING;
+INSERT INTO properties (name, value) VALUES ('broadcast-property', 'off') ON CONFLICT (name) DO NOTHING;
+INSERT INTO properties (name, value, complex_value) VALUES ('roles-property', '', '{"admins": null, "lecturers": null}') ON CONFLICT (name) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS orders (
   order_id         VARCHAR(36) PRIMARY KEY CHECK (order_id ~* '^[0-9a-f-]{36,36}$'),
@@ -103,8 +110,9 @@ CREATE TABLE IF NOT EXISTS orders (
   user_id          VARCHAR(36) NOT NULL CHECK (user_id ~* '^[0-9a-f-]{36,36}$'),
   prepay_id        VARCHAR(36) DEFAULT '',
   state            VARCHAR(32) NOT NULL,
+	asset_id         VARCHAR(36) NOT NULL,
   amount           VARCHAR(128) NOT NULL,
-  channel          VARCHAR(32) NOT NULL,
+  pay_method       VARCHAR(32) NOT NULL DEFAULT '',
   transaction_id   VARCHAR(32) DEFAULT '',
   created_at       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   paid_at          TIMESTAMP WITH TIME ZONE
@@ -125,3 +133,42 @@ CREATE TABLE IF NOT EXISTS coupons (
 CREATE UNIQUE INDEX IF NOT EXISTS coupons_codex ON coupons(code);
 CREATE INDEX IF NOT EXISTS coupons_occupiedx ON coupons(occupied_by);
 CREATE INDEX IF NOT EXISTS coupons_userx ON coupons(user_id);
+
+CREATE TABLE IF NOT EXISTS invitations (
+	code         			VARCHAR(36) PRIMARY KEY,
+	inviter_id        VARCHAR(36) NOT NULL,
+	invitee_id	      VARCHAR(36),
+	created_at       	TIMESTAMP WITH TIME ZONE NOT NULL,
+	used_at        		TIMESTAMP WITH TIME ZONE
+);
+
+CREATE INDEX IF NOT EXISTS invitations_inviterx ON invitations(inviter_id);
+
+CREATE TABLE IF NOT EXISTS currency_rates (
+    symbol            VARCHAR(36) PRIMARY KEY,
+    price_usd         VARCHAR(32) NOT NULL,
+    price_cny         VARCHAR(32) NOT NULL,
+    created_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS currency_rates_pkey ON currency_rates(symbol);
+
+CREATE TABLE IF NOT EXISTS rewards_recipients (
+	user_id           VARCHAR(36) PRIMARY KEY CHECK (user_id ~* '^[0-9a-f-]{36,36}$'),
+	full_name         VARCHAR(512) NOT NULL DEFAULT '',
+	avatar_url        VARCHAR(1024) NOT NULL DEFAULT '',
+	status			  VARCHAR(16) NOT NULL DEFAULT '',
+	created_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS rewards_recipients_userx ON rewards_recipients(user_id);
+
+CREATE TABLE IF NOT EXISTS tips (
+	sender_id VARCHAR(36) NOT NULL,
+  recipient_id VARCHAR(36) NOT NULL,
+	detail JSONB NOT NULL,
+	trace_id VARCHAR(36) NOT NULL,
+	time TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+	PRIMARY KEY(time, sender_id, trace_id)
+);

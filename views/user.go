@@ -25,7 +25,7 @@ type AccountView struct {
 	State               string `json:"state"`
 }
 
-func buildUserView(user *models.User) UserView {
+func buildUserView(r *http.Request, user *models.User) UserView {
 	return UserView{
 		Type:           "user",
 		UserId:         user.UserId,
@@ -33,25 +33,41 @@ func buildUserView(user *models.User) UserView {
 		FullName:       user.GetFullName(),
 		AvatarURL:      user.AvatarURL,
 		SubscribedAt:   user.SubscribedAt.Format(time.RFC3339Nano),
-		Role:           user.GetRole(),
+		Role:           user.GetRole(r.Context()),
 	}
 }
 
-func RenderUsersView(w http.ResponseWriter, r *http.Request, users []*models.User) {
-	userViews := make([]UserView, len(users))
-	for i, user := range users {
-		userViews[i] = buildUserView(user)
+func RenderUsersView(w http.ResponseWriter, r *http.Request, users []*models.User, admins []*models.User, lecturers []*models.User) {
+	var payload struct {
+		Admins    []UserView `json:"admins"`
+		Lecturers []UserView `json:"lecturers"`
+		Users     []UserView `json:"users"`
 	}
-	RenderDataResponse(w, r, userViews)
+	userViews := make([]UserView, len(users))
+	adminViews := make([]UserView, len(admins))
+	lectureViews := make([]UserView, len(lecturers))
+	for i, user := range users {
+		userViews[i] = buildUserView(r, user)
+	}
+	for i, admin := range admins {
+		adminViews[i] = buildUserView(r, admin)
+	}
+	for i, lecturer := range lecturers {
+		lectureViews[i] = buildUserView(r, lecturer)
+	}
+	payload.Users = userViews
+	payload.Admins = adminViews
+	payload.Lecturers = lectureViews
+	RenderDataResponse(w, r, payload)
 }
 
 func RenderUserView(w http.ResponseWriter, r *http.Request, user *models.User) {
-	RenderDataResponse(w, r, buildUserView(user))
+	RenderDataResponse(w, r, buildUserView(r, user))
 }
 
 func RenderAccount(w http.ResponseWriter, r *http.Request, user *models.User) {
 	userView := AccountView{
-		UserView:            buildUserView(user),
+		UserView:            buildUserView(r, user),
 		AuthenticationToken: user.AuthenticationToken,
 		TraceId:             user.TraceId,
 		State:               user.State,

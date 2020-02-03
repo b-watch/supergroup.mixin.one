@@ -68,7 +68,7 @@ type DistributedMessage struct {
 	CreatedAt      time.Time
 }
 
-func createDistributeMessage(ctx context.Context, messageId, parentId, quoteMessageId, userId, recipientId, category, data string) (*DistributedMessage, error) {
+func CreateDistributeMessage(ctx context.Context, messageId, parentId, quoteMessageId, userId, recipientId, category, data string) (*DistributedMessage, error) {
 	dm := &DistributedMessage{
 		MessageId:      messageId,
 		ConversationId: UniqueConversationId(config.AppConfig.Mixin.ClientId, recipientId),
@@ -152,7 +152,7 @@ func (message *Message) Distribute(ctx context.Context) error {
 					}
 					message.Data = base64.StdEncoding.EncodeToString(data)
 				}
-				dm, err := createDistributeMessage(ctx, messageId, message.MessageId, quoteMessageId, message.UserId, user.UserId, message.Category, message.Data)
+				dm, err := CreateDistributeMessage(ctx, messageId, message.MessageId, quoteMessageId, message.UserId, user.UserId, message.Category, message.Data)
 				if err != nil {
 					session.TransactionError(ctx, err)
 				}
@@ -175,7 +175,7 @@ func (message *Message) Distribute(ctx context.Context) error {
 			}
 			v := values.String()
 			if v != "" {
-				query := fmt.Sprintf("INSERT INTO distributed_messages (%s) VALUES %s", strings.Join(distributedMessagesCols, ","), values.String())
+				query := fmt.Sprintf("INSERT INTO distributed_messages (%s) VALUES %s ON CONFLICT (message_id) DO NOTHING", strings.Join(distributedMessagesCols, ","), values.String())
 				_, err = tx.ExecContext(ctx, query)
 				return err
 			}
@@ -192,10 +192,8 @@ func (message *Message) Distribute(ctx context.Context) error {
 }
 
 func (message *Message) Leapfrog(ctx context.Context, reason string) error {
-	ids := make([]string, 0)
-	for key, _ := range config.AppConfig.System.Operators {
-		ids = append(ids, key)
-	}
+	roleSet, _ := ReadRolesProperty(ctx)
+	ids := roleSet.AdminIDs()
 	messageIds := make([]string, len(ids))
 	for i, id := range ids {
 		messageIds[i] = UniqueConversationId(id, message.MessageId)
@@ -214,7 +212,7 @@ func (message *Message) Leapfrog(ctx context.Context, reason string) error {
 		if set[messageId] {
 			continue
 		}
-		dm, err := createDistributeMessage(ctx, messageId, message.MessageId, "", message.UserId, id, message.Category, message.Data)
+		dm, err := CreateDistributeMessage(ctx, messageId, message.MessageId, "", message.UserId, id, message.Category, message.Data)
 		if err != nil {
 			session.TransactionError(ctx, err)
 		}
@@ -224,7 +222,7 @@ func (message *Message) Leapfrog(ctx context.Context, reason string) error {
 		i += 1
 		values.WriteString(distributedMessageValuesString(dm.MessageId, dm.ConversationId, dm.RecipientId, dm.UserId, dm.ParentId, dm.QuoteMessageId, dm.Shard, dm.Category, dm.Data, dm.Status))
 
-		why := fmt.Sprintf("MessageId: %s, Reason: %s", message.MessageId, reason)
+		why := fmt.Sprintf("%s\nID: %s", reason, message.MessageId)
 		data := base64.StdEncoding.EncodeToString([]byte(why))
 		values.WriteString(",")
 		values.WriteString(distributedMessageValuesString(bot.UuidNewV4().String(), dm.ConversationId, dm.RecipientId, dm.UserId, dm.ParentId, dm.QuoteMessageId, dm.Shard, "PLAIN_TEXT", data, dm.Status))
@@ -247,8 +245,11 @@ func (message *Message) Leapfrog(ctx context.Context, reason string) error {
 	return nil
 }
 
-func createSystemDistributedMessage(ctx context.Context, user *User, category, data string) error {
-	dm, err := createDistributeMessage(ctx, bot.UuidNewV4().String(), bot.UuidNewV4().String(), "", config.AppConfig.Mixin.ClientId, user.UserId, "PLAIN_TEXT", data)
+func CreateSystemDistributedMessage(ctx context.Context, user *User, category, data string) error {
+	if len(data) == 0 {
+		return nil
+	}
+	dm, err := CreateDistributeMessage(ctx, bot.UuidNewV4().String(), bot.UuidNewV4().String(), "", config.AppConfig.Mixin.ClientId, user.UserId, "PLAIN_TEXT", data)
 	if err != nil {
 		return session.TransactionError(ctx, err)
 	}

@@ -8,7 +8,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"math/rand"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -18,8 +20,10 @@ import (
 	number "github.com/MixinNetwork/go-number"
 	"github.com/MixinNetwork/supergroup.mixin.one/config"
 	"github.com/MixinNetwork/supergroup.mixin.one/durable"
+	"github.com/MixinNetwork/supergroup.mixin.one/plugin"
 	"github.com/MixinNetwork/supergroup.mixin.one/session"
 	"github.com/gofrs/uuid"
+	"github.com/lib/pq"
 )
 
 const (
@@ -37,21 +41,22 @@ CREATE TABLE IF NOT EXISTS packets (
 	user_id	          VARCHAR(36) NOT NULL CHECK (user_id ~* '^[0-9a-f-]{36,36}$'),
 	asset_id          VARCHAR(36) NOT NULL CHECK (asset_id ~* '^[0-9a-f-]{36,36}$'),
 	amount            VARCHAR(128) NOT NULL,
-	greeting          VARCHAR(36) NOT NULL,
+	greeting          VARCHAR(512) NOT NULL,
 	total_count       BIGINT NOT NULL,
 	remaining_count   BIGINT NOT NULL,
 	remaining_amount  VARCHAR(128) NOT NULL,
 	state             VARCHAR(36) NOT NULL,
-	created_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+	created_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+	pre_distribution    text[]
 );
 
 CREATE INDEX IF NOT EXISTS packets_state_createdx ON packets(state, created_at);
 `
 
-var packetsCols = []string{"packet_id", "user_id", "asset_id", "amount", "greeting", "total_count", "remaining_count", "remaining_amount", "state", "created_at"}
+var packetsCols = []string{"packet_id", "user_id", "asset_id", "amount", "greeting", "total_count", "remaining_count", "remaining_amount", "state", "created_at", "pre_distribution"}
 
 func (p *Packet) values() []interface{} {
-	return []interface{}{p.PacketId, p.UserId, p.AssetId, p.Amount, p.Greeting, p.TotalCount, p.RemainingCount, p.RemainingAmount, p.State, p.CreatedAt}
+	return []interface{}{p.PacketId, p.UserId, p.AssetId, p.Amount, p.Greeting, p.TotalCount, p.RemainingCount, p.RemainingAmount, p.State, p.CreatedAt, pq.Array(p.PreDistribution)}
 }
 
 type Packet struct {
@@ -65,6 +70,7 @@ type Packet struct {
 	RemainingAmount string
 	State           string
 	CreatedAt       time.Time
+	PreDistribution []string
 
 	User         *User
 	Asset        *Asset
@@ -77,14 +83,6 @@ func (current *User) Prepare(ctx context.Context) (int64, error) {
 }
 
 func (current *User) CreatePacket(ctx context.Context, assetId string, amount number.Decimal, totalCount int64, greeting string) (*Packet, error) {
-	if !current.isAdmin() {
-		b, err := ReadProhibitedProperty(ctx)
-		if err != nil {
-			return nil, err
-		} else if b {
-			return nil, session.ForbiddenError(ctx)
-		}
-	}
 	asset, err := current.ShowAsset(ctx, assetId)
 	if err != nil {
 		return nil, err
@@ -111,10 +109,14 @@ func (current *User) CreatePacket(ctx context.Context, assetId string, amount nu
 }
 
 func (current *User) createPacket(ctx context.Context, asset *Asset, amount number.Decimal, totalCount int64, greeting string) (*Packet, error) {
-	if amount.Cmp(number.FromString("0.0001")) < 0 {
+	// @TODO should compare the amount.price_usd with RedPacketMinAmountBase
+	// if amount.Cmp(number.FromString(config.AppConfig.System.RedPacketMinAmountBase)) < 0 {
+	// 	return nil, session.BadDataError(ctx)
+	// }
+	if utf8.RuneCountInString(greeting) > 512 {
 		return nil, session.BadDataError(ctx)
 	}
-	if utf8.RuneCountInString(greeting) > 36 {
+	if totalCount > config.AppConfig.System.RedPacketMaxCount {
 		return nil, session.BadDataError(ctx)
 	}
 	amount = amount.RoundFloor(8)
@@ -127,6 +129,10 @@ func (current *User) createPacket(ctx context.Context, asset *Asset, amount numb
 	}
 	if totalCount <= 0 || totalCount > int64(participantsCount) {
 		return nil, session.BadDataError(ctx)
+	}
+	distribution, err := packetPreDistribute(totalCount, amount)
+	if err != nil {
+		return nil, err
 	}
 	packet := &Packet{
 		PacketId:        bot.UuidNewV4().String(),
@@ -141,6 +147,7 @@ func (current *User) createPacket(ctx context.Context, asset *Asset, amount numb
 		CreatedAt:       time.Now(),
 		User:            current,
 		Asset:           asset,
+		PreDistribution: distribution,
 	}
 
 	params, positions := compileTableQuery(packetsCols)
@@ -152,7 +159,99 @@ func (current *User) createPacket(ctx context.Context, asset *Asset, amount numb
 	return packet, nil
 }
 
+func packetPreDistribute(totalCount int64, amount number.Decimal) ([]string, error) {
+	var packetMinAmount number.Decimal = number.FromString("0.000001")
+	var distribution []string
+	distribution = make([]string, totalCount)
+
+	pending := amount.Sub(packetMinAmount.Mul(number.NewDecimal(totalCount, 0)))
+	if pending.Cmp(number.Zero()) < 0 {
+		return distribution, fmt.Errorf("amount too low")
+	}
+
+	ratio, _ := strconv.ParseFloat(config.AppConfig.System.RedPacketNormDistSigmaMeanRatio, 64)
+
+	for i := int64(0); i < totalCount; i++ {
+		var allocatedAmount number.Decimal
+		allocatedAmount = packetMinAmount
+
+		mean := pending.Div(number.NewDecimal(totalCount-i, 0)).Float64()
+		sigma := mean * ratio
+		noseValue := generateGaussianNoise(mean, sigma)
+		if noseValue < 0 {
+			noseValue = 0
+		}
+		if noseValue > pending.Float64() {
+			noseValue = pending.Float64()
+		}
+
+		if nose := roundTillNotExhausted(number.FromFloat(noseValue)); pending.Cmp(nose) > 0 {
+			pending = pending.Sub(nose)
+			allocatedAmount = allocatedAmount.Add(nose)
+		}
+		distribution[i] = allocatedAmount.Persist()
+	}
+
+	if pending.Cmp(number.Zero()) > 0 {
+		if rest := pending.Div(number.NewDecimal(totalCount, 0)); rest.Cmp(packetMinAmount) > 0 {
+			rest = roundTillNotExhausted(rest)
+			for i := range distribution {
+				pending = pending.Sub(rest)
+				distribution[i] = number.FromString(distribution[i]).Add(rest).Persist()
+			}
+		}
+		if pending.Cmp(number.Zero()) > 0 {
+			i := randomIndex(len(distribution))
+			distribution[i] = number.FromString(distribution[i]).Add(roundTillNotExhausted(pending)).Persist()
+		}
+	}
+	return distribution, nil
+}
+
+func randomIndex(length int) int {
+	return int(rand.Float64() * float64(length-1))
+}
+
+func roundTillNotExhausted(amount number.Decimal) (round number.Decimal) {
+	for d := int32(8); d > 1; d-- {
+		round = amount.RoundFloor(d)
+		if !round.Exhausted() {
+			break
+		}
+	}
+
+	return round
+}
+
+var generate bool = false
+
+func generateGaussianNoise(mu, sigma float64) float64 {
+	epsilon := math.SmallestNonzeroFloat64
+	two_pi := 2.0 * math.Pi
+
+	var z0, z1 float64
+
+	generate = !generate
+
+	if !generate {
+		return z1*sigma + mu
+	}
+	var u1, u2 float64
+	for ok := true; ok; ok = (u1 <= epsilon) {
+		u1 = rand.Float64()
+		u2 = rand.Float64()
+
+	}
+
+	z0 = math.Sqrt(-2.0*math.Log(u1)) * math.Cos(two_pi*u2)
+	z1 = math.Sqrt(-2.0*math.Log(u1)) * math.Sin(two_pi*u2)
+	return z0*sigma + mu
+}
+
 func PayPacket(ctx context.Context, packetId string, assetId, amount string) (*Packet, error) {
+
+	plugin.Trigger(plugin.EventTypePacketPaid, Packet{PacketId: packetId, AssetId: assetId, Amount: amount})
+
 	var packet *Packet
 	err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
 		var err error
@@ -204,6 +303,10 @@ func ShowPacket(ctx context.Context, packetId string) (*Packet, error) {
 var mutexeSet map[string]*sync.Mutex
 
 func (current *User) ClaimPacket(ctx context.Context, packetId string) (*Packet, error) {
+	if current.State != PaymentStatePaid {
+		return nil, session.ServerError(ctx, fmt.Errorf("unqualified: user has to paid to claim"))
+	}
+
 	packet, err := ShowPacket(ctx, packetId)
 	if err != nil || packet == nil {
 		return nil, err
@@ -251,9 +354,9 @@ func (current *User) ClaimPacket(ctx context.Context, packetId string) (*Packet,
 				if err != nil {
 					return err
 				}
-				b, err := readProhibitedStatus(ctx, tx)
-				if err == nil && !b {
-					dm, err := createDistributeMessage(ctx, bot.UuidNewV4().String(), bot.UuidNewV4().String(), "", config.AppConfig.Mixin.ClientId, packet.UserId, "PLAIN_TEXT", base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf(config.AppConfig.MessageTemplate.GroupOpenedRedPacket, current.FullName))))
+				mode, err := readGroupModeProperty(ctx, tx)
+				if err == nil && mode != PropGroupModeLecture {
+					dm, err := CreateDistributeMessage(ctx, bot.UuidNewV4().String(), bot.UuidNewV4().String(), "", config.AppConfig.Mixin.ClientId, packet.UserId, "PLAIN_TEXT", base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf(config.AppConfig.MessageTemplate.GroupOpenedRedPacket, current.FullName))))
 					if err != nil {
 						return err
 					}
@@ -365,27 +468,38 @@ func handlePacketClaim(ctx context.Context, tx *sql.Tx, packet *Packet, userId s
 	if packet.State != PacketStatePaid {
 		return nil
 	}
-	amount := number.FromString(packet.RemainingAmount)
-	if packet.RemainingCount > 1 && amount.Cmp(number.FromString("0.000001")) > 0 {
-		amount = amount.Mul(number.FromString("2")).Div(number.FromString(fmt.Sprint(packet.RemainingCount)))
-		if amount.Cmp(number.FromString("0.000001")) > 0 {
-			rand.Seed(time.Now().UnixNano())
-			for {
-				amount = amount.Mul(number.FromString(fmt.Sprint(rand.Float64())))
-				for d := int32(1); d < 8; d++ {
-					round := amount.RoundFloor(d)
-					if !round.Exhausted() {
-						amount = round
+	var amount number.Decimal
+	// old version packet before predispatch version
+	if len(packet.PreDistribution) == 0 {
+		amount = number.FromString(packet.RemainingAmount)
+		if packet.RemainingCount > 1 && amount.Cmp(number.FromString("0.000001")) > 0 {
+			amount = amount.Mul(number.FromString("2")).Div(number.FromString(fmt.Sprint(packet.RemainingCount)))
+			if amount.Cmp(number.FromString("0.000001")) > 0 {
+				rand.Seed(time.Now().UnixNano())
+				for {
+					amount = amount.Mul(number.FromString(fmt.Sprint(rand.Float64())))
+					for d := int32(1); d < 8; d++ {
+						round := amount.RoundFloor(d)
+						if !round.Exhausted() {
+							amount = round
+							break
+						}
+					}
+					if !amount.Exhausted() {
 						break
 					}
 				}
-				if !amount.Exhausted() {
-					break
-				}
 			}
 		}
+		amount = number.FromString(amount.PresentFloor())
+	} else {
+		// normaldistribution algo packet
+		if packet.RemainingCount > 0 {
+			amount = number.FromString(packet.PreDistribution[packet.RemainingCount-1])
+		} else {
+			return fmt.Errorf("all packet claimed")
+		}
 	}
-	amount = number.FromString(amount.PresentFloor())
 	packet.RemainingCount = packet.RemainingCount - 1
 	packet.RemainingAmount = number.FromString(packet.RemainingAmount).Sub(amount).Persist()
 	_, err := tx.ExecContext(ctx, "UPDATE packets SET (remaining_count, remaining_amount)=($1,$2) WHERE packet_id=$3", packet.RemainingCount, packet.RemainingAmount, packet.PacketId)
@@ -448,7 +562,7 @@ func readPacket(ctx context.Context, tx *sql.Tx, packetId string) (*Packet, erro
 
 func packetFromRow(row durable.Row) (*Packet, error) {
 	var p Packet
-	err := row.Scan(&p.PacketId, &p.UserId, &p.AssetId, &p.Amount, &p.Greeting, &p.TotalCount, &p.RemainingCount, &p.RemainingAmount, &p.State, &p.CreatedAt)
+	err := row.Scan(&p.PacketId, &p.UserId, &p.AssetId, &p.Amount, &p.Greeting, &p.TotalCount, &p.RemainingCount, &p.RemainingAmount, &p.State, &p.CreatedAt, pq.Array(&p.PreDistribution))
 	return &p, err
 }
 

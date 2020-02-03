@@ -17,7 +17,7 @@ func Allow(key string) bool {
 		return true
 	}
 	if limiters[key] == nil {
-		limiters[key] = rate.NewLimiter(rate.Every(3*time.Minute), 1)
+		limiters[key] = rate.NewLimiter(rate.Every(3*time.Minute), 3)
 	}
 	return limiters[key].Allow()
 }

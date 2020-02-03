@@ -50,7 +50,7 @@ func (impl *wechatImpl) createWxPay(w http.ResponseWriter, r *http.Request, _ ma
 		views.RenderErrorResponse(w, r, session.BadRequestError(r.Context()))
 		return
 	}
-	if order, payParams, payJsParams, err := models.CreateOrder(r.Context(), payload.UserId, "19.9", payload.OpenId); err != nil {
+	if order, payParams, payJsParams, err := models.CreateWechatOrder(r.Context(), payload.UserId, config.AppConfig.System.WeChatPaymentAmount, payload.OpenId); err != nil {
 		views.RenderErrorResponse(w, r, err)
 	} else {
 		resp.Order = order
@@ -72,7 +72,7 @@ func (impl *wechatImpl) checkWxPay(w http.ResponseWriter, r *http.Request, param
 func (impl *wechatImpl) wxOAuthRequest(w http.ResponseWriter, r *http.Request, params map[string]string) {
 	userId := params["id"]
 	wxoauth := wxclient.GetOauth()
-	url, err := wxoauth.GetRedirectURL(config.AppConfig.Service.HTTPResourceHost+"/wechat/callback", "snsapi_userinfo", userId)
+	url, err := wxoauth.GetRedirectURL(config.AppConfig.Service.HTTPApiHost+"/wechat/callback", "snsapi_userinfo", userId)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -90,6 +90,10 @@ func (impl *wechatImpl) wxOAuthCallback(w http.ResponseWriter, r *http.Request, 
 		fmt.Println(err)
 		return
 	}
-	url := fmt.Sprintf(config.AppConfig.Service.HTTPResourceHost+"/?#/wxpay?access_token=%s&open_id=%s&user_id=%s", resToken.AccessToken, resToken.OpenID, userId)
+	host := config.AppConfig.Service.HTTPResourceHost
+	if config.AppConfig.System.RouterMode == config.RouterModeHash {
+		host = host + config.RouterModeHashSymbol
+	}
+	url := fmt.Sprintf(host+"/wxpay?access_token=%s&open_id=%s&user_id=%s", resToken.AccessToken, resToken.OpenID, userId)
 	http.Redirect(w, r, url, 302)
 }

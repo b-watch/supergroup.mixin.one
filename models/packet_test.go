@@ -3,6 +3,7 @@ package models
 import (
 	"context"
 	"database/sql"
+	"math"
 	"testing"
 	"time"
 
@@ -116,4 +117,46 @@ func testReadPacketWithRelation(ctx context.Context, packetId string) (*Packet, 
 		return nil, session.TransactionError(ctx, err)
 	}
 	return packet, err
+}
+
+func TestPacketPreDistribution(t *testing.T) {
+	assert := assert.New(t)
+	ctx := setupTestContext()
+	defer teardownTestContext(ctx)
+
+	totalCount := int64(100)
+	amount := number.FromString("10")
+	allocation, err := packetPreDistribute(totalCount, amount)
+	assert.Nil(err)
+	assert.Len(allocation, int(totalCount))
+	t.Log(allocation)
+
+	var dist []float64
+	var allocationSum number.Decimal
+	for _, allocateAmount := range allocation {
+		a := number.FromString(allocateAmount)
+		allocationSum = allocationSum.Add(a)
+		dist = append(dist, a.Float64())
+	}
+	assert.True(amount.Cmp(allocationSum) >= 0)
+
+	testNormalDistribution(t, dist)
+}
+
+func testNormalDistribution(t *testing.T, sample []float64) {
+	var μ, σ float64
+	var sum float64
+	for _, v := range sample {
+		sum += v
+	}
+	μ = float64(sum) / float64(len(sample))
+
+	var variance float64
+	for _, v := range sample {
+		variance += math.Pow((v - μ), 2)
+	}
+	σ = math.Sqrt(variance / float64(len(sample)))
+
+	t.Logf("μ: %f", μ)
+	t.Logf("σ: %f", σ)
 }

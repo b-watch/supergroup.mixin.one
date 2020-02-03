@@ -22,7 +22,9 @@
     "cny": "CNY"
   },
   "errors": {
-    "more_than_available": "More than available"
+    "more_than_available": "More than available",
+    "no_luckycoin_in_lecture_mode": "You can't send luckycoin in lecture mode.",
+    "no_rewards_in_lecture_mode": "You can't send rewards in lecture mode."
   },
   "home": {
     "title": "Group Home",
@@ -31,12 +33,11 @@
     "pane_operations": "Group Operations",
     "pane_features": "Features",
     "op_luckycoin": "Lucky Coin",
-    "op_subscribe": "Subscribe",
-    "op_unsubscribe": "Unsubscribe",
+    "op_subscribed": "Subscribed",
+    "op_unsubscribed": "Unsubscribed",
+    "op_unsubscribe_confirm_msg": "Are you sure you want to unsubscribe this group? You won't receive any message from this group.",
     "op_mute": "Mute Others",
     "op_unmute": "Unmute Others",
-    "op_members": "Members",
-    "op_messages": "Messages",
     "op_coupons": "Coupons"
   },
   "pay": {
@@ -62,13 +63,14 @@
     "welcome": "Share your luck with the group",
     "welcome_desc": "Choose assets and share",
     "select_assets": "Select Assets",
-    "placeholder_amount": "Min: 0.0001",
+    "placeholder_amount": "Min: {min}",
     "placeholder_shares": "Max: {count} people",
-    "placeholder_memo": "Max: 36 charactors",
+    "placeholder_memo": "Max: {max} charactors",
     "amount": "Amount",
     "shares": "People",
     "memo": "Memo",
     "default_memo": "Long {symbol}, short the world",
+    "memo_too_long_err": "Error: Too many charactors in greeting.",
     "pay": "Pay and Share"
   },
   "packet": {
@@ -84,7 +86,11 @@
   "members": {
     "title": "Members",
     "kick": "Kick",
-    "block": "Block"
+    "block": "Block",
+    "unsubscribed": "Unsubscribed",
+    "list_label_admins": "Admins",
+    "list_label_lecturers": "Lecturers",
+    "list_label_subscribers": "Subscribers"
   },
   "pay_wxqr": {
     "title": "WeChat Payment",
@@ -118,5 +124,84 @@
     "copy": "Copy",
     "state_available": "Available",
     "state_used": "Used by {name}"
+  },
+  "invitation": {
+    "entry": "Invitations",
+    "details": "Details",
+    "mine": "Invitation list",
+    "welcome": "Welcome to ",
+    "submit": "Submit",
+    "code": "Codes",
+    "apply": "Request",
+    "invitees": "Invitees",
+    "rule1": "* Pending: code is used but unverified",
+    "rule2": "* You can apply new invitation codes after all existed codes had been used and verified",
+    "reject_reason": "{amount} USDT valued BOX required before next request. If you meet the requirement, please wait for 1 hour and make sure all BOX Tokens are in Mixin Messenger Wallet.",
+    "used_friends": "Invited passed: ",
+    "pending_friends": "Invitation pending: ",
+    "status_used": "Used",
+    "status_unused": "Unused",
+    "status_pending": "Pending",
+    "used": "used",
+    "click_copy": "Click to copy",
+    "used_at": "Join time",
+    "code_available": "Code is available",
+    "code_unavailable": "Code is unavailable",
+    "copied": "Copied",
+    "no_code": "No invitation code",
+    "input_placeholder": "Your Invitation Code",
+    "notice": {
+      "title": "NOTICE:",
+      "line1": "This is a privated group.",
+      "line2_1": "<div>You need an <span class=emphasis> invitation code </span> to join the group.</div>",
+      "line2_2": "<div>You need an <span class=emphasis> invitation code </span> and pay <span class=emphasis>{amount} {symbol}</span> to join the group.</div>"
+    }
+  },
+  "rewards": {
+    "title": "Rewards",
+    "entry": "Rewards",
+    "no_recipient": "No one to get rewards",
+    "add_label": "Add recipients",
+    "select_assets": "Select assets",
+    "placeholder_amount": "Min: {min}",
+    "amount": "Amount",
+    "pay": "Send Rewards",
+    "recipient_section_title": "Select a recipient",
+    "rewards_section_title": "Rewards",
+    "dialog_confrim_title": "Have you paid?",
+    "dialog_confrim_desc": "Have you paid to send rewards to {name}?",
+    "dialog_confrim_ok": "I've Paid",
+    "dialog_confrim_cancel": "Cancel",
+    "rank": "View Rank"
+  },
+  "reward_rank": {
+    "title": "Reward Rank",
+    "current_info": "You send {count} rewards, about ${usd}.",
+    "send": "Go to reward",
+    "week": "Week",
+    "month": "Month",
+    "all": "All",
+    "item_count_text": "{count} rewards"
+  },
+  "announcement": {
+    "title": "Announcment",
+    "label": "Content",
+    "placeholder": "Max: {max} charactors",
+    "send": "Send"
+  },
+  "group_mode": {
+    "title": "Group Mode",
+    "mode_title": "Choose a mode",
+    "mode_title_alt": "Current mode:",
+    "mode_free_title": "Chit-Chat",
+    "mode_free_text": "Everyone is chatting in this mode",
+    "mode_mute_title": "Mute",
+    "mode_mute_text": "Speakers speak, others send rewards and luckycoins",
+    "mode_lecture_title": "Lecture",
+    "mode_lecture_text": "Only speakers speak.",
+    "switch_btn_label": "Switch Mode",
+    "broadcast_title": "Broadcast Settings",
+    "btn_copy_broadcast_url": "Copy Url",
+    "broadcast_label": "On/Off broadcast"
   }
 }

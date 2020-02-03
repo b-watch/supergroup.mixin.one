@@ -34,7 +34,7 @@ func (impl *packetsImpl) prepare(w http.ResponseWriter, r *http.Request, params 
 	current := middlewares.CurrentUser(r)
 	if participantsCount, err := current.Prepare(r.Context()); err != nil {
 		views.RenderErrorResponse(w, r, err)
-	} else if assets, err := current.ListAssets(r.Context()); err != nil {
+	} else if assets, err := current.ListAssets(r.Context(), ""); err != nil {
 		views.RenderErrorResponse(w, r, err)
 	} else {
 		views.RenderPacketPreparation(w, r, participantsCount, assets)

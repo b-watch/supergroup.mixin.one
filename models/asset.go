@@ -53,7 +53,22 @@ func assetFromRow(row durable.Row) (*Asset, error) {
 	return &a, err
 }
 
-func (current *User) ListAssets(ctx context.Context) ([]*Asset, error) {
+func filterAssets(assets []*Asset, accepted []string) []*Asset {
+	var newAssets []*Asset
+	if len(accepted) == 0 {
+		return assets
+	}
+	for _, asset := range assets {
+		for _, acceptedId := range config.AppConfig.System.RewardsAssetList {
+			if acceptedId == asset.AssetId {
+				newAssets = append(newAssets, asset)
+			}
+		}
+	}
+	return newAssets
+}
+
+func (current *User) ListAssets(ctx context.Context, scene string) ([]*Asset, error) {
 	list, err := bot.AssetList(ctx, current.AccessToken)
 	if err != nil {
 		return nil, err
@@ -77,6 +92,11 @@ func (current *User) ListAssets(ctx context.Context) ([]*Asset, error) {
 			PriceUSD: a.PriceUSD,
 			Balance:  a.Balance,
 		})
+	}
+	if scene == "rewards" {
+		assets = filterAssets(assets, config.AppConfig.System.RewardsAssetList)
+	} else if scene == "redpacket" {
+		assets = filterAssets(assets, config.AppConfig.System.RedPacketAssetList)
 	}
 	if err := upsertAssets(ctx, assets); err != nil {
 		return assets, session.TransactionError(ctx, err)

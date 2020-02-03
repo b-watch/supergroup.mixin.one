@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/MixinNetwork/supergroup.mixin.one/plugin"
 	"github.com/MixinNetwork/supergroup.mixin.one/session"
 	"github.com/MixinNetwork/supergroup.mixin.one/views"
 )
@@ -25,8 +26,10 @@ func parseRemoteAddr(remoteAddress string) (string, error) {
 func Constraint(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.ContentLength > 0 && !strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") {
-			views.RenderErrorResponse(w, r, session.BadRequestError(r.Context()))
-			return
+			if !isPluginPath(r) {
+				views.RenderErrorResponse(w, r, session.BadRequestError(r.Context()))
+				return
+			}
 		}
 
 		remoteAddress, err := parseRemoteAddr(r.RemoteAddr)
@@ -37,7 +40,7 @@ func Constraint(handler http.Handler) http.Handler {
 
 		w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
 		w.Header().Add("Access-Control-Allow-Headers", "Content-Type,Authorization,Mixin-Conversation-ID")
-		w.Header().Set("Access-Control-Allow-Methods", "OPTIONS,GET,POST,DELETE")
+		w.Header().Set("Access-Control-Allow-Methods", "OPTIONS,GET,POST,DELETE,PATCH,PUT")
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		w.Header().Set("Access-Control-Max-Age", "600")
 		if r.Method == "OPTIONS" {
@@ -47,4 +50,13 @@ func Constraint(handler http.Handler) http.Handler {
 			handler.ServeHTTP(w, r.WithContext(ctx))
 		}
 	})
+}
+
+func isPluginPath(r *http.Request) bool {
+	for groupName, _ := range plugin.Handlers() {
+		if strings.HasPrefix(r.URL.Path, "/"+groupName) {
+			return true
+		}
+	}
+	return false
 }

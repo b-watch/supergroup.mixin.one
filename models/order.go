@@ -12,6 +12,7 @@ import (
 	bot "github.com/MixinNetwork/bot-api-go-client"
 	"github.com/MixinNetwork/supergroup.mixin.one/config"
 	"github.com/MixinNetwork/supergroup.mixin.one/durable"
+	"github.com/MixinNetwork/supergroup.mixin.one/plugin"
 	"github.com/MixinNetwork/supergroup.mixin.one/session"
 	"github.com/lib/pq"
 	"github.com/objcoding/wxpay"
@@ -24,8 +25,9 @@ CREATE TABLE IF NOT EXISTS orders (
 	user_id          VARCHAR(36) NOT NULL CHECK (user_id ~* '^[0-9a-f-]{36,36}$'),
 	prepay_id        VARCHAR(36) DEFAULT '',
 	state            VARCHAR(32) NOT NULL,
+	asset_id         VARCHAR(36) NOT NULL,
 	amount           VARCHAR(128) NOT NULL,
-	channel          VARCHAR(32) NOT NULL,
+	pay_method          VARCHAR(32) NOT NULL,
 	transaction_id   VARCHAR(32) DEFAULT '',
 	created_at       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 	paid_at          TIMESTAMP WITH TIME ZONE
@@ -35,29 +37,30 @@ CREATE INDEX IF NOT EXISTS order_created_paidx ON orders(created_at, paid_at);
 `
 
 type Order struct {
-	OrderId       string
-	UserId        string
-	TraceId       int64
-	PrepayId      string
-	State         string
-	Amount        string
-	Channel       string
-	TransactionId string
-	CreatedAt     time.Time
-	PaidAt        pq.NullTime
+	OrderId       string      `json:"order_id"`
+	UserId        string      `json:"user_id"`
+	TraceId       int64       `json:"trace_id"`
+	PrepayId      string      `json:"prepay_id"`
+	State         string      `json:"state"`
+	AssetId       string      `json:"asset_id"`
+	Amount        string      `json:"amount"`
+	PayMethod     string      `json:"pay_method"`
+	TransactionId string      `json:"transaction_id"`
+	CreatedAt     time.Time   `json:"created_at"`
+	PaidAt        pq.NullTime `json:"paid_at"`
 }
 
 const WX_TN_PREFIX = "tn-"
 
-var orderColumns = []string{"order_id", "user_id", "trace_id", "prepay_id", "state", "amount", "channel", "transaction_id", "created_at", "paid_at"}
+var orderColumns = []string{"order_id", "user_id", "trace_id", "prepay_id", "state", "asset_id", "amount", "pay_method", "transaction_id", "created_at", "paid_at"}
 
 func (o *Order) values() []interface{} {
-	return []interface{}{o.OrderId, o.UserId, o.TraceId, o.PrepayId, o.State, o.Amount, o.Channel, o.TransactionId, o.CreatedAt, o.PaidAt}
+	return []interface{}{o.OrderId, o.UserId, o.TraceId, o.PrepayId, o.State, o.AssetId, o.Amount, o.PayMethod, o.TransactionId, o.CreatedAt, o.PaidAt}
 }
 
 func orderFromRow(row durable.Row) (*Order, error) {
 	var o Order
-	err := row.Scan(&o.OrderId, &o.UserId, &o.TraceId, &o.PrepayId, &o.State, &o.Amount, &o.Channel, &o.TransactionId, &o.CreatedAt, &o.PaidAt)
+	err := row.Scan(&o.OrderId, &o.UserId, &o.TraceId, &o.PrepayId, &o.State, &o.AssetId, &o.Amount, &o.PayMethod, &o.TransactionId, &o.CreatedAt, &o.PaidAt)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -90,23 +93,11 @@ func GetNotPaidOrders(ctx context.Context, limit int64) ([]*Order, error) {
 	return orders, nil
 }
 
-func CreateOrder(ctx context.Context, userId, amount, wxOpenId string) (*Order, wxpay.Params, wxpay.Params, error) {
-	order := &Order{
-		OrderId:       bot.UuidNewV4().String(),
-		UserId:        userId,
-		TraceId:       0,
-		PrepayId:      "",
-		State:         "PENDING",
-		Amount:        config.AppConfig.System.WeChatPaymentAmount,
-		Channel:       "wx",
-		TransactionId: "",
-	}
-
-	// create an order
+func CreateWechatOrder(ctx context.Context, userId, amount, wxOpenId string) (*Order, wxpay.Params, wxpay.Params, error) {
+	var order *Order
 	var err error
-	query := "INSERT INTO orders (order_id, user_id, prepay_id, state, amount, channel) VALUES ($1, $2, $3, $4, $5, $6)"
-	_, err = session.Database(ctx).ExecContext(ctx, query,
-		order.OrderId, order.UserId, order.PrepayId, order.State, order.Amount, order.Channel)
+	// create an order
+	order, err = createOrder(ctx, userId, "", amount, "PENDING", PayMethodWechat)
 	if err != nil {
 		return nil, nil, nil, session.TransactionError(ctx, err)
 	}
@@ -130,13 +121,48 @@ func CreateOrder(ctx context.Context, userId, amount, wxOpenId string) (*Order, 
 
 	// update record
 	order.State = "NOTPAID"
-	query = "UPDATE orders SET state=$1, prepay_id=$2 WHERE order_id=$3"
+	query := "UPDATE orders SET state=$1, prepay_id=$2 WHERE order_id=$3"
 	_, err = session.Database(ctx).ExecContext(ctx, query, order.State, wxp["prepay_id"], order.OrderId)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
 	return order, wxp, jswxp, nil
+}
+
+func CreateMixinOrder(ctx context.Context, userId, assetId, amount string) (*Order, error) {
+	var order *Order
+	var err error
+	// create an order
+	order, err = createOrder(ctx, userId, assetId, amount, "NOTPAID", PayMethodMixin)
+	if err != nil {
+		return nil, session.TransactionError(ctx, err)
+	}
+	return order, nil
+}
+
+func createOrder(ctx context.Context, userId, assetId, amount, state, method string) (*Order, error) {
+	order := &Order{
+		OrderId:       bot.UuidNewV4().String(),
+		UserId:        userId,
+		TraceId:       0,
+		PrepayId:      "",
+		State:         state,
+		AssetId:       assetId,
+		Amount:        amount,
+		PayMethod:     method,
+		TransactionId: "",
+	}
+
+	// create an order
+	var err error
+	query := "INSERT INTO orders (order_id, user_id, prepay_id, state, asset_id, amount, pay_method) VALUES ($1, $2, $3, $4, $5, $6, $7)"
+	_, err = session.Database(ctx).ExecContext(ctx, query,
+		order.OrderId, order.UserId, order.PrepayId, order.State, order.AssetId, order.Amount, order.PayMethod)
+	if err != nil {
+		return nil, session.TransactionError(ctx, err)
+	}
+	return order, nil
 }
 
 func MarkOrderAsPaidByTraceId(ctx context.Context, traceId int64, transactionId string) (*Order, error) {
@@ -161,6 +187,47 @@ func MarkOrderAsPaidByTraceId(ctx context.Context, traceId int64, transactionId 
 	if err != nil {
 		return nil, session.TransactionError(ctx, err)
 	}
+
+	plugin.Trigger(plugin.EventTypeOrderPaid, *order)
+
+	return order, nil
+}
+
+func MarkOrderAsPaidByOrderId(ctx context.Context, orderId string) (*Order, error) {
+	var order *Order
+	err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
+		var err error
+		order, err = getOrderByOrderId(ctx, tx, orderId)
+		if err != nil || order == nil {
+			return err
+		}
+		query := "UPDATE orders SET state='PAID', paid_at=$1, pay_method=$2 WHERE order_id=$3"
+		_, err = tx.ExecContext(ctx, query, time.Now(), PayMethodMixin, order.OrderId)
+		if err != nil {
+			return err
+		}
+		user, err := findUserById(ctx, tx, order.UserId)
+		if err != nil {
+			return err
+		}
+		return user.paymentInTx(ctx, tx, PayMethodMixin)
+	})
+	if err != nil {
+		return nil, session.TransactionError(ctx, err)
+	}
+
+	plugin.Trigger(plugin.EventTypeOrderPaid, *order)
+
+	return order, nil
+}
+
+func getOrderByOrderId(ctx context.Context, tx *sql.Tx, orderId string) (*Order, error) {
+	query := fmt.Sprintf("SELECT %s FROM orders WHERE order_id=$1 ORDER BY created_at LIMIT 1", strings.Join(orderColumns, ","))
+	row := tx.QueryRowContext(ctx, query, orderId)
+	order, err := orderFromRow(row)
+	if err != nil {
+		return nil, session.TransactionError(ctx, err)
+	}
 	return order, nil
 }
 
@@ -175,10 +242,16 @@ func getOrderByTraceId(ctx context.Context, tx *sql.Tx, traceId int64) (*Order, 
 }
 
 func GetOrder(ctx context.Context, orderId string) (*Order, error) {
-	query := fmt.Sprintf("SELECT %s FROM orders WHERE order_id=$1", strings.Join(orderColumns, ","))
-	row := session.Database(ctx).QueryRowContext(ctx, query, orderId)
-	order, err := orderFromRow(row)
+	var order *Order
+	err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
+		_order, err := getOrderByOrderId(ctx, tx, orderId)
+		order = _order
+		return err
+	})
 	if err != nil {
+		if sessionErr, ok := err.(session.Error); ok {
+			return nil, sessionErr
+		}
 		return nil, session.TransactionError(ctx, err)
 	}
 	return order, nil

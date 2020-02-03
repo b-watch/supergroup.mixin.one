@@ -22,7 +22,9 @@
     "cny": "人民币"
   },
   "errors": {
-    "more_than_available": "超过可用数量"
+    "more_than_available": "超过可用数量",
+    "no_luckycoin_in_lecture_mode": "在讲座模式不可以发红包，请等待讲座结束",
+    "no_rewards_in_lecture_mode": "在讲座模式不可以打赏，请等待讲座结束"
   },
   "home": {
     "title": "大群主页",
@@ -31,12 +33,11 @@
     "pane_operations": "群操作",
     "pane_features": "扩展功能",
     "op_luckycoin": "红包",
-    "op_subscribe": "订阅",
-    "op_unsubscribe": "取消订阅",
+    "op_subscribed": "已订阅",
+    "op_unsubscribed": "未订阅",
+    "op_unsubscribe_confirm_msg": "不再订阅本群吗？确认后你将不会收到任何来自本群的消息。",
     "op_mute": "禁止发言",
     "op_unmute": "允许发言",
-    "op_members": "成员",
-    "op_messages": "消息管理",
     "op_coupons": "兑换码"
   },
   "pay": {
@@ -62,13 +63,14 @@
     "welcome": "把你的幸运带给群友",
     "welcome_desc": "选择一个币，然后支付。",
     "select_assets": "选择",
-    "placeholder_amount": "至少 0.0001",
+    "placeholder_amount": "至少 {min}",
     "placeholder_shares": "最多不超过 {count} 人",
-    "placeholder_memo": "最多不超过 36 个字符",
+    "placeholder_memo": "最多不超过 {max} 个字符",
     "amount": "金额",
     "shares": "红包数",
     "memo": "祝福",
     "default_memo": "沧海桑田，唯有 {symbol} 长久相伴",
+    "memo_too_long_err": "错误：红包祝福语太长。",
     "pay": "支付红包"
   },
   "packet": {
@@ -84,7 +86,11 @@
   "members": {
     "title": "成员管理",
     "kick": "踢出",
-    "block": "屏蔽"
+    "block": "屏蔽",
+    "unsubscribed": "未订阅",
+    "list_label_admins": "管理员",
+    "list_label_lecturers": "讲师",
+    "list_label_subscribers": "群友"
   },
   "pay_wxqr": {
     "title": "微信支付",
@@ -118,5 +124,84 @@
     "copy": "复制",
     "state_available": "未使用",
     "state_used": "被 {name} 用了"
+  },
+  "invitation": {
+    "entry": "我的邀请",
+    "details": "详情",
+    "mine": "我的邀请",
+    "welcome": "欢迎加入",
+    "submit": "提交",
+    "code": "邀请码",
+    "apply": "申请",
+    "invitees": "受邀者",
+    "rule1": "* 未付费：被邀请用户已使用邀请码但未成功付费",
+    "rule2": "* 当邀请码均被使用并成功付费后即可申请新邀请码",
+    "reject_reason": "距离下次申请还差 {amount} USDT 等值 BOX。若符合要求但无法申请，请等候一小时，并确保 BOX 都在 Mixin 钱包，且确保已经完成授权。",
+    "used_friends": "成功邀请好友：",
+    "pending_friends": "待付费好友：",
+    "status_used": "已使用",
+    "status_unused": "未使用",
+    "status_pending": "待付费",
+    "used": "已用",
+    "click_copy": "点击复制",
+    "used_at": "加入时间",
+    "code_available": "邀请码可用",
+    "code_unavailable": "邀请码不可用",
+    "copied": "复制成功",
+    "no_code": "没有邀请码",
+    "input_placeholder": "请输入邀请码",
+    "notice": {
+      "title": "注意：",
+      "line1": "这是个私有群组",
+      "line2_1": "你需要邀请码加入本群组",
+      "line2_2": "你需要<span class=emphasis>邀请码</span>并支付 <span class=emphasis>{amount} {symbol}</span> 等价数字货币来加入本群组"
+    }
+  },
+  "rewards": {
+    "title": "打赏",
+    "entry": "打赏",
+    "no_recipient": "没有人可以接受打赏",
+    "add_label": "添加受赏人",
+    "select_assets": "打赏币种",
+    "placeholder_amount": "至少 {min}",
+    "amount": "金额",
+    "pay": "打赏",
+    "recipient_section_title": "打赏给谁？",
+    "rewards_section_title": "打赏多少？",
+    "dialog_confrim_title": "打赏没？",
+    "dialog_confrim_desc": "有没有给 {name} 打赏支付？",
+    "dialog_confrim_ok": "已经打赏了！",
+    "dialog_confrim_cancel": "取消",
+    "rank": "查看打赏排名"
+  },
+  "reward_rank": {
+    "title": "打赏排名",
+    "current_info": "你共计打赏 {count} 次，约 ${usd} 等值数字货币。",
+    "send": "去打赏",
+    "week": "周排名",
+    "month": "月排名",
+    "all": "总排名",
+    "item_count_text": "打赏 {count} 次"
+  },
+  "announcement": {
+    "title": "公告",
+    "label": "内容",
+    "placeholder": "最多 {max} 字",
+    "send": "发送"
+  },
+  "group_mode": {
+    "title": "发言模式",
+    "mode_title": "选择群模式",
+    "mode_title_alt": "当前群模式：",
+    "mode_free_title": "闲聊模式",
+    "mode_free_text": "每个人都可以发言，除非被拉黑了",
+    "mode_mute_title": "禁言模式",
+    "mode_mute_text": "演讲者可以发言，其他人可以打赏或者发红包",
+    "mode_lecture_title": "讲座模式",
+    "mode_lecture_text": "只有演讲者可以发言",
+    "switch_btn_label": "切换模式",
+    "broadcast_title": "广播设置",
+    "btn_copy_broadcast_url": "复制广播链接",
+    "broadcast_label": "开启/关闭广播模式"
   }
 }

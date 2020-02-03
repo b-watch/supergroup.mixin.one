@@ -6,12 +6,15 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	bot "github.com/MixinNetwork/bot-api-go-client"
 	"github.com/MixinNetwork/supergroup.mixin.one/config"
 	"github.com/MixinNetwork/supergroup.mixin.one/durable"
+	"github.com/MixinNetwork/supergroup.mixin.one/plugin"
 	"github.com/MixinNetwork/supergroup.mixin.one/session"
 	"github.com/gofrs/uuid"
 )
@@ -77,46 +80,68 @@ func CreateMessage(ctx context.Context, user *User, messageId, category, quoteMe
 	if len(data) > 5*1024 {
 		return nil, nil
 	}
-	if user.UserId != config.AppConfig.Mixin.ClientId && !user.isAdmin() {
+
+	if !user.isAdmin(ctx) && !user.isLecturer(ctx) {
+		mode, err := ReadGroupModeProperty(ctx)
+		if err != nil {
+			return nil, err
+		} else if mode == PropGroupModeLecture || mode == PropGroupModeMute {
+			// lecturer and admin can speak in lecture/mute mode
+			return nil, nil
+		}
+		if category == MessageCategoryPlainImage && !config.AppConfig.System.ImageMessageEnable {
+			return nil, nil
+		}
+		if category == MessageCategoryPlainVideo && !config.AppConfig.System.VideoMessageEnable {
+			return nil, nil
+		}
+		if category == MessageCategoryPlainContact && !config.AppConfig.System.ContactMessageEnable {
+			return nil, nil
+		}
+		if category == MessageCategoryPlainAudio && !config.AppConfig.System.AudioMessageEnable {
+			return nil, nil
+		}
 		if category != MessageCategoryMessageRecall && !durable.Allow(user.UserId) {
 			text := base64.StdEncoding.EncodeToString([]byte(config.AppConfig.MessageTemplate.MessageTipsTooMany))
-			if err := createSystemDistributedMessage(ctx, user, MessageCategoryPlainText, text); err != nil {
+			if err := CreateSystemDistributedMessage(ctx, user, MessageCategoryPlainText, text); err != nil {
 				return nil, err
 			}
 			return nil, nil
 		}
 	}
-	if !user.isAdmin() {
-		b, err := ReadProhibitedProperty(ctx)
-		if err != nil {
-			return nil, err
-		} else if b {
-			return nil, nil
+
+	// only admin allow operate members and messages by quick inst
+	if (user.isAdmin(ctx) || user.isLecturer(ctx)) && category == MessageCategoryPlainText && quoteMessageId != "" {
+		if id, _ := bot.UuidFromString(quoteMessageId); id.String() == quoteMessageId {
+			bytes, err := base64.StdEncoding.DecodeString(data)
+			if err != nil {
+				return nil, err
+			}
+			str := strings.ToUpper(strings.TrimSpace(string(bytes)))
+			if str == "BAN" || str == "DELETE" || str == "KICK" {
+				dm, err := FindDistributedMessage(ctx, quoteMessageId)
+				if err != nil || dm == nil {
+					return nil, err
+				}
+				if str == "BAN" {
+					_, err = user.CreateBlacklist(ctx, dm.UserId)
+					if err != nil {
+						return nil, err
+					}
+				}
+				if str == "KICK" {
+					err = user.DeleteUser(ctx, dm.UserId)
+					if err != nil {
+						return nil, err
+					}
+				}
+				quoteMessageId = ""
+				category = MessageCategoryMessageRecall
+				data = base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf(`{"message_id":"%s"}`, dm.ParentId)))
+			}
 		}
 	}
-	if category == MessageCategoryPlainAudio {
-		if !user.isAdmin() {
-			return nil, nil
-		}
-		if !config.AppConfig.System.AudioMessageEnable {
-			return nil, nil
-		}
-	}
-	if category == MessageCategoryPlainImage {
-		if !user.isAdmin() && !config.AppConfig.System.ImageMessageEnable {
-			return nil, nil
-		}
-	}
-	if category == MessageCategoryPlainVideo {
-		if !user.isAdmin() && !config.AppConfig.System.VideoMessageEnable {
-			return nil, nil
-		}
-	}
-	if category == MessageCategoryPlainContact {
-		if !user.isAdmin() && !config.AppConfig.System.ContactMessageEnable {
-			return nil, nil
-		}
-	}
+
 	message := &Message{
 		MessageId:        messageId,
 		UserId:           user.UserId,
@@ -154,10 +179,10 @@ func CreateMessage(ctx context.Context, user *User, messageId, category, quoteMe
 		if err != nil || m == nil {
 			return nil, err
 		}
-		if m.UserId != user.UserId && !user.isAdmin() {
+		if m.UserId != user.UserId && !user.isAdmin(ctx) {
 			return nil, session.ForbiddenError(ctx)
 		}
-		if user.isAdmin() {
+		if user.isAdmin(ctx) {
 			message.UserId = m.UserId
 		}
 	}
@@ -167,6 +192,7 @@ func CreateMessage(ctx context.Context, user *User, messageId, category, quoteMe
 	if err != nil {
 		return nil, session.TransactionError(ctx, err)
 	}
+	plugin.Trigger(plugin.EventTypeMessageCreated, *message)
 	return message, nil
 }
 
@@ -190,20 +216,85 @@ func createSystemMessage(ctx context.Context, tx *sql.Tx, category, data string)
 }
 
 func createSystemJoinMessage(ctx context.Context, tx *sql.Tx, user *User) error {
-	b, err := readProhibitedStatus(ctx, tx)
-	if err != nil || b {
+	mode, err := readGroupModeProperty(ctx, tx)
+	prohibited := err != nil || mode == PropGroupModeLecture || mode == PropGroupModeMute
+	if prohibited {
+		// send MessageTipsJoinUserProhibited to joined user
+		CreateSystemDistributedMessage(ctx, user, "PLAIN_TEXT", base64.StdEncoding.EncodeToString([]byte(config.AppConfig.MessageTemplate.MessageTipsJoinUserProhibited)))
+	} else {
+		// send MessageTipsJoinUser to joined user while send MessageTipsJoin to all users
+		if len(config.AppConfig.MessageTemplate.MessageTipsJoinUser) != 0 {
+			CreateSystemDistributedMessage(ctx, user, "PLAIN_TEXT", base64.StdEncoding.EncodeToString([]byte(config.AppConfig.MessageTemplate.MessageTipsJoinUser)))
+		}
+		if len(config.AppConfig.MessageTemplate.MessageTipsJoin) != 0 {
+			err = createSystemMessage(ctx, tx, "PLAIN_TEXT", base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf(config.AppConfig.MessageTemplate.MessageTipsJoin, user.FullName))))
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func generateRandomColor() string {
+	colors := []string{
+		"#0C9C9C",
+		"#80C748",
+		"#E57C00",
+		"#E50000",
+		"#00D8E5",
+		"#4C7EFE",
+		"#854CFE",
+		"#E54CFE",
+		"#FE4C82",
+		"#FFA800",
+		"#3672CC",
+		"#88462A",
+	}
+	ix := rand.Intn(len(colors))
+	return colors[ix]
+}
+
+func createSystemRewardsMessage(ctx context.Context, tx *sql.Tx, fromUser *User, toUser *User, amount, symbol string) error {
+	mode, err := readGroupModeProperty(ctx, tx)
+	if err != nil || mode == PropGroupModeLecture {
 		return nil
 	}
+	fromUserName := fromUser.FullName
+	toUserName := toUser.FullName
+	if utf8.RuneCountInString(fromUserName) > 7 {
+		fromUserName = string([]rune(fromUserName)[:7]) + "…"
+	}
+	if utf8.RuneCountInString(toUserName) > 7 {
+		toUserName = string([]rune(toUserName)[:7]) + "…"
+	}
+
+	label := fmt.Sprintf(config.AppConfig.MessageTemplate.MessageTipsRewards, fromUserName, toUserName, amount, symbol)
 	t := time.Now()
+	host := config.AppConfig.Service.HTTPResourceHost
+	if config.AppConfig.System.RouterMode == config.RouterModeHash {
+		host = host + config.RouterModeHashSymbol
+	}
+	actionURL := fmt.Sprintf(host + "/rewards/rank")
+	if utf8.RuneCountInString(label) > 36 {
+		label = string([]rune(label)[:36])
+	}
+	btns, err := json.Marshal([]interface{}{map[string]string{
+		"label":  label,
+		"action": actionURL,
+		"color":  generateRandomColor(),
+	}})
 	message := &Message{
 		MessageId: bot.UuidNewV4().String(),
 		UserId:    config.AppConfig.Mixin.ClientId,
-		Category:  "PLAIN_TEXT",
-		Data:      base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf(config.AppConfig.MessageTemplate.MessageTipsJoin, user.FullName))),
+		Category:  "APP_BUTTON_GROUP",
+		Data: base64.StdEncoding.EncodeToString(
+			btns),
 		CreatedAt: t,
 		UpdatedAt: t,
 		State:     MessageStatePending,
 	}
+
 	params, positions := compileTableQuery(messagesCols)
 	query := fmt.Sprintf("INSERT INTO messages (%s) VALUES (%s)", params, positions)
 	_, err = tx.ExecContext(ctx, query, message.values()...)
@@ -237,6 +328,28 @@ func FindMessage(ctx context.Context, id string) (*Message, error) {
 		return nil, session.TransactionError(ctx, err)
 	}
 	return message, nil
+}
+
+func FindMessages(ctx context.Context, ids []string) ([]*Message, error) {
+	for i, id := range ids {
+		ids[i] = fmt.Sprintf("'%s'", id)
+	}
+	query := fmt.Sprintf("SELECT %s FROM messages WHERE message_id in (%s)", strings.Join(messagesCols, ","), strings.Join(ids, ","))
+	rows, err := session.Database(ctx).QueryContext(ctx, query)
+	if err != nil {
+		return nil, session.TransactionError(ctx, err)
+	}
+	defer rows.Close()
+
+	var msgs []*Message
+	for rows.Next() {
+		m, err := messageFromRow(rows)
+		if err != nil {
+			return nil, session.TransactionError(ctx, err)
+		}
+		msgs = append(msgs, m)
+	}
+	return msgs, nil
 }
 
 func LastestMessageWithUser(ctx context.Context, limit int64) ([]*Message, error) {

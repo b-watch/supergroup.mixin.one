@@ -3,16 +3,20 @@
     <van-row class="table-row" v-for="group in groupedItems">
       <van-col span="6" v-for="item in group">
         <a v-if="item.click" class="item" @click="item.click">
-          <img :src="item.icon"/>
-          <span>{{item.label}}</span>
+          <img :src="item.icon" />
+          <span>{{ item.label }}</span>
         </a>
-        <a v-else-if="item.url.indexOf('http') === 0" class="item" @click="openExternalLink(item.url)">
-          <img :src="item.icon"/>
-          <span>{{item.label}}</span>
+        <a
+          v-else-if="item.url.indexOf('http') === 0 || item.isPlugin"
+          class="item plugin-item"
+          @click="openExternalLink(item)"
+        >
+          <img :src="item.icon" />
+          <span>{{ item.label }}</span>
         </a>
-        <router-link v-else="item.url" class="item" :to="item.url">
-          <img :src="item.icon"/>
-          <span>{{item.label}}</span>
+        <router-link v-else="item.url" class="item url-item" :to="item.url">
+          <img :src="item.icon" />
+          <span>{{ item.label }}</span>
         </router-link>
       </van-col>
     </van-row>
@@ -21,32 +25,31 @@
 
 <script>
 export default {
-  name: 'CellTable',
+  name: "CellTable",
   props: {
     items: {
       type: Array,
       default: []
-    },
-  },
-  data() {
-    return {
     }
   },
+  data() {
+    return {};
+  },
   computed: {
-    groupedItems () {
-      let groups = []
+    groupedItems() {
+      let groups = [];
       for (let ix = 0; ix < this.items.length; ix += 4) {
-        groups.push(this.items.slice(ix, ix + 4))
+        groups.push(this.items.slice(ix, ix + 4));
       }
-      return groups
+      return groups;
     }
   },
   methods: {
-    openExternalLink (url) {
-      window.location.href = url
+    openExternalLink(item) {
+      this.$emit("external", item);
     }
   }
-}
+};
 </script>
 
 <style lang="scss" scoped>

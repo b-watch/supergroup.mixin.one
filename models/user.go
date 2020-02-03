@@ -16,13 +16,15 @@ import (
 	bot "github.com/MixinNetwork/bot-api-go-client"
 	"github.com/MixinNetwork/supergroup.mixin.one/config"
 	"github.com/MixinNetwork/supergroup.mixin.one/durable"
+	"github.com/MixinNetwork/supergroup.mixin.one/plugin"
 	"github.com/MixinNetwork/supergroup.mixin.one/session"
 	jwt "github.com/dgrijalva/jwt-go"
 )
 
 const (
-	PaymentStatePending = "pending"
-	PaymentStatePaid    = "paid"
+	PaymentStatePending    = "pending"
+	PaymentStatePaid       = "paid"
+	PaymentStateUnverified = "unverified"
 
 	PayMethodMixin  = "mixin"
 	PayMethodWechat = "wechat"
@@ -43,7 +45,8 @@ CREATE TABLE IF NOT EXISTS users (
 	state             VARCHAR(128) NOT NULL,
 	active_at         TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 	subscribed_at     TIMESTAMP WITH TIME ZONE NOT NULL,
-	pay_method        VARCHAR(512) NOT NULL DEFAULT ''
+	pay_method        VARCHAR(512) NOT NULL DEFAULT '',
+	created_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS users_identityx ON users(identity_number);
@@ -62,20 +65,21 @@ type User struct {
 	ActiveAt       time.Time
 	SubscribedAt   time.Time
 	PayMethod      string
+	CreatedAt      time.Time
 
 	isNew               bool
 	AuthenticationToken string
 }
 
-var usersCols = []string{"user_id", "identity_number", "full_name", "access_token", "avatar_url", "trace_id", "state", "active_at", "subscribed_at", "pay_method"}
+var usersCols = []string{"user_id", "identity_number", "full_name", "access_token", "avatar_url", "trace_id", "state", "active_at", "subscribed_at", "pay_method", "created_at"}
 
 func (u *User) values() []interface{} {
-	return []interface{}{u.UserId, u.IdentityNumber, u.FullName, u.AccessToken, u.AvatarURL, u.TraceId, u.State, u.ActiveAt, u.SubscribedAt, u.PayMethod}
+	return []interface{}{u.UserId, u.IdentityNumber, u.FullName, u.AccessToken, u.AvatarURL, u.TraceId, u.State, u.ActiveAt, u.SubscribedAt, u.PayMethod, u.CreatedAt}
 }
 
 func userFromRow(row durable.Row) (*User, error) {
 	var u User
-	err := row.Scan(&u.UserId, &u.IdentityNumber, &u.FullName, &u.AccessToken, &u.AvatarURL, &u.TraceId, &u.State, &u.ActiveAt, &u.SubscribedAt, &u.PayMethod)
+	err := row.Scan(&u.UserId, &u.IdentityNumber, &u.FullName, &u.AccessToken, &u.AvatarURL, &u.TraceId, &u.State, &u.ActiveAt, &u.SubscribedAt, &u.PayMethod, &u.CreatedAt)
 	return &u, err
 }
 
@@ -85,6 +89,14 @@ func AuthenticateUserByOAuth(ctx context.Context, authorizationCode string) (*Us
 		return nil, err
 	}
 	if !strings.Contains(scope, "PROFILE:READ") {
+		return nil, session.ForbiddenError(ctx)
+	}
+
+	if config.AppConfig.System.ReadAssetsEnable && !strings.Contains(scope, "ASSETS:READ") {
+		return nil, session.ForbiddenError(ctx)
+	}
+
+	if config.AppConfig.System.ReadAssetsEnable && !strings.Contains(scope, "MESSAGES:REPRESENT") {
 		return nil, session.ForbiddenError(ctx)
 	}
 
@@ -117,8 +129,9 @@ func createUser(ctx context.Context, accessToken, userId, identityNumber, fullNa
 			UserId:         userId,
 			IdentityNumber: identity,
 			TraceId:        bot.UuidNewV4().String(),
-			State:          PaymentStatePending,
+			State:          PaymentStateUnverified,
 			ActiveAt:       time.Now(),
+			CreatedAt:      time.Now(),
 			isNew:          true,
 		}
 		if !config.AppConfig.System.PayToJoin {
@@ -131,6 +144,8 @@ func createUser(ctx context.Context, accessToken, userId, identityNumber, fullNa
 			user.State = PaymentStatePaid
 			user.SubscribedAt = time.Now()
 			user.PayMethod = PayMethodOffer
+		} else if !config.AppConfig.System.InviteToJoin {
+			user.State = PaymentStatePending
 		}
 		if config.AppConfig.Service.Environment != "test" {
 			err = createConversation(ctx, "CONTACT", userId)
@@ -160,6 +175,9 @@ func createUser(ctx context.Context, accessToken, userId, identityNumber, fullNa
 		if err != nil {
 			return nil, session.TransactionError(ctx, err)
 		}
+
+		plugin.Trigger(plugin.EventTypeUserCreated, *user)
+
 		return user, nil
 	}
 
@@ -276,7 +294,7 @@ func (user *User) Payment(ctx context.Context) error {
 }
 
 func (user *User) paymentInTx(ctx context.Context, tx *sql.Tx, method string) error {
-	if user.State != PaymentStatePending {
+	if user.State == PaymentStatePaid {
 		if method == PayMethodCoupon {
 			return session.ForbiddenError(ctx)
 		}
@@ -298,6 +316,9 @@ func (user *User) paymentInTx(ctx context.Context, tx *sql.Tx, method string) er
 	sort.Slice(messages, func(i, j int) bool { return messages[i].CreatedAt.Before(messages[j].CreatedAt) })
 	var values bytes.Buffer
 	for i, msg := range messages {
+		if len(msg.Data) == 0 {
+			continue
+		}
 		if msg.Category == MessageCategoryMessageRecall {
 			var recallMessage RecallMessage
 			data, err := base64.StdEncoding.DecodeString(msg.Data)
@@ -320,7 +341,7 @@ func (user *User) paymentInTx(ctx context.Context, tx *sql.Tx, method string) er
 		}
 
 		messageId := UniqueConversationId(user.UserId, msg.MessageId)
-		dm, err := createDistributeMessage(ctx, messageId, msg.MessageId, "", msg.UserId, user.UserId, msg.Category, msg.Data)
+		dm, err := CreateDistributeMessage(ctx, messageId, msg.MessageId, "", msg.UserId, user.UserId, msg.Category, msg.Data)
 		if err != nil {
 			session.TransactionError(ctx, err)
 		}
@@ -385,7 +406,7 @@ func PaidMemberCount(ctx context.Context) (int64, error) {
 }
 
 func (user *User) DeleteUser(ctx context.Context, id string) error {
-	if !config.AppConfig.System.Operators[user.UserId] {
+	if !user.isAdmin(ctx) {
 		return nil
 	}
 	_, err := session.Database(ctx).ExecContext(ctx, fmt.Sprintf("DELETE FROM users WHERE user_id=$1"), id)
@@ -395,18 +416,17 @@ func (user *User) DeleteUser(ctx context.Context, id string) error {
 	return nil
 }
 
-func (user *User) GetRole() string {
-	if config.AppConfig.System.Operators[user.UserId] {
-		return "admin"
-	}
-	return "user"
+func (user *User) GetRole(ctx context.Context) string {
+	roleSet, _ := ReadRolesProperty(ctx)
+	return roleSet.GetRole(user)
 }
 
-func (user *User) isAdmin() bool {
-	if config.AppConfig.System.Operators[user.UserId] {
-		return true
-	}
-	return false
+func (user *User) isAdmin(ctx context.Context) bool {
+	return user.GetRole(ctx) == PropGroupRolesAdmin
+}
+
+func (user *User) isLecturer(ctx context.Context) bool {
+	return user.GetRole(ctx) == PropGroupRolesLecturer
 }
 
 func subscribedUsers(ctx context.Context, subscribedAt time.Time, limit int) ([]*User, error) {
@@ -450,6 +470,19 @@ func FindUser(ctx context.Context, userId string) (*User, error) {
 	return user, nil
 }
 
+func FindUsers(ctx context.Context, ids []string) ([]*User, error) {
+	var users []*User
+	err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
+		var err error
+		users, err = findUsersByIds(ctx, tx, ids)
+		return err
+	})
+	if err != nil {
+		return nil, session.TransactionError(ctx, err)
+	}
+	return users, nil
+}
+
 func PingUserActiveAt(ctx context.Context, userId string) error {
 	query := "UPDATE users SET active_at=$1 WHERE user_id=$2"
 	_, err := session.Database(ctx).ExecContext(ctx, query, time.Now(), userId)
@@ -490,6 +523,43 @@ func findUsersByKeywords(ctx context.Context, keywords string) ([]*User, error) 
 	return users, nil
 }
 
+func findUsersByIds(ctx context.Context, tx *sql.Tx, ids []string) ([]*User, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	for i, id := range ids {
+		ids[i] = fmt.Sprintf("'%s'", id)
+	}
+	query := fmt.Sprintf("SELECT %s FROM users WHERE user_id in (%s)", strings.Join(usersCols, ","), strings.Join(ids, ","))
+	rows, err := tx.QueryContext(ctx, query)
+	if err != nil {
+		return nil, session.TransactionError(ctx, err)
+	}
+	defer rows.Close()
+
+	var users []*User
+	for rows.Next() {
+		p, err := userFromRow(rows)
+		if err != nil {
+			return nil, session.TransactionError(ctx, err)
+		}
+		users = append(users, p)
+	}
+	return users, nil
+}
+
+func deleteUsersByIds(ctx context.Context, tx *sql.Tx, ids []string) error {
+	for i, id := range ids {
+		ids[i] = fmt.Sprintf("'%s'", id)
+	}
+	query := fmt.Sprintf("DELETE FROM users WHERE user_id in (%s)", strings.Join(ids, ","))
+	_, err := tx.QueryContext(ctx, query)
+	if err != nil {
+		return session.TransactionError(ctx, err)
+	}
+	return nil
+}
+
 func findUserById(ctx context.Context, tx *sql.Tx, userId string) (*User, error) {
 	query := fmt.Sprintf("SELECT %s FROM users WHERE user_id=$1", strings.Join(usersCols, ","))
 	row := tx.QueryRowContext(ctx, query, userId)
@@ -523,4 +593,23 @@ func (u *User) GetFullName() string {
 		return u.FullName
 	}
 	return "Null"
+}
+
+func AllUsers(ctx context.Context) ([]*User, error) {
+	var users []*User
+	query := fmt.Sprintf("SELECT %s FROM users ORDER BY subscribed_at", strings.Join(usersCols, ","))
+	rows, err := session.Database(ctx).QueryContext(ctx, query)
+	if err != nil {
+		return users, session.TransactionError(ctx, err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		u, err := userFromRow(rows)
+		if err != nil {
+			return users, session.TransactionError(ctx, err)
+		}
+		users = append(users, u)
+	}
+	return users, nil
 }
