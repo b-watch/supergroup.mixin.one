@@ -69,10 +69,6 @@ export default {
 }
 </script>
 <style lang="scss" scoped>
-.audio {
-  // position: relative;
-}
-
 .audio-processing {
   position: absolute;
   height: 100%;
