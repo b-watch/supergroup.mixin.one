@@ -31,16 +31,6 @@
         </van-cell>
       </van-cell-group>
 
-      <van-cell-group v-if="isAdminOrLecturer" :title="$t('group_mode.broadcast_title')">
-        <van-cell :title="$t('group_mode.broadcast_label')">
-          <van-switch v-model="isBroadcast" />
-        </van-cell>
-        <van-cell :title="broadcastUrl">
-          <van-button type="info" plain size="small"
-            >{{$t('group_mode.btn_copy_broadcast_url')}}</van-button>
-        </van-cell>
-      </van-cell-group>
-
       <van-row v-if="isAdminOrLecturer" style="padding: 20px">
         <van-col span="24">
           <van-button
@@ -51,6 +41,16 @@
             >{{ $t("group_mode.switch_btn_label") }}</van-button>
         </van-col>
       </van-row>
+
+      <van-cell-group v-if="isAdminOrLecturer" :title="$t('group_mode.broadcast_title')">
+        <van-cell :title="$t('group_mode.broadcast_label')">
+          <van-switch @change="changeBroadcastMode" v-model="isBroadcast" />
+        </van-cell>
+        <van-cell :title="broadcastUrl">
+          <van-button type="info" plain size="small"
+            >{{$t('group_mode.btn_copy_broadcast_url')}}</van-button>
+        </van-cell>
+      </van-cell-group>
 
     </div>
 
@@ -77,6 +77,7 @@ export default {
       loading: false,
       isBroadcast: false,
       isChanged: false,
+      broadcastUrl: '',
       currentModeName: 'free',
       modes: [
         {
@@ -122,7 +123,6 @@ export default {
       }
       this.isBroadcast = amountInfo.data.broadcast === 'on'
     }
-
     this.loading = false;
   },
   computed: {
@@ -148,14 +148,10 @@ export default {
         "group-mode-property",
         this.selectedMode.name
       );
-      await this.GLOBAL.api.property.create(
-        "broadcast-property",
-        this.isBroadcast ? 'on' : 'off'
-      );
       this.loading = false
       this.$router.back()
     },
-    selectMode(mode) {
+    selectMode (mode) {
       if (this.isAdminOrLecturer) {
         this.modes = this.modes.map(x => {
           x.selected = x.name === mode.name;
@@ -163,6 +159,15 @@ export default {
         });
         this.isChanged = mode.name !== this.currentModeName
       }
+    },
+    async changeBroadcastMode (checked) {
+      this.loading = true
+      await this.GLOBAL.api.property.create(
+        "broadcast-property",
+        this.isBroadcast ? 'on' : 'off'
+      );
+      this.loading = false
+      this.$router.back()
     }
   }
 };

@@ -22,6 +22,8 @@ import (
 const (
 	PropAnnouncementMessage = "announcement-message-property"
 	PropBroadcast           = "broadcast-property"
+	PropBroadcastOn         = "on"
+	PropBroadcastOff        = "off"
 
 	PropGroupRoles         = "roles-property"
 	PropGroupRolesAdmin    = "admin"
@@ -115,6 +117,12 @@ func (p Property) aroundOverride(ctx context.Context, tx *sql.Tx) error {
 			msg = config.AppConfig.MessageTemplate.MessageGroupModeLecture
 		} else if p.Value == PropGroupModeMute {
 			msg = config.AppConfig.MessageTemplate.MessageGroupModeMute
+		}
+		return createSystemMessage(ctx, tx, "PLAIN_TEXT", base64.StdEncoding.EncodeToString([]byte(msg)))
+	case PropBroadcast:
+		msg := config.AppConfig.MessageTemplate.MessageBroadcastOff
+		if p.Value == PropBroadcastOn {
+			msg = fmt.Sprintf(config.AppConfig.MessageTemplate.MessageBroadcastOn, config.AppConfig.Service.HTTPBroadcastHost)
 		}
 		return createSystemMessage(ctx, tx, "PLAIN_TEXT", base64.StdEncoding.EncodeToString([]byte(msg)))
 	}
