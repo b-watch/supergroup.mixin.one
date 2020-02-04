@@ -92,15 +92,15 @@ type Config struct {
 		HomeShortcutGroups []ShortcutGroup `yaml:"home_shortcut_groups"`
 	} `yaml:"appearance"`
 	MessageTemplate struct {
-		WelcomeMessage                string `yaml:"welcome_message"`
 		GroupRedPacket                string `yaml:"group_redpacket"`
 		GroupRedPacketShortDesc       string `yaml:"group_redpacket_short_desc"`
 		GroupRedPacketDesc            string `yaml:"group_redpacket_desc"`
 		GroupOpenedRedPacket          string `yaml:"group_opened_redpacket"`
-		MessageTipsGuest              string `yaml:"message_tips_guest"`
 		MessageGroupModeFree          string `yaml:"message_group_mode_free"`
 		MessageGroupModeMute          string `yaml:"message_group_mode_mute"`
 		MessageGroupModeLecture       string `yaml:"message_group_mode_lecture"`
+		MessageBroadcastOn            string `yaml:"message_broadcast_on"`
+		MessageBroadcastOff           string `yaml:"message_broadcast_off"`
 		MessageAnnouncement           string `yaml:"message_announcement"`
 		MessageTipsJoin               string `yaml:"message_tips_join"`
 		MessageTipsJoinUser           string `yaml:"message_tips_join_user"`

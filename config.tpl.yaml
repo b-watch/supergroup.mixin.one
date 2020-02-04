@@ -69,7 +69,6 @@ appearance:
           label_zh: "服务名称"
           url: https://..
 message_template:
-  welcome_message: "欢迎加入 Mixin 中文群"
   group_redpacket: "中文群红包"
   group_redpacket_short_desc: "来自无名氏的红包"
   group_redpacket_desc: "来自 %s 的红包"
@@ -77,8 +76,9 @@ message_template:
   message_group_mode_free: "管理员切换了自由发言模式，你可以说话了。"
   message_group_mode_mute: "管理员切换了禁言模式，暂时不能说话了。但你可以发红包或者打赏。"
   message_group_mode_lecture: "管理员切换了上课模式，暂时不能说话了。"
+  message_broadcast_on: "广播正在进行中。\n链接： %s"
+  message_broadcast_off: "广播已经结束"
   message_announcement: "公告更新：%s"
-  message_tips_guest: "您需要先点击机器图标授权。"
   message_tips_join: "%s 加入了群组"
   message_tips_join_user: "你已经加入了群组"
   message_tips_join_user_prohibited: "你已经加入了群组，但是当前群组处于禁言状态，所以你不能发言。"
