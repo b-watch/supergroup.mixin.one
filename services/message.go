@@ -352,17 +352,22 @@ func handleMessage(ctx context.Context, mc *MessageContext, message *mixin.Messa
 			}
 		}
 	}
+
+	var msg *models.Message
+	msg, err = models.CreateMessage(ctx, user, message.MessageID, message.Category, message.QuoteMessageID, message.Data, message.CreatedAt, message.UpdatedAt)
+	if err != nil {
+		return err
+	}
+
 	// broadcast
-	if isBroadcastOn, err := models.ReadBroadcastProperty(ctx); err == nil && isBroadcastOn == "on" {
+	if isBroadcastOn, err := models.ReadBroadcastProperty(ctx); err == nil && isBroadcastOn == "on" && msg != nil {
 		go func() {
 			if bmsg, err := decodeMessage(ctx, user, message); err == nil {
 				broadcastChan <- bmsg
 			}
 		}()
 	}
-	if _, err := models.CreateMessage(ctx, user, message.MessageID, message.Category, message.QuoteMessageID, message.Data, message.CreatedAt, message.UpdatedAt); err != nil {
-		return err
-	}
+
 	return nil
 }
 

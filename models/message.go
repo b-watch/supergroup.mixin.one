@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"net/url"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -212,6 +213,40 @@ func createSystemMessage(ctx context.Context, tx *sql.Tx, category, data string)
 	params, positions := compileTableQuery(messagesCols)
 	query := fmt.Sprintf("INSERT INTO messages (%s) VALUES (%s) ON CONFLICT (message_id) DO NOTHING", params, positions)
 	_, err := tx.ExecContext(ctx, query, message.values()...)
+	return err
+}
+
+func createSystemAppCardMessage(ctx context.Context, tx *sql.Tx, iconUrl, title, description string) error {
+	mixin := config.AppConfig.Mixin
+	t := time.Now()
+
+	URL, err := url.Parse(config.AppConfig.Service.HTTPBroadcastHost)
+	action := URL.String()
+
+	card, err := json.Marshal(map[string]string{
+		"icon_url":    iconUrl,
+		"title":       title,
+		"description": description,
+		"action":      action,
+	})
+	if err != nil {
+		return err
+	}
+
+	message := &Message{
+		MessageId: bot.UuidNewV4().String(),
+		UserId:    mixin.ClientId,
+		Category:  MessageCategoryAppCard,
+		Data: base64.StdEncoding.EncodeToString(
+			card),
+		CreatedAt:        t,
+		UpdatedAt:        t,
+		State:            MessageStatePending,
+		LastDistributeAt: genesisStartedAt(),
+	}
+	params, positions := compileTableQuery(messagesCols)
+	query := fmt.Sprintf("INSERT INTO messages (%s) VALUES (%s) ON CONFLICT (message_id) DO NOTHING", params, positions)
+	_, err = tx.ExecContext(ctx, query, message.values()...)
 	return err
 }
 
