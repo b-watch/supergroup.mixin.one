@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
-	"net/url"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -216,18 +215,15 @@ func createSystemMessage(ctx context.Context, tx *sql.Tx, category, data string)
 	return err
 }
 
-func createSystemAppCardMessage(ctx context.Context, tx *sql.Tx, iconUrl, title, description string) error {
+func createSystemAppCardMessage(ctx context.Context, tx *sql.Tx, iconUrl, title, description, url string) error {
 	mixin := config.AppConfig.Mixin
 	t := time.Now()
-
-	URL, err := url.Parse(config.AppConfig.Service.HTTPBroadcastHost)
-	action := URL.String()
 
 	card, err := json.Marshal(map[string]string{
 		"icon_url":    iconUrl,
 		"title":       title,
 		"description": description,
-		"action":      action,
+		"action":      url,
 	})
 	if err != nil {
 		return err
