@@ -384,6 +384,7 @@ func sendHelpMessage(ctx context.Context, user *models.User, mc *MessageContext,
 func decodeMessage(ctx context.Context, user *models.User, message *mixin.MessageView) (WsBroadcastMessage, error) {
 	var bmsg WsBroadcastMessage
 	bmsg.Category = message.Category
+	bmsg.QuoteMessageId = message.QuoteMessageID
 	bmsg.MessageId = message.MessageID
 	bmsg.CreatedAt = message.UpdatedAt
 	bmsg.Data = message.Data

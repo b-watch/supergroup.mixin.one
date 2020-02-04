@@ -15,15 +15,16 @@ import (
 )
 
 type WsBroadcastMessage struct {
-	MessageId     string                       `json:"id"`
-	SpeakerName   string                       `json:"speaker_name"`
-	SpeakerAvatar string                       `json:"speaker_avatar"`
-	SpeakerId     string                       `json:"speaker_id"`
-	Category      string                       `json:"category"`
-	Data          string                       `json:"data"`
-	Text          string                       `json:"text"`
-	Attachment    WsBroadcastMessageAttachment `json:"attachment"`
-	CreatedAt     time.Time                    `json:"created_at"`
+	MessageId      string                       `json:"id"`
+	QuoteMessageId string                       `json:"quote_message_id"`
+	SpeakerName    string                       `json:"speaker_name"`
+	SpeakerAvatar  string                       `json:"speaker_avatar"`
+	SpeakerId      string                       `json:"speaker_id"`
+	Category       string                       `json:"category"`
+	Data           string                       `json:"data"`
+	Text           string                       `json:"text"`
+	Attachment     WsBroadcastMessageAttachment `json:"attachment"`
+	CreatedAt      time.Time                    `json:"created_at"`
 }
 
 type WsBroadcastMessageAttachment struct {
