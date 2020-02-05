@@ -237,7 +237,7 @@ func readBroadcastProperty(ctx context.Context, tx *sql.Tx) (string, error) {
 	return readPropertyAsString(ctx, tx, PropBroadcast)
 }
 
-func ReadPinnedMessage(ctx context.Context) (string, error) {
+func ReadPinnedMessage(ctx context.Context) (interface{}, error) {
 	var p *Property
 	err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
 		var err error
@@ -248,12 +248,12 @@ func ReadPinnedMessage(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return p.Value, nil
+	return p.ComplexValue, nil
 }
 
 func PinMessageProperty(ctx context.Context, msg *WsBroadcastMessage) error {
 	msgStr, _ := json.Marshal(msg)
-	_, err := CreateProperty(ctx, PropPinnedMessage, string(msgStr), nil)
+	_, err := CreateProperty(ctx, PropPinnedMessage, "", string(msgStr))
 	return err
 }
 
