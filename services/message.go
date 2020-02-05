@@ -358,7 +358,6 @@ func handleMessage(ctx context.Context, mc *MessageContext, message *mixin.Messa
 	if err != nil {
 		return err
 	}
-
 	// broadcast
 	if isBroadcastOn, err := models.ReadBroadcastProperty(ctx); err == nil && isBroadcastOn == "on" && msg != nil {
 		go func() {
@@ -398,27 +397,35 @@ func decodeMessage(ctx context.Context, user *models.User, message *mixin.Messag
 		return bmsg, nil
 	}
 
-	if message.Category != "PLAIN_IMAGE" && message.Category != "PLAIN_VIDEO" && message.Category != "PLAIN_AUDIO" && message.Category != "PLAIN_DATA" {
-		return bmsg, nil
-	}
-
 	data, err := base64.StdEncoding.DecodeString(message.Data)
 	if err != nil {
 		log.Println("message data decode error", err)
 		return bmsg, err
 	}
 
-	att, err := attachmentFromMixinJSON(string(data))
-	if err != nil {
-		log.Println("decode attachment error", err)
-		return bmsg, err
+	if message.Category == "PLAIN_IMAGE" ||
+		message.Category == "PLAIN_VIDEO" ||
+		message.Category == "PLAIN_AUDIO" ||
+		message.Category == "PLAIN_DATA" {
+		att, err := attachmentFromMixinJSON(string(data))
+		if err != nil {
+			log.Println("decode attachment error", err)
+			return bmsg, err
+		}
+		attResp, err := bot.AttachemntShow(ctx, config.AppConfig.Mixin.ClientId, config.AppConfig.Mixin.SessionId, config.AppConfig.Mixin.SessionKey, att.ID)
+		if err != nil {
+			log.Println("get attachment details error", err)
+		}
+		att.ViewUrl = attResp.ViewURL
+		bmsg.Attachment = att
+	} else if message.Category == "PLAIN_LIVE" {
+		att, err := liveCardFromMixinJSON(string(data))
+		if err != nil {
+			log.Println("decode live card error", err)
+		}
+		bmsg.Attachment = att
 	}
-	attResp, err := bot.AttachemntShow(ctx, config.AppConfig.Mixin.ClientId, config.AppConfig.Mixin.SessionId, config.AppConfig.Mixin.SessionKey, att.ID)
-	if err != nil {
-		log.Println("get attachment details error", err)
-	}
-	att.ViewUrl = attResp.ViewURL
-	bmsg.Attachment = att
+
 	return bmsg, nil
 }
 
@@ -458,6 +465,24 @@ func attachmentFromMixinJSON(jsonString string) (att WsBroadcastMessageAttachmen
 			return
 		}
 	}
+	return
+}
+
+func liveCardFromMixinJSON(jsonString string) (att WsBroadcastMessageAttachment, err error) {
+	var data struct {
+		Width    *uint   `json:"width"`
+		Height   *uint   `json:"height"`
+		ThumbUrl *string `json:"thumb_url"`
+		Url      *string `json:"url"`
+	}
+	err = json.Unmarshal([]byte(jsonString), &data)
+	if err != nil {
+		return
+	}
+	att.ViewUrl = *data.Url
+	att.Width = data.Width
+	att.Height = data.Height
+	att.ThumbUrl = *data.ThumbUrl
 	return
 }
 

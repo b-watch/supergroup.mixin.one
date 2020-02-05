@@ -18,7 +18,7 @@ export const MIXIN_HOST = "https://api.mixin.one";
 
 export const EOS_ASSET_ID = "6cfe566e-4aad-470b-8c9a-2fd35b49c68d";
 
-export const SUP_MESSAGE_CAT = ['PLAIN_TEXT', 'PLAIN_IMAGE', 'PLAIN_VIDEO', 'PLAIN_AUDIO']
+export const SUP_MESSAGE_CAT = ['PLAIN_TEXT', 'PLAIN_IMAGE', 'PLAIN_VIDEO', 'PLAIN_AUDIO', 'PLAIN_LIVE', 'PLAIN_DATA']
 
 export const SOCKET_STATE = {
   DISCONNECT: 'disconnect',

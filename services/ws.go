@@ -40,7 +40,8 @@ type WsBroadcastMessageAttachment struct {
 	Height    *uint   `json:"height,omitempty"`
 	Thumbnail []byte  `json:"thumbnail,omitempty"`
 
-	ViewUrl string `json:"view_url"`
+	ViewUrl  string `json:"view_url"`
+	ThumbUrl string `json:"thumb_url"`
 }
 
 func StartWebsocketService(name string, db *durable.Database, broadcastChan chan WsBroadcastMessage) {
