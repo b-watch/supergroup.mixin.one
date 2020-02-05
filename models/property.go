@@ -324,7 +324,7 @@ func RemoveRolesProperty(ctx context.Context, userId string, role string) (RoleS
 }
 
 func (p *Property) Validate() error {
-	if utf8.RuneCountInString(p.Value) > 2048 {
+	if utf8.RuneCountInString(p.Value) > 4096 {
 		return errors.New("value is too long")
 	}
 

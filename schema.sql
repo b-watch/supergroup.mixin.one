@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS blacklists (
 
 CREATE TABLE IF NOT EXISTS properties (
   name               VARCHAR(512) PRIMARY KEY,
-  value              VARCHAR(2048) NOT NULL,
+  value              VARCHAR(4096) NOT NULL,
   complex_value      JSONB,
   created_at         TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
