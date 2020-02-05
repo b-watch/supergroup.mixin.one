@@ -65,6 +65,7 @@ type Config struct {
 		RewardsEnable                   bool     `yaml:"rewards_enable"`
 		RewardsMinAmountBase            string   `yaml:"rewards_min_amount_base"`
 		RewardsAssetList                []string `yaml:"rewards_asset_list"`
+		RedPacketEnable                 bool     `yaml:"redpacket_enable"`
 		RedPacketMinAmountBase          string   `yaml:"redpacket_min_amount_base"`
 		RedPacketAssetList              []string `yaml:"redpacket_asset_list"`
 		RedPacketNormDistSigmaMeanRatio string   `yaml:"redpacket_normal_distribution_sigma_mean_ratio"`
@@ -153,6 +154,7 @@ type ExportedConfig struct {
 	InviteToJoin           bool            `json:"invite_to_join"`
 	RewardsEnable          bool            `json:"rewards_enable"`
 	RewardsMinAmountBase   string          `json:"rewards_min_amount_base"`
+	RedPacketEnable        bool            `json:"redpacket_enable"`
 	RedPacketMinAmountBase string          `json:"redpacket_min_amount_base"`
 	RedPacketMaxCount      int64           `json:"redpacket_max_count"`
 	HomeWelcomeMessage     string          `json:"home_welcome_message"`

@@ -88,7 +88,7 @@
         </van-panel>
         <br />
       </template>
-      <van-panel :title="$t('home.pane_operations')">
+      <van-panel v-if="builtinItems.length" :title="$t('home.pane_operations')">
         <cell-table
           :items="builtinItems"
           @external="openExternalLink"
@@ -195,11 +195,14 @@ export default {
           this.$toast(this.$t("errors.no_luckycoin_in_lecture_mode"));
         };
       }
-      this.builtinItems.push(this.luckyCoinItem);
 
       // tips visbility
       if (this.websiteConf.data.rewards_enable) {
         this.builtinItems.push(this.rewardsItem);
+      }
+      // luckycoin visbility
+      if (this.websiteConf.data.redpacket_enable) {
+        this.builtinItems.push(this.luckyCoinItem);
       }
       // invitation visbility
       if (this.websiteConf.data.invite_to_join) {
