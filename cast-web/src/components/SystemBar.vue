@@ -1,7 +1,19 @@
 <template>
   <v-scroll-y-transition>
     <v-system-bar
+      v-if="!isBroadcasting"
+      fixed
+      window
+      dark
+      color="error"
+      class="bottom-bar"
+      @click="handleSymtemBarClick"
+    >
+      <span>大群广播模式未开启</span>
+    </v-system-bar>
+    <v-system-bar
       v-show="show"
+      v-else
       fixed
       window
       dark
@@ -68,12 +80,21 @@ export default {
   name: "SystemBar",
   computed: {
     ...mapState('app', {
-      show: state => state.systemBar
+      systemBar: state => state.systemBar
+    }),
+    ...mapState('group', {
+      broadcast: state => state.information.broadcast
     }),
     ...mapState('message', {
       state: state => state.state,
       hasNewMessage: state => state.hasNewMessage
     }),
+    isBroadcasting() {
+      return this.broadcast === 'on'
+    },
+    show () {
+      return this.systemBar
+    },
     connecting() {
       return this.state === SOCKET_STATE.CONNECTING
     },

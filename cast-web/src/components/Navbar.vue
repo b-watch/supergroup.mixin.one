@@ -72,7 +72,7 @@ export default {
       information: state => state.information
     }),
     groupName() {
-      return this.config.service_name
+      return this.config.service_name || '大群广播'
     },
     usersCount() {
       return this.information.users_count
