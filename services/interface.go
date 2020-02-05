@@ -1,7 +1,11 @@
 package services
 
-import "context"
+import (
+	"context"
+
+	"github.com/MixinNetwork/supergroup.mixin.one/models"
+)
 
 type Service interface {
-	Run(context.Context, chan WsBroadcastMessage) error
+	Run(context.Context, chan models.WsBroadcastMessage) error
 }

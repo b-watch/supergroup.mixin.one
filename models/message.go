@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"log"
 	"math/rand"
 	"strings"
 	"time"
@@ -63,17 +64,47 @@ func messageFromRow(row durable.Row) (*Message, error) {
 }
 
 type Message struct {
-	MessageId        string
-	UserId           string
-	Category         string
-	QuoteMessageId   string
-	Data             string
-	CreatedAt        time.Time
-	UpdatedAt        time.Time
-	State            string
-	LastDistributeAt time.Time
+	MessageId        string    `json:"message_id"`
+	UserId           string    `json:"user_id"`
+	Category         string    `json:"category"`
+	QuoteMessageId   string    `json:"quote_message_id"`
+	Data             string    `json:"data"`
+	CreatedAt        time.Time `json:"created_at"`
+	UpdatedAt        time.Time `json:"updated_at"`
+	State            string    `json:"state"`
+	LastDistributeAt time.Time `json:"last_distributed_at"`
 
-	FullName sql.NullString
+	FullName sql.NullString `json:"fullname"`
+}
+
+type WsBroadcastMessage struct {
+	MessageId      string                       `json:"id"`
+	QuoteMessageId string                       `json:"quote_message_id"`
+	SpeakerName    string                       `json:"speaker_name"`
+	SpeakerAvatar  string                       `json:"speaker_avatar"`
+	SpeakerId      string                       `json:"speaker_id"`
+	Category       string                       `json:"category"`
+	Data           string                       `json:"data"`
+	Text           string                       `json:"text"`
+	Attachment     WsBroadcastMessageAttachment `json:"attachment"`
+	CreatedAt      time.Time                    `json:"created_at"`
+}
+
+type WsBroadcastMessageAttachment struct {
+	ID        string `json:"id"`
+	Size      int    `json:"size"`
+	MimeType  string `json:"mime_type"`
+	Persisted bool   `json:"-"`
+
+	Name      *string `json:"name,omitempty"`
+	Duration  *uint   `json:"duration,omitempty"`
+	Waveform  []byte  `json:"waveform,omitempty"`
+	Width     *uint   `json:"width,omitempty"`
+	Height    *uint   `json:"height,omitempty"`
+	Thumbnail []byte  `json:"thumbnail,omitempty"`
+
+	ViewUrl  string `json:"view_url"`
+	ThumbUrl string `json:"thumb_url"`
 }
 
 func CreateMessage(ctx context.Context, user *User, messageId, category, quoteMessageId, data string, createdAt, updatedAt time.Time) (*Message, error) {
@@ -138,6 +169,22 @@ func CreateMessage(ctx context.Context, user *User, messageId, category, quoteMe
 				quoteMessageId = ""
 				category = MessageCategoryMessageRecall
 				data = base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf(`{"message_id":"%s"}`, dm.ParentId)))
+			}
+			if str == "PIN" || str == "UNPIN" {
+				msg, err := FindMessage(ctx, quoteMessageId)
+				if err != nil || msg == nil {
+					return nil, err
+				}
+				if str == "PIN" {
+					if err = PinMessageProperty(ctx, msg); err != nil {
+						return nil, err
+					}
+				}
+				if str == "UNPIN" {
+					if err = UnpinMessageProperty(ctx); err != nil {
+						return nil, err
+					}
+				}
 			}
 		}
 	}
@@ -449,4 +496,110 @@ func readLastestMessagesInTx(ctx context.Context, tx *sql.Tx, limit int64) ([]*M
 
 type RecallMessage struct {
 	MessageId string `json:"message_id"`
+}
+
+func GetExportedMessage(ctx context.Context, user *User, message *Message) (WsBroadcastMessage, error) {
+	var bmsg WsBroadcastMessage
+	bmsg.Category = message.Category
+	bmsg.QuoteMessageId = message.QuoteMessageId
+	bmsg.MessageId = message.MessageId
+	bmsg.CreatedAt = message.UpdatedAt
+	bmsg.Data = message.Data
+	bmsg.SpeakerId = user.UserId
+	bmsg.SpeakerName = user.FullName
+	bmsg.SpeakerAvatar = user.AvatarURL
+
+	if message.Category == "PLAIN_TEXT" {
+		bytes, _ := base64.StdEncoding.DecodeString(message.Data)
+		bmsg.Text = string(bytes)
+		return bmsg, nil
+	}
+
+	data, err := base64.StdEncoding.DecodeString(message.Data)
+	if err != nil {
+		log.Println("message data decode error", err)
+		return bmsg, err
+	}
+
+	if message.Category == "PLAIN_IMAGE" ||
+		message.Category == "PLAIN_VIDEO" ||
+		message.Category == "PLAIN_AUDIO" ||
+		message.Category == "PLAIN_DATA" {
+		att, err := attachmentFromMixinJSON(string(data))
+		if err != nil {
+			log.Println("decode attachment error", err)
+			return bmsg, err
+		}
+		attResp, err := bot.AttachemntShow(ctx, config.AppConfig.Mixin.ClientId, config.AppConfig.Mixin.SessionId, config.AppConfig.Mixin.SessionKey, att.ID)
+		if err != nil {
+			log.Println("get attachment details error", err)
+		}
+		att.ViewUrl = attResp.ViewURL
+		bmsg.Attachment = att
+	} else if message.Category == "PLAIN_LIVE" {
+		att, err := liveCardFromMixinJSON(string(data))
+		if err != nil {
+			log.Println("decode live card error", err)
+		}
+		bmsg.Attachment = att
+	}
+
+	return bmsg, nil
+}
+
+func attachmentFromMixinJSON(jsonString string) (att WsBroadcastMessageAttachment, err error) {
+	var data struct {
+		ID        string  `json:"attachment_id"`
+		Size      int     `json:"size"`
+		MimeType  string  `json:"mime_type"`
+		Name      *string `json:"name"`
+		Duration  *uint   `json:"duration"`
+		Waveform  *string `json:"waveform"`
+		Width     *uint   `json:"width"`
+		Height    *uint   `json:"height"`
+		Thumbnail *string `json:"thumbnail"`
+	}
+	err = json.Unmarshal([]byte(jsonString), &data)
+	if err != nil {
+		return
+	}
+
+	att.ID = data.ID
+	att.Size = data.Size
+	att.MimeType = data.MimeType
+	att.Duration = data.Duration
+	if data.Waveform != nil {
+		att.Waveform, err = base64.StdEncoding.DecodeString(*data.Waveform)
+		if err != nil {
+			return
+		}
+	}
+	att.Name = data.Name
+	att.Width = data.Width
+	att.Height = data.Height
+	if data.Thumbnail != nil {
+		att.Thumbnail, err = base64.StdEncoding.DecodeString(*data.Thumbnail)
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+
+func liveCardFromMixinJSON(jsonString string) (att WsBroadcastMessageAttachment, err error) {
+	var data struct {
+		Width    *uint   `json:"width"`
+		Height   *uint   `json:"height"`
+		ThumbUrl *string `json:"thumb_url"`
+		Url      *string `json:"url"`
+	}
+	err = json.Unmarshal([]byte(jsonString), &data)
+	if err != nil {
+		return
+	}
+	att.ViewUrl = *data.Url
+	att.Width = data.Width
+	att.Height = data.Height
+	att.ThumbUrl = *data.ThumbUrl
+	return
 }

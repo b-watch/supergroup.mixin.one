@@ -5,16 +5,17 @@ import (
 	"fmt"
 
 	"github.com/MixinNetwork/supergroup.mixin.one/durable"
+	"github.com/MixinNetwork/supergroup.mixin.one/models"
 	"github.com/MixinNetwork/supergroup.mixin.one/session"
 )
 
 type Hub struct {
 	context       context.Context
 	services      map[string]Service
-	broadcastChan chan WsBroadcastMessage
+	broadcastChan chan models.WsBroadcastMessage
 }
 
-func NewHub(db *durable.Database, broadcastChan chan WsBroadcastMessage) *Hub {
+func NewHub(db *durable.Database, broadcastChan chan models.WsBroadcastMessage) *Hub {
 	hub := &Hub{services: make(map[string]Service)}
 	hub.context = session.WithDatabase(context.Background(), db)
 	hub.broadcastChan = broadcastChan

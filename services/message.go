@@ -39,7 +39,7 @@ type MessageService struct{}
 
 type MessageContext struct {
 	user        *mixin.User
-	bc          chan WsBroadcastMessage
+	bc          chan models.WsBroadcastMessage
 	recipientID map[string]time.Time
 }
 
@@ -98,7 +98,7 @@ type TransferMemoInst struct {
 	Param2 string `json:"p2"`
 }
 
-func (service *MessageService) Run(ctx context.Context, broadcastChan chan WsBroadcastMessage) error {
+func (service *MessageService) Run(ctx context.Context, broadcastChan chan models.WsBroadcastMessage) error {
 	go distribute(ctx)
 	go loopPendingMessage(ctx)
 	go handlePendingParticipants(ctx)
@@ -321,7 +321,7 @@ func handlePendingParticipants(ctx context.Context) {
 	}
 }
 
-func handleMessage(ctx context.Context, mc *MessageContext, message *mixin.MessageView, broadcastChan chan WsBroadcastMessage) error {
+func handleMessage(ctx context.Context, mc *MessageContext, message *mixin.MessageView, broadcastChan chan models.WsBroadcastMessage) error {
 	user, err := models.FindUser(ctx, message.UserID)
 	if err != nil {
 		return err
@@ -361,7 +361,7 @@ func handleMessage(ctx context.Context, mc *MessageContext, message *mixin.Messa
 	// broadcast
 	if isBroadcastOn, err := models.ReadBroadcastProperty(ctx); err == nil && isBroadcastOn == "on" && msg != nil {
 		go func() {
-			if bmsg, err := decodeMessage(ctx, user, message); err == nil {
+			if bmsg, err := models.GetExportedMessage(ctx, user, msg); err == nil {
 				broadcastChan <- bmsg
 			}
 		}()
@@ -378,112 +378,6 @@ func sendHelpMessage(ctx context.Context, user *models.User, mc *MessageContext,
 		return err
 	}
 	return nil
-}
-
-func decodeMessage(ctx context.Context, user *models.User, message *mixin.MessageView) (WsBroadcastMessage, error) {
-	var bmsg WsBroadcastMessage
-	bmsg.Category = message.Category
-	bmsg.QuoteMessageId = message.QuoteMessageID
-	bmsg.MessageId = message.MessageID
-	bmsg.CreatedAt = message.UpdatedAt
-	bmsg.Data = message.Data
-	bmsg.SpeakerId = user.UserId
-	bmsg.SpeakerName = user.FullName
-	bmsg.SpeakerAvatar = user.AvatarURL
-
-	if message.Category == "PLAIN_TEXT" {
-		bytes, _ := base64.StdEncoding.DecodeString(message.Data)
-		bmsg.Text = string(bytes)
-		return bmsg, nil
-	}
-
-	data, err := base64.StdEncoding.DecodeString(message.Data)
-	if err != nil {
-		log.Println("message data decode error", err)
-		return bmsg, err
-	}
-
-	if message.Category == "PLAIN_IMAGE" ||
-		message.Category == "PLAIN_VIDEO" ||
-		message.Category == "PLAIN_AUDIO" ||
-		message.Category == "PLAIN_DATA" {
-		att, err := attachmentFromMixinJSON(string(data))
-		if err != nil {
-			log.Println("decode attachment error", err)
-			return bmsg, err
-		}
-		attResp, err := bot.AttachemntShow(ctx, config.AppConfig.Mixin.ClientId, config.AppConfig.Mixin.SessionId, config.AppConfig.Mixin.SessionKey, att.ID)
-		if err != nil {
-			log.Println("get attachment details error", err)
-		}
-		att.ViewUrl = attResp.ViewURL
-		bmsg.Attachment = att
-	} else if message.Category == "PLAIN_LIVE" {
-		att, err := liveCardFromMixinJSON(string(data))
-		if err != nil {
-			log.Println("decode live card error", err)
-		}
-		bmsg.Attachment = att
-	}
-
-	return bmsg, nil
-}
-
-func attachmentFromMixinJSON(jsonString string) (att WsBroadcastMessageAttachment, err error) {
-	var data struct {
-		ID        string  `json:"attachment_id"`
-		Size      int     `json:"size"`
-		MimeType  string  `json:"mime_type"`
-		Name      *string `json:"name"`
-		Duration  *uint   `json:"duration"`
-		Waveform  *string `json:"waveform"`
-		Width     *uint   `json:"width"`
-		Height    *uint   `json:"height"`
-		Thumbnail *string `json:"thumbnail"`
-	}
-	err = json.Unmarshal([]byte(jsonString), &data)
-	if err != nil {
-		return
-	}
-
-	att.ID = data.ID
-	att.Size = data.Size
-	att.MimeType = data.MimeType
-	att.Duration = data.Duration
-	if data.Waveform != nil {
-		att.Waveform, err = base64.StdEncoding.DecodeString(*data.Waveform)
-		if err != nil {
-			return
-		}
-	}
-	att.Name = data.Name
-	att.Width = data.Width
-	att.Height = data.Height
-	if data.Thumbnail != nil {
-		att.Thumbnail, err = base64.StdEncoding.DecodeString(*data.Thumbnail)
-		if err != nil {
-			return
-		}
-	}
-	return
-}
-
-func liveCardFromMixinJSON(jsonString string) (att WsBroadcastMessageAttachment, err error) {
-	var data struct {
-		Width    *uint   `json:"width"`
-		Height   *uint   `json:"height"`
-		ThumbUrl *string `json:"thumb_url"`
-		Url      *string `json:"url"`
-	}
-	err = json.Unmarshal([]byte(jsonString), &data)
-	if err != nil {
-		return
-	}
-	att.ViewUrl = *data.Url
-	att.Width = data.Width
-	att.Height = data.Height
-	att.ThumbUrl = *data.ThumbUrl
-	return
 }
 
 func generateRewardTraceID(originTraceID string) (string, error) {
