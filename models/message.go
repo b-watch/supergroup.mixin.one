@@ -173,6 +173,7 @@ func CreateMessage(ctx context.Context, user *User, messageId, category, quoteMe
 			if str == "PIN" || str == "UNPIN" {
 				dm, err := FindDistributedMessage(ctx, quoteMessageId)
 				var msg Message
+				var exported WsBroadcastMessage
 				msg.CreatedAt = dm.CreatedAt
 				msg.MessageId = dm.MessageId
 				msg.QuoteMessageId = dm.QuoteMessageId
@@ -182,12 +183,13 @@ func CreateMessage(ctx context.Context, user *User, messageId, category, quoteMe
 				msg.UpdatedAt = dm.CreatedAt
 				msg.State = dm.Status
 				msg.LastDistributeAt = dm.CreatedAt
+				exported, err = GetExportedMessage(ctx, user, &msg)
 				if err != nil || dm == nil {
 					log.Printf("quote %s %v %v\n", quoteMessageId, dm, err)
 					return nil, err
 				}
 				if str == "PIN" {
-					if err = PinMessageProperty(ctx, &msg); err != nil {
+					if err = PinMessageProperty(ctx, &exported); err != nil {
 						return nil, err
 					}
 				}
