@@ -15,5 +15,6 @@ func ReadStatistic(ctx context.Context, user *User) (map[string]interface{}, err
 	s["mode"], _ = ReadGroupModeProperty(ctx)
 	s["announcement"], _ = ReadAnnouncementProperty(ctx)
 	s["broadcast"], _ = ReadBroadcastProperty(ctx)
+	s["pinned_message"], _ = ReadPinnedMessage(ctx)
 	return s, nil
 }

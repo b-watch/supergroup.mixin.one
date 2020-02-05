@@ -14,6 +14,7 @@ import (
 	"github.com/MixinNetwork/supergroup.mixin.one/config"
 	"github.com/MixinNetwork/supergroup.mixin.one/durable"
 	"github.com/MixinNetwork/supergroup.mixin.one/interceptors"
+	"github.com/MixinNetwork/supergroup.mixin.one/models"
 	"github.com/MixinNetwork/supergroup.mixin.one/plugin"
 	"github.com/MixinNetwork/supergroup.mixin.one/services"
 )
@@ -80,7 +81,7 @@ func main() {
 			log.Println(err)
 		}
 	default:
-		WsBroadcastChan := make(chan services.WsBroadcastMessage, 3)
+		WsBroadcastChan := make(chan models.WsBroadcastMessage, 3)
 		go services.StartWebsocketService(*service, database, WsBroadcastChan)
 		go func() {
 			hub := services.NewHub(database, WsBroadcastChan)

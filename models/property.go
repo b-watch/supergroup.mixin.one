@@ -34,6 +34,8 @@ const (
 	PropGroupModeFree    = "free"
 	PropGroupModeLecture = "lecture"
 	PropGroupModeMute    = "mute"
+
+	PropPinnedMessage = "pinned-message-property"
 )
 
 const properties_DDL = `
@@ -233,6 +235,31 @@ func readGroupModeProperty(ctx context.Context, tx *sql.Tx) (string, error) {
 
 func readBroadcastProperty(ctx context.Context, tx *sql.Tx) (string, error) {
 	return readPropertyAsString(ctx, tx, PropBroadcast)
+}
+
+func ReadPinnedMessage(ctx context.Context) (string, error) {
+	var p *Property
+	err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
+		var err error
+		p, err = readProperty(ctx, tx, PropPinnedMessage)
+		return err
+	})
+
+	if err != nil {
+		return "", err
+	}
+	return p.Value, nil
+}
+
+func PinMessageProperty(ctx context.Context, msg *Message) error {
+	msgStr, _ := json.Marshal(msg)
+	_, err := CreateProperty(ctx, PropPinnedMessage, string(msgStr), nil)
+	return err
+}
+
+func UnpinMessageProperty(ctx context.Context) error {
+	_, err := CreateProperty(ctx, PropPinnedMessage, "", nil)
+	return err
 }
 
 func ReadRolesProperty(ctx context.Context) (RoleSet, error) {
