@@ -1,7 +1,7 @@
 <template>
   <v-layout
     ref="message"
-    :class="[messageClass, 'message']"
+    :class="[messageClass, 'message', {'focus': isFocus}]"
   >
     <v-avatar
       height="32"
@@ -22,6 +22,7 @@
       >
         {{ message.speaker_name }}
       </div>
+      <quote-message :message="message" />
       <message-item
         :message="message"
         v-bind="$attrs"
@@ -39,6 +40,7 @@
 import { mapGetters } from 'vuex'
 import MessageTime from './MessageTime'
 import MessageItem from './MessageItem'
+import QuoteMessage from './QuoteMessage'
 
 const MESSAGE_CLASS = {
   PLAIN_TEXT: 'message-text',
@@ -51,7 +53,8 @@ export default {
   name: 'MessageBubble',
   components: {
     MessageItem,
-    MessageTime
+    MessageTime,
+    QuoteMessage
   },
   props: {
     message: {
@@ -61,6 +64,11 @@ export default {
     prev: {
       type: Object,
       default: () => {}
+    }
+  },
+  data() {
+    return {
+      isFocus: false
     }
   },
   computed: {
@@ -74,6 +82,18 @@ export default {
     messageClass() {
       return MESSAGE_CLASS[this.message.category]
     }
+  },
+  mounted() {
+    this.$root.$on('focusMessage', (message) => {
+      if (this.message.id === message.id) {
+        this.isFocus = true
+        setTimeout(() => {
+          this.isFocus = false
+        }, 3000)
+        const el = this.$refs.message
+        this.$vuetify.goTo(el, { duration: 200 })
+      }
+    })
   }
 };
 </script>
@@ -81,6 +101,25 @@ export default {
 <style lang="scss" scoped>
 .message {
   margin: 8px 0;
+  position: relative;
+  z-index: 1;
+
+  &::after {
+    content: '';
+    z-index: -1;
+    position: absolute;
+    top: -4px;
+    bottom: -4px;
+    right: -12px;
+    left: -12px;
+    transition: all 0.4s ease;
+  }
+
+  &.focus {
+    &::after {
+      background-color: #ECEFF1;
+    }
+  }
 
   .bubble {
     margin-left: 15px;

@@ -18,6 +18,11 @@ const getters = {
       Vue.set(state.nameColorMap, message.speaker_name, color)
       return color
     }
+  },
+  getMessageById(state) {
+    return (id) => {
+      return state.messages.find(m => m.id === id)
+    }
   }
 }
 

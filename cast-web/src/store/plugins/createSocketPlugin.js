@@ -1,13 +1,11 @@
-import { WS_BASE_URL, SUP_MESSAGE_CAT } from '@/constants';
+import { WS_BASE_URL } from '@/constants';
 
 const MESSAGE_WS = WS_BASE_URL + "/messages";
 
 export default function (socket) {
   return function (store) {
     const onmessage = function (msg) {
-      if (SUP_MESSAGE_CAT.includes(msg.category)) {
-        store.commit('message/ADD_MESSAGE', msg)
-      }
+      store.commit('message/ADD_MESSAGE', msg)
     }
     const onconnect = function () {
       store.commit('message/CONNECTING')

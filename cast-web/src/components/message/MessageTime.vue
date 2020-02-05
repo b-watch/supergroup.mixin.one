@@ -7,6 +7,8 @@
   </div>
 </template>
 <script>
+import { SUP_MESSAGE_CAT } from '@/constants'
+
 export default {
   name: "MessageTime",
   props: {
@@ -17,7 +19,10 @@ export default {
   },
   computed: {
     textStyle() {
-      return ['PLAIN_TEXT', 'PLAIN_AUDIO'].includes(this.message.category)
+      return ['PLAIN_TEXT', 'PLAIN_AUDIO', 'PLAIN_DATA'].includes(this.message.category) || this.unsupportMessage
+    },
+    unsupportMessage() {
+      return !SUP_MESSAGE_CAT.includes(this.message.category)
     }
   }
 }

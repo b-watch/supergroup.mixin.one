@@ -5,6 +5,8 @@
       <chat-area />
     </v-content>
     <system-bar />
+    <open-in-browser />
+    <page-footer />
   </v-app>
 </template>
 
@@ -12,6 +14,8 @@
 import ChatArea from './components/ChatArea';
 import Navbar from './components/Navbar'
 import SystemBar from './components/SystemBar'
+import OpenInBrowser from './components/OpenInBrowser'
+import PageFooter from './components/PageFooter'
 import { mapActions } from 'vuex'
 
 export default {
@@ -20,7 +24,9 @@ export default {
   components: {
     ChatArea,
     SystemBar,
-    Navbar
+    Navbar,
+    OpenInBrowser,
+    PageFooter
   },
 
   mounted() {

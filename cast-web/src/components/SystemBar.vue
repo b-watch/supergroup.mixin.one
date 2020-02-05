@@ -7,18 +7,12 @@
       dark
       :color="stateColor"
       class="bottom-bar"
+      @click="handleSymtemBarClick"
     >
       <template v-if="hasNewMessage">
         <v-icon>mdi-message</v-icon>
         <span>有新信息</span>
         <v-spacer />
-        <v-btn
-          text
-          small
-          @click="handleCheckMsg"
-        >
-          查看
-        </v-btn>
       </template>
       <template v-else>
         <v-icon
@@ -50,7 +44,7 @@
   </v-scroll-y-transition>
 </template>
 <script>
-import { mapState } from 'vuex'
+import { mapState, mapMutations } from 'vuex'
 import { SOCKET_STATE } from '@/constants'
 
 const STATE_META = {
@@ -72,12 +66,10 @@ const STATE_META = {
 
 export default {
   name: "SystemBar",
-  data () {
-    return {
-      show: true
-    };
-  },
   computed: {
+    ...mapState('app', {
+      show: state => state.systemBar
+    }),
     ...mapState('message', {
       state: state => state.state,
       hasNewMessage: state => state.hasNewMessage
@@ -114,22 +106,28 @@ export default {
     state(val) {
       if (val === SOCKET_STATE.CONNECTED) {
         setTimeout(() => {
-          this.show = false
+          this.setSystemBar(false)
         }, 1000)
       } else if (val === SOCKET_STATE.DISCONNECT) {
-        this.show = true
+        this.setSystemBar(true)
       }
     },
-    hasNewMessage(val) {
-      this.show = val
+    hasNewMessage(value) {
+      this.setSystemBar(value)
     }
   },
   methods: {
+    ...mapMutations('app', ['setSystemBar']),
     handleReconnect() {
       this.$socket.reconnect()
     },
     handleCheckMsg() {
       this.$root.$emit('CHECK_NEW_MESSAGE')
+    },
+    handleSymtemBarClick() {
+      if (this.hasNewMessage) {
+        this.handleCheckMsg()
+      }
     }
   }
 }
@@ -138,5 +136,6 @@ export default {
 .bottom-bar {
   bottom: 0!important;
   top: auto;
+  z-index: 6;
 }
 </style>

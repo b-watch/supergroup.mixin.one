@@ -12,16 +12,16 @@ import AudioMessage from './AudioMessage.vue'
 import ImageMessage from './ImageMessage.vue'
 import TextMessage from './TextMessage.vue'
 import VideoMessage from './VideoMessage.vue'
-import MessageTime from './MessageTime.vue'
+import UnSupportMessage from './UnSupportMessage.vue'
+import FileMessage from './FileMessage.vue'
 
 const MESSAGE_COMPONENT = {
   PLAIN_TEXT: 'text-message',
   PLAIN_IMAGE: 'image-message',
   PLAIN_VIDEO: 'video-message',
-  PLAIN_AUDIO: 'audio-message'
+  PLAIN_AUDIO: 'audio-message',
+  PLAIN_DATA: 'file-message'
 }
-
-export const wrapper = Symbol('messageWrapper')
 
 export default {
   name: 'MessageItem',
@@ -29,7 +29,9 @@ export default {
     AudioMessage, 
     ImageMessage,
     TextMessage, 
-    VideoMessage
+    VideoMessage,
+    UnSupportMessage,
+    FileMessage
   },
   props: {
     message: {
@@ -39,7 +41,10 @@ export default {
   },
   computed: {
     messageComponent() {
-      return MESSAGE_COMPONENT[this.message.category]
+      if (Object.keys(MESSAGE_COMPONENT).includes(this.message.category)) {
+        return MESSAGE_COMPONENT[this.message.category]
+      }
+      return 'un-support-message'
     }
   }
 };
