@@ -171,8 +171,8 @@ func CreateMessage(ctx context.Context, user *User, messageId, category, quoteMe
 				data = base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf(`{"message_id":"%s"}`, dm.ParentId)))
 			}
 			if str == "PIN" || str == "UNPIN" {
-				var msg *Message
 				var exported WsBroadcastMessage
+				msg := &Message{}
 				dm, err := FindDistributedMessage(ctx, quoteMessageId)
 				if dm != nil {
 					log.Printf("quote dm %s %v %v\n", quoteMessageId, dm, err)
