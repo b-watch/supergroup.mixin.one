@@ -1,6 +1,8 @@
 <template>
   <v-app class="app">
-    <navbar />
+    <div>
+      <navbar />
+    </div>
     <v-content>
       <chat-area />
     </v-content>

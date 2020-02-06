@@ -1,7 +1,6 @@
 <template>
   <v-app-bar
     class="app-bar align-start"
-    app
     dark
     :color="$colors.NAV_COLOR"
     height="auto"

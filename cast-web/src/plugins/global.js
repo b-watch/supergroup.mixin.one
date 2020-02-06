@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import { COLORS } from '@/constants'
 import timeUtils from '@/utils/time'
-import touch from '@/utils/touch'
+import touch from '@/directives/touch'
 import mutate from 'vuetify/lib/directives/mutate'
 import intersect from 'vuetify/lib/directives/intersect'
 

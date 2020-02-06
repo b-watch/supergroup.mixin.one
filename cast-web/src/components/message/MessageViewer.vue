@@ -18,7 +18,7 @@
         </v-btn>
       </div>
       <message-item
-        v-touch="{ swipe: handleSwipe, enable: touchless }"
+        v-touch="{ swipe: handleSwipe, enable: touchless, scale: true }"
         :message="message"
         class="viewer"
       />
@@ -41,12 +41,12 @@ export default {
     };
   },
   mounted() {
-    this.$root.$on('viewMessage', (message) => {
-      this.show(message)
+    this.$root.$on('viewMessage', (message, { touchless = false } = {}) => {
+      this.show(message, touchless)
     })
   },
   methods: {
-    show(message, { touchless = false } = {}) {
+    show(message, touchless) {
       this.message = message
       this.dialog = true
       this.touchless = touchless

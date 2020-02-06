@@ -46,7 +46,8 @@ const MESSAGE_CLASS = {
   PLAIN_TEXT: 'message-text',
   PLAIN_IMAGE: 'message-image',
   PLAIN_VIDEO: 'message-video',
-  PLAIN_AUDIO: 'message-audio'
+  PLAIN_AUDIO: 'message-audio',
+  PLAIN_LIVE: 'message-live'
 }
 
 export default {
@@ -102,7 +103,6 @@ export default {
 .message {
   margin: 8px 0;
   position: relative;
-  z-index: 1;
 
   &::after {
     content: '';
@@ -116,6 +116,8 @@ export default {
   }
 
   &.focus {
+    z-index: 1;
+
     &::after {
       background-color: #ECEFF1;
     }
@@ -151,9 +153,11 @@ export default {
   }
 }
 
-.message-image, .message-video {
+.message-image, 
+.message-video, 
+.message-live {
   .bubble {
-    max-width: 220px;
+    max-width: 240px;
   }
 }
 </style>

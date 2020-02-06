@@ -6,8 +6,8 @@
         :key="msg.id"
         :idx="index"
         :message="msg"
+        :pip="true"
         :prev="getPrev(index, messages)"
-        @click.native="handleClickMessage(msg)"
       />
     </template>
     <template v-else>
