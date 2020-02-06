@@ -252,8 +252,7 @@ func ReadPinnedMessage(ctx context.Context) (interface{}, error) {
 }
 
 func PinMessageProperty(ctx context.Context, msg *WsBroadcastMessage) error {
-	msgStr, _ := json.Marshal(msg)
-	_, err := CreateProperty(ctx, PropPinnedMessage, "", string(msgStr))
+	_, err := CreateProperty(ctx, PropPinnedMessage, "", msg)
 	return err
 }
 

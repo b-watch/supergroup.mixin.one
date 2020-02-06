@@ -64,17 +64,17 @@ func messageFromRow(row durable.Row) (*Message, error) {
 }
 
 type Message struct {
-	MessageId        string    `json:"message_id"`
-	UserId           string    `json:"user_id"`
-	Category         string    `json:"category"`
-	QuoteMessageId   string    `json:"quote_message_id"`
-	Data             string    `json:"data"`
-	CreatedAt        time.Time `json:"created_at"`
-	UpdatedAt        time.Time `json:"updated_at"`
-	State            string    `json:"state"`
-	LastDistributeAt time.Time `json:"last_distributed_at"`
+	MessageId        string    `mapstructure:"message_id" json:"message_id"`
+	UserId           string    `mapstructure:"user_id" json:"user_id"`
+	Category         string    `mapstructure:"category" json:"category"`
+	QuoteMessageId   string    `mapstructure:"quote_message_id" json:"quote_message_id"`
+	Data             string    `mapstructure:"data" json:"data"`
+	CreatedAt        time.Time `mapstructure:"created_at" json:"created_at"`
+	UpdatedAt        time.Time `mapstructure:"updated_at" json:"updated_at"`
+	State            string    `mapstructure:"state" json:"state"`
+	LastDistributeAt time.Time `mapstructure:"last_distributed_at" json:"last_distributed_at"`
 
-	FullName sql.NullString `json:"fullname"`
+	FullName sql.NullString `mapstructure:"fullname" json:"fullname"`
 }
 
 type WsBroadcastMessage struct {
@@ -175,7 +175,6 @@ func CreateMessage(ctx context.Context, user *User, messageId, category, quoteMe
 				msg := &Message{}
 				dm, err := FindDistributedMessage(ctx, quoteMessageId)
 				if dm != nil {
-					log.Printf("quote dm %s %v %v\n", quoteMessageId, dm, err)
 					msg.CreatedAt = dm.CreatedAt
 					msg.MessageId = dm.MessageId
 					msg.QuoteMessageId = dm.QuoteMessageId
