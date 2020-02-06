@@ -193,13 +193,19 @@ func CreateMessage(ctx context.Context, user *User, messageId, category, quoteMe
 					}
 				}
 				exported, err = GetExportedMessage(ctx, user, msg)
+				if err != nil {
+					log.Printf("exported msg %v %v\n", exported, err)
+					return nil, err
+				}
 				if str == "PIN" {
 					if err = PinMessageProperty(ctx, &exported); err != nil {
+						log.Printf("pin msg %v %v\n", exported, err)
 						return nil, err
 					}
 				}
 				if str == "UNPIN" {
 					if err = UnpinMessageProperty(ctx); err != nil {
+						log.Printf("unpin msg %v %v\n", exported, err)
 						return nil, err
 					}
 				}
