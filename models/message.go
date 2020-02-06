@@ -171,23 +171,27 @@ func CreateMessage(ctx context.Context, user *User, messageId, category, quoteMe
 				data = base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf(`{"message_id":"%s"}`, dm.ParentId)))
 			}
 			if str == "PIN" || str == "UNPIN" {
-				dm, err := FindDistributedMessage(ctx, quoteMessageId)
-				if err != nil || dm == nil {
-					log.Printf("quote %s %v %v\n", quoteMessageId, dm, err)
-					return nil, err
-				}
-				var msg Message
+				var msg *Message
 				var exported WsBroadcastMessage
-				msg.CreatedAt = dm.CreatedAt
-				msg.MessageId = dm.MessageId
-				msg.QuoteMessageId = dm.QuoteMessageId
-				msg.UserId = dm.UserId
-				msg.Category = dm.Category
-				msg.Data = dm.Data
-				msg.UpdatedAt = dm.CreatedAt
-				msg.State = dm.Status
-				msg.LastDistributeAt = dm.CreatedAt
-				exported, err = GetExportedMessage(ctx, user, &msg)
+				dm, err := FindDistributedMessage(ctx, quoteMessageId)
+				if dm != nil {
+					msg.CreatedAt = dm.CreatedAt
+					msg.MessageId = dm.MessageId
+					msg.QuoteMessageId = dm.QuoteMessageId
+					msg.UserId = dm.UserId
+					msg.Category = dm.Category
+					msg.Data = dm.Data
+					msg.UpdatedAt = dm.CreatedAt
+					msg.State = dm.Status
+					msg.LastDistributeAt = dm.CreatedAt
+				} else {
+					msg, err = FindMessage(ctx, quoteMessageId)
+					if msg == nil {
+						log.Printf("quote %s %v %v\n", quoteMessageId, msg, err)
+						return nil, err
+					}
+				}
+				exported, err = GetExportedMessage(ctx, user, msg)
 				if str == "PIN" {
 					if err = PinMessageProperty(ctx, &exported); err != nil {
 						return nil, err
