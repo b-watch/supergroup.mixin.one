@@ -175,6 +175,7 @@ func CreateMessage(ctx context.Context, user *User, messageId, category, quoteMe
 				var exported WsBroadcastMessage
 				dm, err := FindDistributedMessage(ctx, quoteMessageId)
 				if dm != nil {
+					log.Printf("quote dm %s %v %v\n", quoteMessageId, dm, err)
 					msg.CreatedAt = dm.CreatedAt
 					msg.MessageId = dm.MessageId
 					msg.QuoteMessageId = dm.QuoteMessageId
@@ -187,7 +188,7 @@ func CreateMessage(ctx context.Context, user *User, messageId, category, quoteMe
 				} else {
 					msg, err = FindMessage(ctx, quoteMessageId)
 					if msg == nil {
-						log.Printf("quote %s %v %v\n", quoteMessageId, msg, err)
+						log.Printf("quote msg %s %v %v\n", quoteMessageId, msg, err)
 						return nil, err
 					}
 				}
