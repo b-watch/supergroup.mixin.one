@@ -1,5 +1,8 @@
 <template>
-  <v-container v-mutate.child="handleMutate">
+  <v-container
+    ref="chatArea"
+    v-mutate.child="handleMutate"
+  >
     <template v-if="messages.length !== 0">
       <message-bubble
         v-for="(msg, index) in messages"
@@ -51,6 +54,7 @@ export default {
   mounted() {
     this.scrollToBottom()
     this.$root.$on('CHECK_NEW_MESSAGE', () => {
+      console.log('scroll bottom')
       this.scrollToBottom()
     })
   },
@@ -75,8 +79,8 @@ export default {
       }
     },
     scrollToBottom() {
-      const bottom = this.$refs.bottom
-      this.$vuetify.goTo(bottom, { duration: 0 })
+      const content = document.querySelector('#chatContent')
+      content.scrollTop = content.scrollHeight
     }
   }
 };

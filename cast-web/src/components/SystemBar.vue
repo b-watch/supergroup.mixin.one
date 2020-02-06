@@ -7,7 +7,6 @@
       dark
       color="error"
       class="bottom-bar"
-      @click="handleSymtemBarClick"
     >
       <span>大群广播模式未开启</span>
     </v-system-bar>

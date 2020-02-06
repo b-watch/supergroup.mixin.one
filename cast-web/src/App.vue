@@ -3,7 +3,7 @@
     <div>
       <navbar />
     </div>
-    <v-content>
+    <v-content id="chatContent">
       <chat-area />
     </v-content>
     <system-bar />

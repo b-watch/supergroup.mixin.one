@@ -62,7 +62,6 @@ function touch(el, binding = {}, vnode) {
   const defaultValues = { enable: false, limitClient: false, swipe: null, scale: false }
   const bindValues = binding.value || {}
   const options = { ...defaultValues, ...bindValues }
-  console.log('options', options, bindValues, defaultValues)
   if (!options.enable) {
     el.style.transition = ''
     el.style.webkitTransform = '';

@@ -1,0 +1,9 @@
+html, body, .v-application, .v-application--wrap {
+  height: 100%;
+}
+
+.v-content {
+  height: 100%;
+  flex: 1;
+  overflow: auto;
+}
