@@ -83,14 +83,14 @@ export default {
       systemBar: state => state.systemBar
     }),
     ...mapState('group', {
-      broadcast: state => state.information.broadcast
+      information: state => state.information
     }),
     ...mapState('message', {
       state: state => state.state,
       hasNewMessage: state => state.hasNewMessage
     }),
     isBroadcasting() {
-      return this.broadcast === 'on'
+      return this.information && this.information.broadcast === 'on'
     },
     show () {
       return this.systemBar

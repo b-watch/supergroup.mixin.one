@@ -1,66 +1,61 @@
 <template>
   <v-app-bar
-    class="app-bar"
+    class="app-bar align-start"
     app
     dark
     :color="$colors.NAV_COLOR"
-    :height="isPanelExpand ? '256px' : '74px'"
+    height="auto"
   >
-    <v-flex
-      class="mt-1"
-      style="height: 100%"
-    >
-      <v-layout>
-        <v-flex>
-          <h1 class="title">
+    <div class="flex-fill content">
+      <div class="flex-fill d-flex align-center">
+        <div class="flex-fill">
+          <h1 class="subtitle-1 font-weight-bold">
             {{ groupName }}
           </h1>
           <div class="caption">
             {{ usersCount }} listeners
           </div>
-        </v-flex>
-      </v-layout>
-
-      <v-flex
+        </div>
+        <v-btn
+          icon
+          @click="togglePanel"
+        >
+          <v-icon :class="['icon', { 'expand': isPanelExpand }]">
+            mdi-chevron-up
+          </v-icon>
+        </v-btn>
+      </div>
+      <div
         v-if="isPanelExpand"
-        class="pt-2 pb-2"
+        class="py-2"
       >
-        <div class="announcement my-2">
+        <div class="announcement">
           {{ announcement }}
         </div>
         <v-divider
           class="my-2"
         />
-        <v-flex class="py-2">
-          <v-btn
-            outlined
-            block
-            @click="handleJoin"
-          >
-            Join Group
-          </v-btn>
-        </v-flex>
-      </v-flex>
-      <div
-        class="text-center"
-        style="margin-top: -10px;"
-        @click="togglePanel"
-      >
-        <v-icon v-if="isPanelExpand">
-          mdi-chevron-up
-        </v-icon>
-        <v-icon v-else>
-          mdi-chevron-down
-        </v-icon>
+        <v-btn
+          outlined
+          block
+          @click="handleJoin"
+        >
+          Join Group
+        </v-btn>
       </div>
-    </v-flex>
+      <pinned-message v-else />
+    </div>
   </v-app-bar>
 </template>
 <script>
+import PinnedMessage from './message/PinnedMessage'
+
 import { mapState } from 'vuex'
 export default {
   name: "Navbar",
-
+  components: {
+    PinnedMessage
+  },
   data () {
     return {
       isPanelExpand: false
@@ -94,17 +89,23 @@ export default {
       this.isPanelExpand = !this.isPanelExpand
     },
     handleJoin() {
-      // window.location.href = 'https://mixin.one/codes/'
+      this.$downloadApp()
     }
   }
 }
 </script>
 <style lang="scss" scoped>
+.icon {
+  transform: rotate(180deg);
+
+  &.expand {
+    transform: rotate(0deg);
+  }
+}
+
 .announcement {
   font-size: 14px;
   opacity: 0.7;
-  line-height: 1.2em;
-  height: 6em;
   overflow: hidden;
 }
 </style>

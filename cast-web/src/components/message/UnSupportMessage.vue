@@ -1,5 +1,8 @@
 <template>
-  <div class="px-1 caption">
+  <div
+    class="px-1 caption"
+    @click="handleClick"
+  >
     <a>[ 请下载学习 App 查看这条消息 ]<span class="hidden">AA:AA</span></a>
   </div>
 </template>
@@ -12,10 +15,11 @@ export default {
       default: () => {}
     }
   },
-  data () {
-    return {
-    };
-  },
+  methods: {
+    handleClick() {
+      this.$downloadApp()
+    }
+  }
 }
 </script>
 <style lang="scss" scoped>

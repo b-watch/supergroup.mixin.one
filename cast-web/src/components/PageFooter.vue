@@ -9,14 +9,17 @@
     <v-icon class="mr-2">
       mdi-download
     </v-icon>
-    <div class="body-2">
+    <div
+      class="body-2"
+      @click="handleDownload"
+    >
       下载 学习 APP
     </div>
     <v-spacer />
     <v-btn
       small
       text
-      @click="handleHide"
+      @click.stop="handleHide"
     >
       不再显示
     </v-btn>
@@ -31,14 +34,23 @@ export default {
       systemBar: state => state.systemBar,
       pageFooter: state => state.pageFooter
     }),
+    ...mapState('group', {
+      information: state => state.information
+    }),
+    isBroadcasting() {
+      return this.information && this.information.broadcast === 'on'
+    },
     show() {
-      return !this.systemBar && this.pageFooter
+      return !this.systemBar && this.isBroadcasting && this.pageFooter
     }
   },
   methods: {
     ...mapMutations('app', ['setPageFooter']),
     handleHide() {
       this.setPageFooter(false)
+    },
+    handleDownload() {
+      this.$downloadApp()
     }
   }
 }

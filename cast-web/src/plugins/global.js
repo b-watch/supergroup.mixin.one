@@ -14,3 +14,7 @@ Vue.directive('intersect', intersect)
 Vue.prototype.$colors = COLORS
 
 Vue.prototype.$timeUtil = timeUtils
+
+Vue.prototype.$downloadApp = function() {
+  window.alert('尽情期待')
+}

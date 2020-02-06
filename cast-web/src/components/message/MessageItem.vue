@@ -14,13 +14,15 @@ import TextMessage from './TextMessage.vue'
 import VideoMessage from './VideoMessage.vue'
 import UnSupportMessage from './UnSupportMessage.vue'
 import FileMessage from './FileMessage.vue'
+import LiveMessage from './LiveMessage.vue'
 
 const MESSAGE_COMPONENT = {
   PLAIN_TEXT: 'text-message',
   PLAIN_IMAGE: 'image-message',
   PLAIN_VIDEO: 'video-message',
   PLAIN_AUDIO: 'audio-message',
-  PLAIN_DATA: 'file-message'
+  PLAIN_DATA: 'file-message',
+  PLAIN_LIVE: 'live-message'
 }
 
 export default {
@@ -31,7 +33,8 @@ export default {
     TextMessage, 
     VideoMessage,
     UnSupportMessage,
-    FileMessage
+    FileMessage,
+    LiveMessage
   },
   props: {
     message: {

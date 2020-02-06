@@ -27,6 +27,7 @@ export default {
   },
   methods: {
     handleViewImage() {
+      this.$root.$emit('viewMessage', this.message, { touchless: true })
     }
   }
 }

@@ -1,9 +1,9 @@
 <template>
   <div
     v-if="show"
-    class="quote-message"
-    :style="[{ 'border-color': nameColor }]"
-    @click="handleQuoteClick"
+    v-ripple
+    class="pinned-message"
+    @click="handleClick"
   >
     <div
       v-if="thumb"
@@ -11,17 +11,14 @@
     >
       <v-img
         aspect-ratio="1"
-        width="28"
+        width="38"
         :src="thumb"
         class="thumb-image"
       />
     </div>
     <div>
-      <div
-        :style="[{ color: nameColor }]"
-        class="speaker"
-      >
-        {{ quoteMessage.speaker_name }}
+      <div class="subtitle-2">
+        置顶消息
       </div>
       <div class="text">
         {{ text }}
@@ -30,48 +27,36 @@
   </div>
 </template>
 <script>
-import { mapGetters } from 'vuex'
+import { mapState } from 'vuex'
 import { SUP_MESSAGE_CAT } from '@/constants'
 import cutStr from '@/utils/cutStr'
 
 export default {
-  name: "QuoteMessage",
-  props: {
-    message: {
-      type: Object,
-      default: () => {}
-    }
-  },
+  name: "PinnedMessage",
   data () {
     return {
     };
   },
   computed: {
-    ...mapGetters('message', ['getMessageById', 'getNameColor']),
-    quoteMessageId() {
-      return this.message.quote_message_id
-    },
-    quoteMessage() {
-      if (!this.quoteMessageId) { return null }
-      return this.getMessageById(this.quoteMessageId)
-    },
-    nameColor() {
-      if (!this.quoteMessage) { return '' }
-      return this.getNameColor(this.quoteMessage)
+    ...mapState('group', {
+      information: state => state.information
+    }),
+    pinnedMessage() {
+      return (this.information && this.information.pinned_message) || {}
     },
     show () {
-      if (!this.quoteMessage) { return false }
-      const category = this.quoteMessage.category
+      if (!this.pinnedMessage) { return false }
+      const category = this.pinnedMessage.category
       return SUP_MESSAGE_CAT.includes(category)
     },
     text() {
       if (!this.show) { return '' }
-      const category = this.quoteMessage.category
+      const category = this.pinnedMessage.category
       if (category === 'PLAIN_TEXT') {
-        return cutStr(this.quoteMessage.text, 8)
+        return this.pinnedMessage.text
       } 
       if (category === 'PLAIN_DATA') {
-        const name = this.quoteMessage.attachment.name
+        const name = this.pinnedMessage.attachment.name
         return cutStr(name, 8)
       }
       const textMap = {
@@ -84,8 +69,8 @@ export default {
     },
     thumb() {
       if (!this.show) { return '' }
-      const thumbnail = this.quoteMessage.attachment.thumbnail
-      const thumbUrl = this.quoteMessage.attachment.thumb_url
+      const thumbnail = this.pinnedMessage.attachment.thumbnail
+      const thumbUrl = this.pinnedMessage.attachment.thumb_url
       if (thumbnail) {
         return 'data:image/jpeg;base64,' + thumbnail
       }
@@ -96,17 +81,18 @@ export default {
     }
   },
   methods: {
-    handleQuoteClick() {
-      this.$root.$emit('focusMessage', this.quoteMessage)
+    handleClick() {
+      this.$root.$emit('viewMessage', this.pinnedMessage)
     }
   }
 }
 </script>
 <style lang="scss" scoped>
-.quote-message {
+.pinned-message {
   border-left: 2px solid;
   border-radius: 2px;
   padding-left: 4px;
+  margin: 4px 0;
   font-size: 12px;
   display: flex;
 
@@ -118,10 +104,6 @@ export default {
     .thumb-image {
       border-radius: 2px;
     }
-  }
-
-  .speaker {
-    line-height: 12px;
   }
 }
 </style>

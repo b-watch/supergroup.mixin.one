@@ -9,9 +9,18 @@
       tile
       class="viewer-card pa-5"
     >
+      <div class="close-btn">
+        <v-btn
+          icon
+          @click="exit"
+        >
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </div>
       <message-item
-        v-touch="{ swipe: handleSwipe }"
+        v-touch="{ swipe: handleSwipe, enable: touchless }"
         :message="message"
+        class="viewer"
       />
     </v-card>
   </v-dialog>
@@ -27,13 +36,20 @@ export default {
   data () {
     return {
       dialog: false,
-      message: null
+      message: null,
+      touchless: false
     };
   },
+  mounted() {
+    this.$root.$on('viewMessage', (message) => {
+      this.show(message)
+    })
+  },
   methods: {
-    show(message) {
+    show(message, { touchless = false } = {}) {
       this.message = message
       this.dialog = true
+      this.touchless = touchless
     },
     handleSwipe() {
       this.exit()
@@ -41,6 +57,7 @@ export default {
     exit() {
       this.dialog = false
       this.message = null
+      this.touchless = false 
     }
   }
 }
@@ -48,8 +65,16 @@ export default {
 <style lang="scss" scoped>
 .viewer-card {
   height: 100%;
+  position: relative;
   display: flex;
   flex-direction: column;
+  justify-content: center;
+
+  .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+  }
 
   .message-wrapper {
     height: 100%;

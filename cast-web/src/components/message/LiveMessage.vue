@@ -27,7 +27,7 @@ export default {
   data () {
     return {
       options: {
-        controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'fullscreen']
+        controls: ['play', 'play-large', 'pip', 'fullscreen']
       }
     };
   }

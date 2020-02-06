@@ -18,7 +18,7 @@
         No messages
       </p>
     </template>
-    <message-viewer ref="viewer" />
+    <message-viewer />
     <div
       ref="bottom"
       v-intersect="handleBottomIntersect"
@@ -60,12 +60,6 @@ export default {
     }),
     getPrev(index, messages) {
       return index === 0 ? null : messages[index-1]
-    },
-    handleClickMessage(message) {
-      const viewer = this.$refs.viewer
-      if (message.category === 'PLAIN_IMAGE') {
-        viewer.show(message)
-      }
     },
     handleBottomIntersect(entries, observer) {
       this.isBottomIntersect = entries[0].isIntersecting

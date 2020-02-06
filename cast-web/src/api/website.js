@@ -2,8 +2,8 @@
 const api = require('./net').default
 
 const Website = {
-  amount: async function () {
-    return await api.get('/amount', {})
+  amount: function () {
+    return api.get('/amount', {})
   },
   config: async function () {
     let resp = await api.get('/config', {})

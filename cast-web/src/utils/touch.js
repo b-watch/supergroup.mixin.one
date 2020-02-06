@@ -13,6 +13,7 @@ const reqAnimationFrame = (function () {
 const Touch = {
   bind(el, binding, vnode) {
     el.style.transition = 'transform 0.2s linear'
+    const enable = binding.value.enable
     const START_X = el.offsetWidth
     const START_Y = el.offsetHeight
     let transform = {
@@ -77,13 +78,15 @@ const Touch = {
       }
     })
     mc.on("panstart panmove", (ev) => {
+      if (!enable) { return }
       transform.translate = {
-        x: START_X + ev.deltaX,
-        y: START_Y + ev.deltaY
+        x: transform.translate.x + ev.deltaX,
+        y: transform.translate.y + ev.deltaY
       };
       requestElementUpdate();
     });
     mc.on("doubletap", () => {
+      if (!enable) { return }
       transform.scale = transform.scale === 1 ? 1.5 : 1
       transform.translate = {
         x: START_X,
