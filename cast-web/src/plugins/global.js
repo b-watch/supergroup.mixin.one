@@ -16,5 +16,5 @@ Vue.prototype.$colors = COLORS
 Vue.prototype.$timeUtil = timeUtils
 
 Vue.prototype.$downloadApp = function() {
-  window.alert('尽情期待')
+  window.alert('敬请期待')
 }

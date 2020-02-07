@@ -8,9 +8,12 @@ export default class Socket {
     this.INTERVAL = 1000
     this.times = 0
     this.callbacks = {}
+    this.connecting = false
   }
 
   connect (url, opts) {
+    if (this.connecting) { return }
+    this.connecting = true
     this.callbacks = opts
     execute(this.callbacks.onconnect)
     this.websocket = new WebSocket(url);

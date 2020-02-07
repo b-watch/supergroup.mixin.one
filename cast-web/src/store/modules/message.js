@@ -2,7 +2,7 @@ import Vue from 'vue'
 import { SOCKET_STATE } from '@/constants'
 import getNameColor from '@/utils/getNameColor'
 
-const MAX_MESSAGE_AMOUNT = 200
+const MAX_MESSAGE_AMOUNT = 500
 
 const state = {
   messages: [],
@@ -31,6 +31,9 @@ const mutations = {
     state.hasNewMessage = value
   },
   ADD_MESSAGE(state, message) {
+    if (state.messages.findIndex((m) => m.id === message.id) > -1) {
+      return
+    }
     state.messages = [...state.messages, message]
     if (state.messages.length > MAX_MESSAGE_AMOUNT) {
       state.messages.shift()

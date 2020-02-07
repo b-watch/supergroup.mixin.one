@@ -3,9 +3,9 @@
     :id="'message' + message.id"
     :lazy-src="'data:image/jpeg;base64,' + message.attachment.thumbnail"
     :src="message.attachment.view_url"
+    :max-height="isViewer ? '100%' : '280'"
     contain
     min-width="200"
-    max-height="100%"
     class="image"
     @click="handleViewImage"
   />
@@ -19,6 +19,10 @@ export default {
     message: {
       type: Object,
       default: () => {}
+    },
+    isViewer: {
+      type: Boolean,
+      default: false
     }
   },
   data () {

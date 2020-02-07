@@ -8,7 +8,7 @@
       ref="plyr"
       :options="options"
     >
-      <audio>
+      <audio ref="media">
         <source
           :src="message.attachment.view_url"
           :type="message.attachment.mime_type"
