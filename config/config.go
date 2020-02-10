@@ -195,6 +195,7 @@ func GetExported() ExportedConfig {
 	exc.RewardsEnable = AppConfig.System.RewardsEnable
 	exc.RewardsMinAmountBase = AppConfig.System.RewardsMinAmountBase
 	exc.RedPacketMinAmountBase = AppConfig.System.RedPacketMinAmountBase
+	exc.RedPacketEnable = AppConfig.System.RedPacketEnable
 	exc.RedPacketMaxCount = AppConfig.System.RedPacketMaxCount
 	exc.HomeWelcomeMessage = AppConfig.Appearance.HomeWelcomeMessage
 	exc.HomeShortcutGroups = AppConfig.Appearance.HomeShortcutGroups
