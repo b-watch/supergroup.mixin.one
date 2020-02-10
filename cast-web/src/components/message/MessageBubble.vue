@@ -28,10 +28,6 @@
         v-bind="$attrs"
       />
       <message-time :message="message" />
-      <div
-        v-show="!isSameSpeaker"
-        class="caret"
-      />
     </div>
   </v-layout>
 </template>
@@ -90,9 +86,10 @@ export default {
         this.isFocus = true
         setTimeout(() => {
           this.isFocus = false
-        }, 3000)
+        }, 1000)
         const el = this.$refs.message
-        this.$vuetify.goTo(el, { duration: 200 })
+        const content = document.querySelector('#chatContent')
+        content.scrollTop = el.offsetTop
       }
     })
   }
@@ -138,17 +135,6 @@ export default {
       font-size: 12px;
       font-weight: bold;
       line-height: 14px;
-    }
-
-    .caret {
-      position: absolute;
-      left: -20px;
-      top: 10px;
-      width: 0;
-      height: 0;
-      border-width: 8px 12px 8px 12px;
-      border-color: transparent white transparent transparent;
-      border-style: solid;
     }
   }
 }

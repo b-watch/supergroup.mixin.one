@@ -1,13 +1,16 @@
 <template>
-  <div class="video">
-    <div class="live-wrapper">
+  <div
+    v-if="message"
+    class="video"
+  >
+    <div
+      v-touch="{ enable: message, limitClient: true }"
+      class="live-wrapper"
+    >
       <div class="label">
         LIVE
       </div>
-      <div
-        v-if="pip && !pipNativeSupport"
-        class="pip"
-      >
+      <div class="pip">
         <v-btn
           icon
           small
@@ -15,7 +18,7 @@
           @click="handleToggleFloating"
         >
           <v-icon size="18">
-            mdi-picture-in-picture-top-right
+            mdi-close-box
           </v-icon>
         </v-btn>
       </div>
@@ -43,23 +46,12 @@
 </template>
 <script>
 import plyrMixin from '@/mixins/plyr'
-
 export default {
-  name: "VideoMessage",
+  name: "LiveFloatingMessage",
   mixins: [plyrMixin],
-  props: {
-    pip: {
-      type: Boolean,
-      default: false
-    },
-    message: {
-      type: Object,
-      default: () => {}
-    }
-  },
   data () {
     return {
-      pipNativeSupport: false,
+      message: null,
       options: {
         controls: ['play', 'play-large', 'pip', 'fullscreen']
       }
@@ -71,24 +63,21 @@ export default {
     }
   },
   mounted() {
-    this.pipNativeSupport = false
-    // this.pipNativeSupport = 'pictureInPictureEnabled' in document
+    this.$root.$on('floatLive', (message) => {
+      this.message = message
+    })
   },
   methods: {
     handleToggleFloating() {
-      this.$root.$emit('floatLive', this.message)
-      if (this.player) {
-        this.player.stop()
-      }
+      this.message = null
     }
   }
 }
 </script>
 <style lang="scss" scoped>
+</style>
+<style lang="scss" scoped>
 .video {
-  position: relative;
-  z-index: 1;
-
   .label {
     position: absolute;
     color: #fff;
@@ -113,7 +102,12 @@ export default {
   }
 
   .live-wrapper {
-    position: relative;
+    position: fixed;
+    max-width: 280px;
+    max-height: 280px;
+    z-index: 1;
+    top: 10px;
+    right: 10px;
   }
 }
 </style>

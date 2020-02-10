@@ -1,9 +1,11 @@
 <template>
   <v-container
     ref="chatArea"
-    v-mutate.child="handleMutate"
   >
-    <template v-if="messages.length !== 0">
+    <div
+      v-if="messages.length !== 0"
+      v-mutate.child="handleMutate"
+    >
       <message-bubble
         v-for="(msg, index) in messages"
         :key="msg.id"
@@ -12,7 +14,7 @@
         :pip="true"
         :prev="getPrev(index, messages)"
       />
-    </template>
+    </div>
     <template v-else>
       <p
         class="text-center font-weight-light mt-4"
@@ -22,6 +24,7 @@
       </p>
     </template>
     <message-viewer />
+    <live-floating-message />
     <div
       ref="bottom"
       v-intersect="handleBottomIntersect"
@@ -32,6 +35,7 @@
 <script>
 import { mapState } from 'vuex'
 import MessageViewer from './message/MessageViewer'
+import LiveFloatingMessage from './message/LiveFloatingMessage'
 import MessageBubble from './message/MessageBubble'
 import { mapMutations } from 'vuex'
 
@@ -39,7 +43,8 @@ export default {
   name: 'ChatArea',
   components: {
     MessageBubble,
-    MessageViewer
+    MessageViewer,
+    LiveFloatingMessage
   },
   data() {
     return {
@@ -54,7 +59,6 @@ export default {
   mounted() {
     this.scrollToBottom()
     this.$root.$on('CHECK_NEW_MESSAGE', () => {
-      console.log('scroll bottom')
       this.scrollToBottom()
     })
   },
@@ -71,16 +75,18 @@ export default {
         this.setHasNewMessage(false)
       }
     },
-    handleMutate() {
+    handleMutate(data) {
       if (this.isBottomIntersect) {
         this.scrollToBottom()
       } else {
+        console.log(data)
         this.setHasNewMessage(true)
       }
     },
     scrollToBottom() {
       const content = document.querySelector('#chatContent')
       content.scrollTop = content.scrollHeight
+      this.setHasNewMessage(false)
     }
   }
 };

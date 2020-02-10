@@ -20,6 +20,7 @@
       <message-item
         v-touch="{ swipe: handleSwipe, enable: touchless, scale: true }"
         :message="message"
+        :is-viewer="true"
         class="viewer"
       />
     </v-card>
@@ -74,6 +75,7 @@ export default {
     position: absolute;
     top: 10px;
     right: 10px;
+    z-index: 1;
   }
 
   .message-wrapper {
