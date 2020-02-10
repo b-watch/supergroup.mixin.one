@@ -39,7 +39,7 @@
           block
           @click="handleJoin"
         >
-          Join Group
+          下载 Mixin Messenger 入群
         </v-btn>
       </div>
       <pinned-message v-else />

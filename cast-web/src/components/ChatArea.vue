@@ -18,7 +18,7 @@
         class="text-center font-weight-light mt-4"
         style="width: 100%;"
       >
-        No messages
+        还没有开始广播。
       </p>
     </template>
     <message-viewer />

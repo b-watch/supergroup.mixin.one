@@ -13,7 +13,7 @@
       class="body-2"
       @click="handleDownload"
     >
-      下载 学习 APP
+      下载 Mixin Messenger
     </div>
     <v-spacer />
     <v-btn

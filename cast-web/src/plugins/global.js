@@ -16,5 +16,6 @@ Vue.prototype.$colors = COLORS
 Vue.prototype.$timeUtil = timeUtils
 
 Vue.prototype.$downloadApp = function() {
-  window.alert('尽情期待')
+  // window.alert('尽情期待')
+  window.location.href = 'https://mixin.one/messenger'
 }

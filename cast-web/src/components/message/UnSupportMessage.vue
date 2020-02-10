@@ -3,7 +3,7 @@
     class="px-1 caption"
     @click="handleClick"
   >
-    <a>[ 请下载学习 App 查看这条消息 ]<span class="hidden">AA:AA</span></a>
+    <a>[ 请下载 Mixin Messenger 查看这条消息 ]<span class="hidden">AA:AA</span></a>
   </div>
 </template>
 <script>
