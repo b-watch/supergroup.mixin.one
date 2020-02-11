@@ -5,6 +5,7 @@
   >
     <div
       ref="text1"
+      class="text1"
       v-html="text"
     />
   </div>
@@ -39,5 +40,10 @@ export default {
 <style lang="scss" scoped>
 .text {
   margin: 4px;
+  word-break: break-all;
+}
+
+.text1 {
+  word-break: break-all;
 }
 </style>

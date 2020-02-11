@@ -129,6 +129,7 @@ export default {
     border-radius: 7px;
     font-size: 14px;
     overflow: hidden;
+    word-break: break-all;
 
     .speaker {
       margin: 4px;
