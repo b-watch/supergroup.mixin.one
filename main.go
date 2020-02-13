@@ -36,7 +36,9 @@ func resetBotPreferences() {
 func main() {
 	service := flag.String("service", "http", "run a service")
 	dir := flag.String("dir", "./", "config.yaml dir")
+	slug := flag.String("slug", "", "process identity")
 	flag.Parse()
+	log.Printf("process slug: %s\n", slug)
 
 	config.LoadConfig(*dir)
 	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
