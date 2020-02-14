@@ -1,6 +1,6 @@
 module.exports = {
   publicPath: process.env.NODE_ENV === 'production'
-    ? '/a0/'
+    ? '/$PUB_PATH$/'
     : '/',
   devServer: {
     disableHostCheck: true,

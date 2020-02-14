@@ -236,12 +236,15 @@ export default {
     addToGroups(groups, isPlugin) {
       return groups.map(x => {
         x.label = this.isZh ? x.label_zh : x.label_en;
-        const items = x.items || x.shortcuts;
+        const items = x.items || x.shortcuts || [];
         x.shortcuts = this.buildShortcuts(items, isPlugin);
         return x;
       });
     },
     buildShortcuts(items, isPlugin) {
+      if (items === null) {
+        return []
+      }
       return items
         .map(z => {
           z.label = this.isZh ? z.label_zh : z.label_en;
