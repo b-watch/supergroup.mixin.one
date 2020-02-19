@@ -7,6 +7,7 @@ const (
 	EventTypeGroupModeChanged       EventType = "GroupModeChanged"       // payload is github.com/MixinNetwork/supergroup.mixin.one/models.PropGroupMode (free | lecture | mute)
 	EventTypeOrderPaid              EventType = "OrderPaid"              // payload is github.com/MixinNetwork/supergroup.mixin.one/models.Order
 	EventTypeUserCreated            EventType = "UserCreated"            // payload is github.com/MixinNetwork/supergroup.mixin.one/models.User
+	EventTypeUserPaid               EventType = "UserPaid"               // payload is github.com/MixinNetwork/supergroup.mixin.one/models.User
 	EventTypeInvitationCodesCreated EventType = "InvitationCodesCreated" // payload is github.com/MixinNetwork/supergroup.mixin.one/models.InvitationCodesBundle
 	EventTypePacketPaid             EventType = "PacketPaid"             // payload is github.com/MixinNetwork/supergroup.mixin.one/models.Packet
 )

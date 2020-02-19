@@ -189,6 +189,36 @@ func createUser(ctx context.Context, accessToken, userId, identityNumber, fullNa
 	return user, nil
 }
 
+func SyncUser(ctx context.Context, user *User) error {
+	u, err := FindUser(ctx, user.UserId)
+	if err != nil {
+		return session.TransactionError(ctx, err)
+	}
+
+	if err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
+		if u == nil {
+			user.isNew = true
+			params, positions := compileTableQuery(usersCols)
+			_, err := tx.ExecContext(ctx, fmt.Sprintf("INSERT INTO users (%s) VALUES (%s)", params, positions), user.values()...)
+			return err
+		} else {
+			_, err = tx.ExecContext(ctx, "UPDATE users SET (state,subscribed_at,pay_method)=($1,$2,$3) WHERE user_id=$4", user.State, user.SubscribedAt, user.PayMethod, user.UserId)
+			return err
+		}
+	}); err != nil {
+		return err
+	}
+
+	if user.isNew && config.AppConfig.Service.Environment != "test" {
+		err = createConversation(ctx, "CONTACT", user.UserId)
+		if err != nil {
+			return session.ServerError(ctx, err)
+		}
+	}
+
+	return nil
+}
+
 func createConversation(ctx context.Context, category, participantId string) error {
 	if config.AppConfig.Service.Environment == "test" {
 		return nil
@@ -366,8 +396,12 @@ func (user *User) paymentInTx(ctx context.Context, tx *sql.Tx, method string) er
 	user.State = PaymentStatePaid
 	user.SubscribedAt = time.Now()
 	user.PayMethod = method
-	_, err = tx.ExecContext(ctx, "UPDATE users SET (state,subscribed_at,pay_method)=($1,$2,$3) WHERE user_id=$4", user.State, user.SubscribedAt, user.PayMethod, user.UserId)
-	return err
+	if _, err := tx.ExecContext(ctx, "UPDATE users SET (state,subscribed_at,pay_method)=($1,$2,$3) WHERE user_id=$4", user.State, user.SubscribedAt, user.PayMethod, user.UserId); err != nil {
+		return err
+	}
+
+	plugin.Trigger(plugin.EventTypeUserPaid, user)
+	return nil
 }
 
 func Subscribers(ctx context.Context, offset time.Time, identity int64, keywords string) ([]*User, error) {

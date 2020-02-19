@@ -78,6 +78,9 @@ func main() {
 		if config.AppConfig.System.RewardsEnable {
 			go services.StartRank(*service, database, connStr)
 		}
+		if config.AppConfig.System.EventSubTopic != "" {
+			go services.SyncUsers(database)
+		}
 		err := StartServer(database)
 		if err != nil {
 			log.Println(err)
