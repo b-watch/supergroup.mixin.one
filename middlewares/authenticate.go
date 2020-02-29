@@ -60,7 +60,7 @@ func Authenticate(handler http.Handler) http.Handler {
 			handleUnauthorized(handler, w, r)
 		} else {
 			ctx := context.WithValue(r.Context(), keyCurrentUser, user)
-			if config.AppConfig.System.InviteToJoin && user.State == models.PaymentStateUnverified {
+			if config.AppConfig.System.InviteToJoin && user.State != models.PaymentStatePaid {
 				handleUnverified(handler, w, r.WithContext(ctx))
 			} else {
 				handler.ServeHTTP(w, r.WithContext(ctx))

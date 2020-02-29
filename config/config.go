@@ -51,6 +51,11 @@ type Config struct {
 		DatabasePort     string `yaml:"port"`
 		DatabaseName     string `yaml:"database_name"`
 	} `yaml:"database"`
+	AWS struct {
+		Key    string `yaml:"key,omitempty"`
+		Secret string `yaml:"secret,omitempty"`
+		Region string `yaml:"region,omitempty"`
+	} `yaml:"aws"`
 	System struct {
 		RouterMode           string `yaml:"router_mode"`
 		MessageShardModifier string `yaml:"message_shard_modifier"`
@@ -87,6 +92,9 @@ type Config struct {
 		AccpetWeChatPayment    bool           `yaml:"accept_wechat_payment"`
 		WeChatPaymentAmount    string         `yaml:"wechat_payment_amount"`
 		AccpetCouponPayment    bool           `yaml:"accept_coupon_payment"`
+
+		EventPubTopic string `yaml:"event_pub_topic"`
+		EventSubTopic string `yaml:"event_sub_topic"`
 	} `yaml:"system"`
 	Appearance struct {
 		HomeWelcomeMessage string          `yaml:"home_welcome_message"`
