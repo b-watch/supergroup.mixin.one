@@ -102,6 +102,7 @@ CREATE TABLE IF NOT EXISTS properties (
 INSERT INTO properties (name, value) VALUES ('announcement-message-property', 'Tap here to edit announcement') ON CONFLICT (name) DO NOTHING;
 INSERT INTO properties (name, value) VALUES ('group-mode-property', 'free') ON CONFLICT (name) DO NOTHING;
 INSERT INTO properties (name, value) VALUES ('broadcast-property', 'off') ON CONFLICT (name) DO NOTHING;
+INSERT INTO properties (name, value) VALUES ('lesson-id', '') ON CONFLICT (name) DO NOTHING;
 INSERT INTO properties (name, value, complex_value) VALUES ('pinned-message-property', '', null) ON CONFLICT (name) DO NOTHING;
 INSERT INTO properties (name, value, complex_value) VALUES ('roles-property', '', '{"admins": null, "lecturers": null}') ON CONFLICT (name) DO NOTHING;
 
@@ -173,3 +174,19 @@ CREATE TABLE IF NOT EXISTS tips (
 	time TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 	PRIMARY KEY(time, sender_id, trace_id)
 );
+
+CREATE TABLE IF NOT EXISTS lesson_record_message (
+  lesson_id VARCHAR(36) NOT NULL,
+	id VARCHAR(36) NOT NULL,
+  quote_message_id VARCHAR(36) NOT NULL,
+	speaker_name VARCHAR(512) NOT NULL DEFAULT '',
+	speaker_avatar VARCHAR(1024) NOT NULL DEFAULT '',
+	speaker_id VARCHAR(36) NOT NULL,
+	category VARCHAR(512) NOT NULL,
+	data TEXT NOT NULL,
+	text TEXT,
+	attachment JSONB,
+	created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+	PRIMARY KEY(lesson_id, id)
+);
+

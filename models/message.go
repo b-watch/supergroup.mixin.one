@@ -535,6 +535,7 @@ func GetExportedMessage(ctx context.Context, user *User, message *Message) (WsBr
 	if message.Category == "PLAIN_TEXT" {
 		bytes, _ := base64.StdEncoding.DecodeString(message.Data)
 		bmsg.Text = string(bytes)
+		SaveLessonMessage(ctx, &bmsg)
 		return bmsg, nil
 	}
 
@@ -553,7 +554,7 @@ func GetExportedMessage(ctx context.Context, user *User, message *Message) (WsBr
 			log.Println("decode attachment error", err)
 			return bmsg, err
 		}
-		attResp, err := bot.AttachemntShow(ctx, config.AppConfig.Mixin.ClientId, config.AppConfig.Mixin.SessionId, config.AppConfig.Mixin.SessionKey, att.ID)
+		attResp, err := bot.AttachmentShow(ctx, config.AppConfig.Mixin.ClientId, config.AppConfig.Mixin.SessionId, config.AppConfig.Mixin.SessionKey, att.ID)
 		if err != nil {
 			log.Println("get attachment details error", err)
 		}
@@ -566,7 +567,7 @@ func GetExportedMessage(ctx context.Context, user *User, message *Message) (WsBr
 		}
 		bmsg.Attachment = att
 	}
-
+	SaveLessonMessage(ctx, &bmsg)
 	return bmsg, nil
 }
 

@@ -92,6 +92,9 @@ func overrideProperty(ctx context.Context, property *Property) (*Property, error
 	err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
 		params, positions := compileTableQuery(propertiesColumns)
 		query := fmt.Sprintf("INSERT INTO properties (%s) VALUES (%s) ON CONFLICT (name) DO UPDATE SET value=EXCLUDED.value, complex_value=EXCLUDED.complex_value", params, positions)
+		if property.Name == "broadcast-property" && property.Value == "off" {
+			LessonFinished(ctx)
+		}
 		_, err := tx.ExecContext(ctx, query, property.values()...)
 		if err != nil {
 			return err

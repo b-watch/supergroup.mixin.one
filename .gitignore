@@ -8,6 +8,7 @@ supergroup.mixin.one
 config.yaml
 env.dev.sh
 env.prod.sh
+.env*
 
 !config/config.go
 .DS_Store

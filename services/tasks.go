@@ -121,7 +121,7 @@ func validateMessage(ctx context.Context, message *models.Message) (bool, string
 		session.Logger(ctx).Errorf("validateMessage ERROR: %+v", err)
 		return false, "message.Data Unmarshal error"
 	}
-	attachment, err := bot.AttachemntShow(ctx, config.AppConfig.Mixin.ClientId, config.AppConfig.Mixin.SessionId, config.AppConfig.Mixin.SessionKey, a.AttachmentId)
+	attachment, err := bot.AttachmentShow(ctx, config.AppConfig.Mixin.ClientId, config.AppConfig.Mixin.SessionId, config.AppConfig.Mixin.SessionKey, a.AttachmentId)
 	if err != nil {
 		session.Logger(ctx).Errorf("validateMessage ERROR: %+v", err)
 		return false, fmt.Sprintf("bot.AttachemntShow error: %+v, id: %s", err, a.AttachmentId)
