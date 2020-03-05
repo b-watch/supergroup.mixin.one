@@ -48,8 +48,7 @@ func SaveLessonMessage(ctx context.Context, message *WsBroadcastMessage) {
 	}
 	if value == "" {
 		value = uuid.Must(uuid.NewV4()).String()
-		query := fmt.Sprintf("UPDATE properties SET value='%s' WHERE name='lesson-id'", value)
-		session.Database(ctx).ExecContext(ctx, query)
+		CreateProperty(ctx, "lesson-id", value, "")
 	}
 	tA, _ := json.Marshal(message.Attachment)
 	attachment := string(tA)
@@ -72,5 +71,5 @@ func SaveLessonMessage(ctx context.Context, message *WsBroadcastMessage) {
 }
 
 func LessonFinished(ctx context.Context) {
-	session.Database(ctx).ExecContext(ctx, "UPDATE properties SET value='' WHERE name='lesson-id'")
+	CreateProperty(ctx, "lesson-id", "", "")
 }
