@@ -27,7 +27,7 @@ func Connect() broker.Broker {
 }
 
 func Pub(b broker.Broker, e *Event) error {
-	arnTopic := config.AppConfig.System.EventPubQueueURL
+	arnTopic := config.AppConfig.System.EventPubTopic
 	if arnTopic == "" {
 		return nil
 	}

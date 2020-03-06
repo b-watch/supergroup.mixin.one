@@ -93,9 +93,8 @@ type Config struct {
 		WeChatPaymentAmount    string         `yaml:"wechat_payment_amount"`
 		AccpetCouponPayment    bool           `yaml:"accept_coupon_payment"`
 
-		EventPubTopic    string `yaml:"event_pub_topic"`
-		EventPubQueueURL string `yaml: "event_pub_queue_url"`
-		EventSubTopic    string `yaml:"event_sub_topic"`
+		EventPubTopic string `yaml:"event_pub_topic"`
+		EventSubTopic string `yaml:"event_sub_topic"`
 	} `yaml:"system"`
 	Appearance struct {
 		HomeWelcomeMessage string          `yaml:"home_welcome_message"`
