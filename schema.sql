@@ -175,9 +175,8 @@ CREATE TABLE IF NOT EXISTS tips (
 	PRIMARY KEY(time, sender_id, trace_id)
 );
 
-CREATE TABLE IF NOT EXISTS lesson_record_message (
-  lesson_id VARCHAR(36) NOT NULL,
-	id VARCHAR(36) NOT NULL,
+CREATE TABLE IF NOT EXISTS broadcast_message (
+	id VARCHAR(36) NOT NULL PRIMARY KEY,
   quote_message_id VARCHAR(36) NOT NULL,
 	speaker_name VARCHAR(512) NOT NULL DEFAULT '',
 	speaker_avatar VARCHAR(1024) NOT NULL DEFAULT '',
@@ -186,7 +185,6 @@ CREATE TABLE IF NOT EXISTS lesson_record_message (
 	data TEXT NOT NULL,
 	text TEXT,
 	attachment JSONB,
-	created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-	PRIMARY KEY(lesson_id, id)
+	created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 

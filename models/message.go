@@ -535,7 +535,7 @@ func GetExportedMessage(ctx context.Context, user *User, message *Message) (WsBr
 	if message.Category == "PLAIN_TEXT" {
 		bytes, _ := base64.StdEncoding.DecodeString(message.Data)
 		bmsg.Text = string(bytes)
-		SaveLessonMessage(ctx, &bmsg)
+		SaveBroadcastMessage(ctx, &bmsg)
 		return bmsg, nil
 	}
 
@@ -567,7 +567,7 @@ func GetExportedMessage(ctx context.Context, user *User, message *Message) (WsBr
 		}
 		bmsg.Attachment = att
 	}
-	SaveLessonMessage(ctx, &bmsg)
+	SaveBroadcastMessage(ctx, &bmsg)
 	return bmsg, nil
 }
 

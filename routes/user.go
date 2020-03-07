@@ -34,6 +34,7 @@ func registerUsers(router *httptreemux.TreeMux) {
 	router.GET("/subscribers", impl.subscribers)
 	router.GET("/users/:id", impl.show)
 	router.GET("/amount", impl.amount)
+	router.GET("/broadcast/recent", impl.broadcastRecent)
 	router.GET("/config", impl.getConfig)
 
 }
@@ -186,6 +187,14 @@ func (impl *usersImpl) show(w http.ResponseWriter, r *http.Request, params map[s
 
 func (impl *usersImpl) amount(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	if s, err := models.ReadStatistic(r.Context(), middlewares.CurrentUser(r)); err != nil {
+		views.RenderErrorResponse(w, r, err)
+	} else {
+		views.RenderDataResponse(w, r, s)
+	}
+}
+
+func (impl *usersImpl) broadcastRecent(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	if s, err := models.ReadBroadcastById(r.Context()); err != nil {
 		views.RenderErrorResponse(w, r, err)
 	} else {
 		views.RenderDataResponse(w, r, s)

@@ -90,6 +90,10 @@ message_template:
   message_tips_rewards: "%s给%s打赏了%s %s"
   message_commands_info: "/INFO"
   message_commands_info_resp: "当前订阅人数: %d"
+broadcast_recent_app_info:
+  title: "课程回放"
+  icon_url: "https://zeromesh.net/taskwall/red_envelope.png"
+  description: "点此进入课程回放"
 wechat:
   # 微信配置
   app_id: ""

@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import { SOCKET_STATE } from '@/constants'
 import getNameColor from '@/utils/getNameColor'
+import api from '@/api'
 
 const MAX_MESSAGE_AMOUNT = 500
 
@@ -50,7 +51,12 @@ const mutations = {
   }
 }
 
-const actions = {}
+const actions = {
+  async loadRecentMessage({ state }) {
+    const { data } = await api.message.history()
+    state.messages = data.reverse()
+  }
+}
 
 export default {
   namespaced: true,

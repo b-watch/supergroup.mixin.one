@@ -6,7 +6,11 @@ let Message = {
   },
 
   recall: async function (messageId) {
-    return await api.post('/messages/' + messageId +'/recall', {}, {})
+    return await api.post('/messages/' + messageId + '/recall', {}, {})
+  },
+
+  history: async function () {
+    return await api.get('/broadcast/recent')
   }
 }
 

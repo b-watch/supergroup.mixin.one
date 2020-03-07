@@ -122,6 +122,11 @@ type Config struct {
 		MessageCommandsInfo           string `yaml:"message_commands_info"`
 		MessageCommandsInfoResp       string `yaml:"message_commands_info_resp"`
 	} `yaml:"message_template"`
+	BroadCastAppInfo struct {
+		Title       string `yaml:"title"`
+		IconUrl     string `yaml:"icon_url"`
+		Description string `yaml:"description"`
+	} `yaml:"broadcast_recent_app_info"`
 	Wechat struct {
 		AppId          string `yaml:"app_id"`
 		AppSecret      string `yaml:"app_secret"`

@@ -36,6 +36,8 @@ const (
 	PropGroupModeMute    = "mute"
 
 	PropPinnedMessage = "pinned-message-property"
+
+	PropLessonID = "lesson-id"
 )
 
 const properties_DDL = `
@@ -92,9 +94,6 @@ func overrideProperty(ctx context.Context, property *Property) (*Property, error
 	err := session.Database(ctx).RunInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
 		params, positions := compileTableQuery(propertiesColumns)
 		query := fmt.Sprintf("INSERT INTO properties (%s) VALUES (%s) ON CONFLICT (name) DO UPDATE SET value=EXCLUDED.value, complex_value=EXCLUDED.complex_value", params, positions)
-		if property.Name == "broadcast-property" && property.Value == "off" {
-			LessonFinished(ctx)
-		}
 		_, err := tx.ExecContext(ctx, query, property.values()...)
 		if err != nil {
 			return err
@@ -125,11 +124,17 @@ func (p Property) aroundOverride(ctx context.Context, tx *sql.Tx) error {
 		}
 		return createSystemMessage(ctx, tx, "PLAIN_TEXT", base64.StdEncoding.EncodeToString([]byte(msg)))
 	case PropBroadcast:
-		msg := config.AppConfig.MessageTemplate.MessageBroadcastOff
 		if p.Value == PropBroadcastOn {
+			msg := config.AppConfig.MessageTemplate.MessageBroadcastOff
 			msg = fmt.Sprintf(config.AppConfig.MessageTemplate.MessageBroadcastOn, config.AppConfig.Service.HTTPBroadcastHost)
+			return createSystemMessage(ctx, tx, "PLAIN_TEXT", base64.StdEncoding.EncodeToString([]byte(msg)))
+		} else if p.Value == PropBroadcastOff {
+			title := config.AppConfig.BroadCastAppInfo.Title
+			iconUrl := config.AppConfig.BroadCastAppInfo.IconUrl
+			description := config.AppConfig.BroadCastAppInfo.Description
+			url := config.AppConfig.Service.HTTPBroadcastHost + "/recent"
+			return createSystemAppCardMessage(ctx, tx, iconUrl, title, description, url)
 		}
-		return createSystemMessage(ctx, tx, "PLAIN_TEXT", base64.StdEncoding.EncodeToString([]byte(msg)))
 	}
 	return nil
 }

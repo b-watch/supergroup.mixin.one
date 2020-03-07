@@ -34,10 +34,12 @@ export default {
   mounted() {
     this.loadConfig()
     this.loadInformation()
+    if(window.location.pathname === '/recent') this.loadRecentMessage()
   },
 
   methods: {
-    ...mapActions('group', ['loadConfig', 'loadInformation'])
+    ...mapActions('group', ['loadConfig', 'loadInformation']),
+    ...mapActions('message', ['loadRecentMessage'])
   }
 };
 </script>
