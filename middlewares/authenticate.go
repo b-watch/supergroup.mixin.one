@@ -60,8 +60,10 @@ func Authenticate(handler http.Handler) http.Handler {
 			handleUnauthorized(handler, w, r)
 		} else {
 			ctx := context.WithValue(r.Context(), keyCurrentUser, user)
-			if config.AppConfig.System.InviteToJoin && user.State != models.PaymentStatePaid {
+			if config.AppConfig.System.InviteToJoin && user.State == models.PaymentStateUnverified {
 				handleUnverified(handler, w, r.WithContext(ctx))
+			} else if user.State != models.PaymentStatePaid {
+				handleUnpaid(handler, w, r.WithContext(ctx))
 			} else {
 				handler.ServeHTTP(w, r.WithContext(ctx))
 			}
@@ -95,4 +97,18 @@ func handleUnverified(handler http.Handler, w http.ResponseWriter, r *http.Reque
 	}
 
 	views.RenderErrorResponse(w, r, session.UnverifiedError(r.Context()))
+}
+
+func handleUnpaid(handler http.Handler, w http.ResponseWriter, r *http.Request) {
+	for _, pp := range whitelist {
+		if pp[0] != r.Method {
+			continue
+		}
+		if matched, err := regexp.MatchString(pp[1], strings.ToLower(r.URL.Path)); err == nil && matched {
+			handler.ServeHTTP(w, r)
+			return
+		}
+	}
+
+	views.RenderErrorResponse(w, r, session.UnpaidError(r.Context()))
 }

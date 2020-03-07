@@ -19,6 +19,9 @@ export default {
       this.GLOBAL.api.net.on(460, payload => {
         this.$router.push("/invitation/entry");
       });
+      this.GLOBAL.api.net.on(461, payload => {
+        this.$router.push("/pay");
+      });
     }
   },
   methods: {

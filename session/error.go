@@ -55,6 +55,11 @@ func UnverifiedError(ctx context.Context) Error {
 	return createError(ctx, http.StatusAccepted, 460, description, nil)
 }
 
+func UnpaidError(ctx context.Context) Error {
+	description := "Unpaid, redirect to payment page."
+	return createError(ctx, http.StatusAccepted, 641, description, nil)
+}
+
 func ForbiddenError(ctx context.Context) Error {
 	description := http.StatusText(http.StatusForbidden)
 	return createError(ctx, http.StatusAccepted, http.StatusForbidden, description, nil)

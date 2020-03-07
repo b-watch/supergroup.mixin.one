@@ -18,9 +18,10 @@ func Connect() broker.Broker {
 		WithRegion(cfg.AWS.Region).
 		WithCredentials(credentials.NewStaticCredentials(cfg.AWS.Key, cfg.AWS.Secret, ""))
 
-	b := snssqs.NewBroker(snssqs.SNSConfig(c), snssqs.SQSConfig(c))
+	b := snssqs.NewBroker(snssqs.SNSConfig(c), snssqs.SQSConfig(c), snssqs.SQSConfig(c))
 	if err := b.Connect(); err != nil {
 		log.Panicln(err)
+
 	}
 
 	return b
