@@ -24,9 +24,9 @@ var whitelist = [][2]string{
 	{"POST", "^/auth$"},
 	{"GET", "^/shortcuts$"},
 	{"PUT", "^/invitations/"},
-	{"GET", "^/me$"},
+	// {"GET", "^/me$"},
 	{"GET", "^/payment/currency$"},
-	{"POST", "^/payment/create$"},
+	// {"POST", "^/payment/create$"},
 }
 
 var whitelistMutex sync.Mutex
@@ -64,8 +64,8 @@ func Authenticate(handler http.Handler) http.Handler {
 			ctx := context.WithValue(r.Context(), keyCurrentUser, user)
 			if config.AppConfig.System.InviteToJoin && user.State == models.PaymentStateUnverified {
 				handleUnverified(handler, w, r.WithContext(ctx))
-			} else if user.State != models.PaymentStatePaid {
-				handleUnpaid(handler, w, r.WithContext(ctx))
+				// } else if user.State != models.PaymentStatePaid {
+				// 	handleUnpaid(handler, w, r.WithContext(ctx))
 			} else {
 				handler.ServeHTTP(w, r.WithContext(ctx))
 			}
