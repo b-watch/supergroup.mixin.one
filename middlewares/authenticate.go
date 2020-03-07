@@ -26,7 +26,7 @@ var whitelist = [][2]string{
 	{"PUT", "^/invitations/"},
 	{"GET", "^/me$"},
 	{"GET", "^/payment/currency$"},
-	{"POST", "^/payment$"},
+	{"POST", "^/payment/create$"},
 }
 
 var whitelistMutex sync.Mutex
