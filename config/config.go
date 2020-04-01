@@ -56,6 +56,9 @@ type Config struct {
 		Secret string `yaml:"secret,omitempty"`
 		Region string `yaml:"region,omitempty"`
 	} `yaml:"aws"`
+	Xuexi struct {
+		PublicKey string `yaml:"session_public_key,omitempty"`
+	} `yaml:"xuexi"`
 	System struct {
 		RouterMode           string `yaml:"router_mode"`
 		MessageShardModifier string `yaml:"message_shard_modifier"`
