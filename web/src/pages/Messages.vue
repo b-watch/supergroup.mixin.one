@@ -29,6 +29,7 @@ import MessageItem from '@/components/partial/MessageItem'
 import Loading from '@/components/Loading'
 import { ActionSheet, Toast } from 'vant'
 import utils from '@/utils'
+import storage from '@/utils/localStorage'
 
 export default {
   name: 'Messages',
@@ -72,7 +73,7 @@ export default {
       })
     },
     messageClick (mem) {
-      if (window.localStorage.getItem('role') === 'admin') {
+      if (storage.getItem('role') === 'admin') {
         this.currentMessage = mem
         this.showActionSheet = true
       }

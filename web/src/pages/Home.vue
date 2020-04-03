@@ -106,6 +106,7 @@ import { mapState } from "vuex";
 import { Dialog } from "vant";
 import AssetItem from "@/components/partial/AssetItem";
 import utils from "@/utils";
+import storage from '@/utils/localStorage'
 
 export default {
   data() {
@@ -252,7 +253,7 @@ export default {
             // for plugin SPA, use hash mode to pass query
             z.isPlugin = true;
             z.url +=
-              "/#/?token=" + encodeURIComponent(localStorage.getItem("token"));
+              "/#/?token=" + encodeURIComponent(storage.getItem("token"));
           }
           return z;
         })

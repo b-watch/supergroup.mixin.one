@@ -31,6 +31,7 @@ import Loading from '@/components/Loading'
 import { ActionSheet, Toast, Dialog } from 'vant'
 import utils from '@/utils'
 import { saveAs } from 'file-saver'
+import storage from '@/utils/localStorage'
 
 export default {
   name: 'Coupons',
@@ -86,7 +87,7 @@ export default {
       this.showActionSheet = false
     },
     onCreateCoupons () {
-      if (window.localStorage.getItem('role') === 'admin') {
+      if (storage.getItem('role') === 'admin') {
         this.showAddCouponModel = true
       }
     },

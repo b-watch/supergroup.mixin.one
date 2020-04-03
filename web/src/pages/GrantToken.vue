@@ -37,7 +37,7 @@ export default {
             "/#" +
             pluginPath +
             "?token=" +
-            localStorage.getItem("token");
+            storage.getItem("token");
           window.location.href = url;
         }
       });

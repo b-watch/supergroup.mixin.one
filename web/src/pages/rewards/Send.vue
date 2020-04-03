@@ -130,6 +130,7 @@ import Row from "@/components/Nav";
 import Loading from "@/components/Loading";
 import uuid from "uuid";
 import utils from "@/utils";
+import storage from '@/utils/localStorage'
 import { Toast, Dialog } from "vant";
 import { CLIENT_ID } from "@/constants";
 
@@ -187,7 +188,7 @@ export default {
         this.recipients[0].selected = true;
       }
     }
-    this.isAdmin = window.localStorage.getItem("role") === "admin";
+    this.isAdmin = storage.getItem("role") === "admin";
     this.loading = false;
   },
   computed: {

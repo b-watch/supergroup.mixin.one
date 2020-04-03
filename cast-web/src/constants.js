@@ -8,6 +8,8 @@ export const BASE_URL = process.env.VUE_APP_API_ROOT;
 
 export const WS_BASE_URL = process.env.VUE_APP_WS_ROOT;
 
+export const TOKEN_PREFIX = process.env.VUE_APP_TOKEN_PREFIX;
+
 export const ROUTER_MODE = process.env.VUE_APP_ROUTER_MODE || "hash";
 
 export const COLORS = {

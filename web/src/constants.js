@@ -6,6 +6,8 @@ export const WEB_ROOT = process.env.VUE_APP_WEB_ROOT;
 
 export const OAUTH_CALLBACK_URL = process.env.VUE_APP_WEB_ROOT + "/auth";
 
+export const TOKEN_PREFIX = process.env.VUE_APP_TOKEN_PREFIX || 'untitled_prefix';
+
 export const BASE_URL = process.env.VUE_APP_API_ROOT;
 
 export const ROUTER_MODE = process.env.VUE_APP_ROUTER_MODE || "hash";

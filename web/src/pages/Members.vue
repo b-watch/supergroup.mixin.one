@@ -37,6 +37,7 @@ import MemberItem from "@/components/partial/MemberItem";
 import Loading from "@/components/Loading";
 import { ActionSheet, Toast } from "vant";
 import utils from "@/utils";
+import storage from '@/utils/localStorage'
 
 export default {
   name: "Members",
@@ -120,7 +121,7 @@ export default {
       this.maskLoading = false;
     },
     memberClick(mem) {
-      if (window.localStorage.getItem("role") === "admin") {
+      if (storage.getItem("role") === "admin") {
         this.currentMember = mem;
         this.showActionSheet = true;
       }
