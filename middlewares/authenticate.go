@@ -11,6 +11,9 @@ import (
 	"github.com/MixinNetwork/supergroup.mixin.one/models"
 	"github.com/MixinNetwork/supergroup.mixin.one/session"
 	"github.com/MixinNetwork/supergroup.mixin.one/views"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/fox-one/pkg/encrypt"
+	"github.com/fox-one/pkg/uuid"
 )
 
 var whitelist = [][2]string{
@@ -48,7 +51,23 @@ func CurrentUser(r *http.Request) *models.User {
 	return user
 }
 
+func decodeXuexiAuthToken(publicKey interface{}, tokenString string) (string, bool) {
+	var claim jwt.StandardClaims
+	if _, err := jwt.ParseWithClaims(tokenString, &claim, func(t *jwt.Token) (interface{}, error) {
+		return publicKey, nil
+	}); err != nil {
+		return "", false
+	}
+
+	return claim.Id, uuid.IsUUID(claim.Id)
+}
+
 func Authenticate(handler http.Handler) http.Handler {
+	xuexiPublicKey, err := encrypt.ParsePublicPem(config.AppConfig.Xuexi.PublicKey)
+	if err != nil {
+		panic("parse xuexi auth key failed")
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		header := r.Header.Get("Authorization")
 		if !strings.HasPrefix(header, "Bearer ") {
@@ -56,7 +75,19 @@ func Authenticate(handler http.Handler) http.Handler {
 			return
 		}
 
-		user, err := models.AuthenticateUserByToken(r.Context(), header[7:])
+		tokenString := header[7:]
+
+		var (
+			user *models.User
+			err  error
+		)
+
+		if uid, ok := decodeXuexiAuthToken(xuexiPublicKey, tokenString); ok {
+			user, err = models.FindUser(r.Context(), uid)
+		} else {
+			user, err = models.AuthenticateUserByToken(r.Context(), tokenString)
+		}
+
 		if err != nil {
 			views.RenderErrorResponse(w, r, err)
 		} else if user == nil {
