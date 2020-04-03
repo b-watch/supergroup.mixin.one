@@ -2,22 +2,33 @@ import { TOKEN_PREFIX } from '@/constants'
 
 function setItem(key, value) {
   const prefix = TOKEN_PREFIX + '-storage'
-  const storage = window.localStorage.getItem(prefix)
-  if (storage) {
-    storage[key] = value
+  try {
+    let storage = JSON.parse(window.localStorage.getItem(prefix))
+    if (storage === null) {
+      storage = {}
+    }
+    if (storage) {
+      storage[key] = value
+    }
+    window.localStorage.setItem(prefix, JSON.stringify(storage))
+  } catch (err) {
+    return null
   }
-  window.localStorage.setItem(prefix, JSON.stringify(storage))
   return null
 }
 
 function getItem(key) {
   const prefix = TOKEN_PREFIX + '-storage'
-  const storage = JSON.parse(window.localStorage.getItem(prefix))
-  if (storage) {
-    if (!storage.hasOwnProperty(key)) {
-      return null
+  try {
+    const storage = JSON.parse(window.localStorage.getItem(prefix))
+    if (storage) {
+      if (!storage.hasOwnProperty(key)) {
+        return null
+      }
+      return storage[key]
     }
-    return storage[key]
+  } catch (err) {
+    return null
   }
   return null
 }

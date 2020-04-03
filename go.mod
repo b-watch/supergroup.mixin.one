@@ -22,7 +22,7 @@ require (
 	github.com/facebookgo/stats v0.0.0-20151006221625-1b76add642e4 // indirect
 	github.com/facebookgo/subset v0.0.0-20200203212716-c811ad88dec4 // indirect
 	github.com/fox-one/mixin-sdk v1.0.6
-	github.com/fox-one/pkg v1.2.3 // indirect
+	github.com/fox-one/pkg v1.2.3
 	github.com/gin-gonic/gin v1.4.0
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/gorilla/handlers v1.4.2
