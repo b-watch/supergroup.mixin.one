@@ -10,7 +10,7 @@
         "
       >
         <div class="panel-header" slot="header">
-          <h1>{{ websiteConf ? websiteConf.data.service_name : "..." }}</h1>
+          <h1>{{ websiteConf ? websiteConf.data.service_name + ' 版本 3'  : "..."  }}</h1>
           <div class="announcement">
             <p v-html="announcementText"></p>
             <van-button

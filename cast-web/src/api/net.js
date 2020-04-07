@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { BASE_URL } from '@/constants'
+import storage from "@/utils/localStorage"
 
 let headers = {
   'Content-Type': 'application/json',
@@ -58,7 +59,7 @@ const API = {
   request (options) {
     options.url = BASE_URL + options.url;
     let headers = options.headers || {}
-    let token = options.token || window.localStorage.getItem('token')
+    let token = options.token || storage.getItem('token')
     options.headers = Object.assign(headers, {'Authorization': 'Bearer ' + token })
 
     /* eslint prefer-promise-reject-errors: 0 */

@@ -1,4 +1,5 @@
 const api = require("./net").default;
+const storage = require("@/utils/localStorage").default;
 
 const Account = {
   me: async function() {
@@ -35,9 +36,9 @@ const Account = {
     };
     let resp = await api.post("/auth", params, {});
     if (resp.data) {
-      window.localStorage.setItem("token", resp.data.authentication_token);
-      window.localStorage.setItem("user_id", resp.data.user_id);
-      window.localStorage.setItem("role", resp.data.role);
+      storage.setItem("token", resp.data.authentication_token);
+      storage.setItem("user_id", resp.data.user_id);
+      storage.setItem("role", resp.data.role);
     }
     return resp;
   },
@@ -53,19 +54,19 @@ const Account = {
   },
 
   userId: function() {
-    return window.localStorage.getItem("user_id");
+    return storage.getItem("user_id");
   },
 
   role: function() {
-    return window.localStorage.getItem("role");
+    return storage.getItem("role");
   },
 
   token: function() {
-    return window.localStorage.getItem("token");
+    return storage.getItem("token");
   },
 
   clear: function(callback) {
-    window.localStorage.clear();
+    storage.clear();
     if (typeof callback === "function") {
       callback();
     }

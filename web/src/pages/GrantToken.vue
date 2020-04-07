@@ -6,6 +6,7 @@
 import Loading from "../components/Loading";
 import { mapState } from "vuex";
 import utils from "@/utils";
+import storage from "@/utils/localStorage";
 
 export default {
   data() {
