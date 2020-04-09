@@ -57,7 +57,7 @@ export default {
         if( document.addEventListener ){
           document.addEventListener('WeixinJSBridgeReady', this.onBridgeReady, false);
         }else if (document.attachEvent){
-          document.attachEvent('WeixinJSBridgeReady', this.onBridgeReady); 
+          document.attachEvent('WeixinJSBridgeReady', this.onBridgeReady);
           document.attachEvent('onWeixinJSBridgeReady', this.onBridgeReady);
         }
         alert("Please open this page in WeChat")
@@ -78,8 +78,8 @@ export default {
         'user_id': this.userId
       })
       let data = orderInfo.data
-      if (data 
-        && data.order.OrderId 
+      if (data
+        && data.order.OrderId
         && data.pay_params.return_code !== 'FAIL'
         && data.pay_params.result_code !== 'FAIL'
         && data.pay_js_params) {
@@ -100,7 +100,7 @@ export default {
       this.loading = true
       WeixinJSBridge.invoke(
         'getBrandWCPayRequest', {
-          "appId": jsparams.appId, 
+          "appId": jsparams.appId,
           "timeStamp": jsparams.timeStamp,
           "nonceStr": jsparams.nonceStr,
           "package": jsparams.package,
